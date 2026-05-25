@@ -1,0 +1,24 @@
+{
+  "short_name": "DuoPOS",
+  "name": "DuoPOS - Punto de Venta Gamificado",
+  "description": "Un sistema POS completamente funcional e interactivo inspirado en los colores de Duolingo, con inventario, ventas y racha diaria.",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2855/2855138.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/11255/11255627.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#f7f7f7",
+  "theme_color": "#58cc02",
+  "display": "standalone",
+  "orientation": "portrait"
+}

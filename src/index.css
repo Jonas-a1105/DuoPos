@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+  --animate-scanLine: scanLine 2s linear infinite;
+  --animate-spin-slow: spin 8s linear infinite;
+
+  @keyframes scanLine {
+    0% { top: 0%; }
+    50% { top: 100%; }
+    100% { top: 0%; }
+  }
+}
+
+/* Custom bounce and Duolingo-style click behavior */
+.duo-btn-primary {
+  background-color: #58cc02;
+  color: white;
+  border-bottom: 4px solid #46a302;
+  transition: all 0.1s ease;
+}
+
+.duo-btn-primary:hover {
+  background-color: #61e002;
+}
+
+.duo-btn-primary:active {
+  border-bottom-width: 0px;
+  transform: translateY(4px);
+}
+
+.duo-btn-secondary {
+  background-color: white;
+  color: #3c3c3c;
+  border: 2px solid #e5e5e5;
+  border-bottom: 4px solid #e5e5e5;
+  transition: all 0.1s ease;
+}
+
+.duo-btn-secondary:hover {
+  background-color: #f7f7f7;
+}
+
+.duo-btn-secondary:active {
+  border-bottom-width: 2px;
+  transform: translateY(2px);
+}
+

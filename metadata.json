@@ -1,0 +1,6 @@
+{
+  "name": "POS Duolingo",
+  "description": "Un sistema POS completamente funcional inspirado en el diseño gamificado y la paleta de colores de Duolingo, con inventario, ventas, reportes y más.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
