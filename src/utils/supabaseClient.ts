@@ -4,6 +4,13 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
+console.log('--- Vite Environment Variables debug ---');
+console.log('VITE_SUPABASE_URL present:', !!supabaseUrl);
+console.log('VITE_SUPABASE_ANON_KEY present:', !!supabaseAnonKey);
+console.log('VITE_SUPABASE_URL value length:', supabaseUrl.length);
+console.log('VITE_SUPABASE_ANON_KEY value length:', supabaseAnonKey.length);
+console.log('----------------------------------------');
+
 // Validar si las claves son reales y tienen el formato correcto antes de inicializar para evitar caídas
 const isKeysValid = 
   supabaseUrl && 
