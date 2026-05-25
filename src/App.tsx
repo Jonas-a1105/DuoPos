@@ -8,7 +8,8 @@ import { User, Product, Transaction, CashShift, CashMovement, Customer, LegalBil
 import { DEFAULT_PRODUCTS, DUO_CHARACTERS, DEFAULT_CUSTOMERS, DEFAULT_BILLING_SETTINGS } from './initialData';
 import LoginScreen from './components/LoginScreen';
 import LandingPage from './components/LandingPage';
-import { supabase } from './utils/supabaseClient';
+import { supabase, isSupabaseConfigured } from './utils/supabaseClient';
+import { syncLoad, syncSave, syncInsert, syncDelete, flushPendingQueue } from './utils/supabaseSync';
 
 import DashboardScreen from './components/DashboardScreen';
 import SalesScreen from './components/SalesScreen';
@@ -387,31 +388,38 @@ export default function App() {
       }
     }
 
-    // 2. Load products
-    const savedProductsRaw = localStorage.getItem('duo_pos_products');
-    let loadedProducts: Product[] = [];
-    if (savedProductsRaw) {
-      loadedProducts = JSON.parse(savedProductsRaw);
-    } else {
-      loadedProducts = DEFAULT_PRODUCTS;
-    }
-
-    // Ensure branchesStock is initialized for every loaded product
-    const augmentedProducts = loadedProducts.map(p => {
-      if (!p.branchesStock) {
-        return {
-          ...p,
-          branchesStock: {
-            'branch-centro': p.stock,
-            'branch-central': p.stock * 3 + 40, // massive CEDIS stock
-            'branch-norte': Math.round(p.stock * 0.7) + 5
+    // 2. Load products (Local-First: Supabase primero, fallback a localStorage)
+    const loadProducts = async () => {
+      try {
+        const loaded = await syncLoad<Product>('products', 'duo_pos_products', DEFAULT_PRODUCTS);
+        // Ensure branchesStock is initialized for every loaded product
+        const augmented = loaded.map(p => {
+          if (!p.branchesStock) {
+            return {
+              ...p,
+              branchesStock: {
+                'branch-centro': p.stock,
+                'branch-central': p.stock * 3 + 40,
+                'branch-norte': Math.round(p.stock * 0.7) + 5
+              }
+            };
           }
-        };
+          return p;
+        });
+        setProducts(augmented);
+        localStorage.setItem('duo_pos_products', JSON.stringify(augmented));
+      } catch {
+        // Fallback seguro
+        const savedProductsRaw = localStorage.getItem('duo_pos_products');
+        if (savedProductsRaw) {
+          setProducts(JSON.parse(savedProductsRaw));
+        } else {
+          setProducts(DEFAULT_PRODUCTS);
+        }
       }
-      return p;
-    });
-    setProducts(augmentedProducts);
-    localStorage.setItem('duo_pos_products', JSON.stringify(augmentedProducts));
+    };
+    loadProducts();
+
 
     // 3. Load transactions
     const savedTxnsRaw = localStorage.getItem('duo_pos_transactions');
@@ -439,14 +447,22 @@ export default function App() {
       setShiftHistory(JSON.parse(shiftHistoryRaw));
     }
 
-    // 6. Load customers
-    const savedCustomersRaw = localStorage.getItem('duo_pos_customers');
-    if (savedCustomersRaw) {
-      setCustomers(JSON.parse(savedCustomersRaw));
-    } else {
-      setCustomers(DEFAULT_CUSTOMERS);
-      localStorage.setItem('duo_pos_customers', JSON.stringify(DEFAULT_CUSTOMERS));
-    }
+    // 6. Load customers (Local-First)
+    const loadCustomers = async () => {
+      try {
+        const loaded = await syncLoad<Customer>('customers', 'duo_pos_customers', DEFAULT_CUSTOMERS);
+        setCustomers(loaded);
+      } catch {
+        const savedCustomersRaw = localStorage.getItem('duo_pos_customers');
+        if (savedCustomersRaw) {
+          setCustomers(JSON.parse(savedCustomersRaw));
+        } else {
+          setCustomers(DEFAULT_CUSTOMERS);
+          localStorage.setItem('duo_pos_customers', JSON.stringify(DEFAULT_CUSTOMERS));
+        }
+      }
+    };
+    loadCustomers();
 
     // 7. Load billing settings
     const savedBillingRaw = localStorage.getItem('duo_pos_billing_settings');
@@ -502,6 +518,9 @@ export default function App() {
     } else {
       setStockTransfers([]);
     }
+
+    // 11. Sincronizar operaciones pendientes offline
+    flushPendingQueue();
   }, []);
 
   // Guard the active Tab if active user role changes

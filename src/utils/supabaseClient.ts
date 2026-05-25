@@ -1,50 +1,80 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Trigger fresh rebuild on Vercel to force environment variables injection
+// ─── Environment Variables ─────────────────────────────────────────────────────
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-console.log('--- Vite Environment Variables debug ---');
-console.log('VITE_SUPABASE_URL present:', !!supabaseUrl);
-console.log('VITE_SUPABASE_ANON_KEY present:', !!supabaseAnonKey);
-console.log('VITE_SUPABASE_URL value length:', supabaseUrl.length);
-console.log('VITE_SUPABASE_ANON_KEY value length:', supabaseAnonKey.length);
-console.log('----------------------------------------');
-
-// Validar si las claves son reales y tienen el formato correcto antes de inicializar para evitar caídas
-const isKeysValid = 
-  supabaseUrl && 
-  supabaseUrl.startsWith('http') && 
-  supabaseAnonKey && 
+const isKeysValid =
+  supabaseUrl &&
+  supabaseUrl.startsWith('http') &&
+  supabaseAnonKey &&
   supabaseAnonKey.length > 10;
 
-if (!isKeysValid) {
+// ─── Real Supabase Client ──────────────────────────────────────────────────────
+let supabase: SupabaseClient;
+
+if (isKeysValid) {
+  supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  });
+  console.log('✅ Supabase client inicializado correctamente.');
+} else {
   console.warn(
-    'Supabase URL or Anon Key is invalid or missing. App is running in Local/Mock fallback mode.'
+    '⚠️ Supabase URL o Anon Key no configurados. La app corre en modo local (localStorage únicamente).'
   );
+  // Mock seguro para que la app no crash si Supabase no está configurado
+  supabase = {
+    auth: {
+      onAuthStateChange: () => ({
+        data: { subscription: { unsubscribe: () => {} } },
+      }),
+      signInWithPassword: async () => ({
+        data: { user: null, session: null },
+        error: { message: 'Supabase no configurado. Usa el modo local.', status: 0 },
+      }),
+      signUp: async () => ({
+        data: { user: null, session: null },
+        error: { message: 'Supabase no configurado. Usa el modo local.', status: 0 },
+      }),
+      signOut: async () => ({ error: null }),
+      getSession: async () => ({ data: { session: null }, error: null }),
+    },
+    from: () => ({
+      select: (..._args: any[]) => ({
+        eq: () => ({
+          single: async () => ({ data: null, error: null }),
+          maybeSingle: async () => ({ data: null, error: null }),
+          order: () => ({ data: [], error: null }),
+        }),
+        order: () => ({ data: [], error: null }),
+        limit: () => ({ data: [], error: null }),
+      }),
+      insert: (data: any) => ({
+        select: () => ({
+          single: async () => ({ data, error: null }),
+          maybeSingle: async () => ({ data, error: null }),
+        }),
+      }),
+      update: () => ({
+        eq: async () => ({ data: null, error: null }),
+      }),
+      upsert: (data: any) => ({
+        select: () => ({
+          single: async () => ({ data, error: null }),
+          maybeSingle: async () => ({ data, error: null }),
+        }),
+      }),
+      delete: () => ({
+        eq: async () => ({ data: null, error: null }),
+      }),
+    }),
+  } as any;
 }
 
-// Cliente Mock seguro para evitar crashes si el usuario no ha configurado sus variables en Vercel aún
-const mockSupabase = {
-  auth: {
-    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-    signInWithPassword: async () => ({ data: { user: null }, error: { message: 'Supabase no está configurado en las variables de entorno de Vercel.' } }),
-    signUp: async () => ({ data: { user: null }, error: { message: 'Supabase no está configurado en las variables de entorno de Vercel.' } }),
-    signOut: async () => {}
-  },
-  from: () => ({
-    select: () => ({
-      eq: () => ({
-        single: async () => ({ data: null, error: { message: 'Supabase no configurado' } }),
-        maybeSingle: async () => ({ data: null, error: { message: 'Supabase no configurado' } })
-      })
-    }),
-    update: () => ({
-      eq: async () => ({ error: { message: 'Supabase no configurado' } })
-    })
-  })
-} as any;
+// ─── Helper: Detectar si estamos online con Supabase real ──────────────────────
+export const isSupabaseConfigured = (): boolean => isKeysValid;
 
-export const supabase = isKeysValid
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : mockSupabase;
+export { supabase };

@@ -1,13 +1,8 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useState } from 'react';
 import { User } from '../types';
 import { DUO_CHARACTERS, Character } from '../initialData';
-import { KeyRound, Mail, User2, ChevronRight, Award } from 'lucide-react';
-import { supabase } from '../utils/supabaseClient';
+import { KeyRound, Mail, User2, ChevronRight, Award, Loader2 } from 'lucide-react';
+import { supabase, isSupabaseConfigured } from '../utils/supabaseClient';
 
 
 interface LoginScreenProps {
@@ -18,18 +13,59 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const [isRegistering, setIsRegistering] = useState(false);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('123456'); // Default simple password for easy sandbox testing
+  const [password, setPassword] = useState('123456');
   const [selectedCharacter, setSelectedCharacter] = useState<string>('duo');
-  const [role, setRole] = useState<'admin' | 'supervisor' | 'cashier'>('admin'); // Default to full administrator for evaluation
+  const [role, setRole] = useState<'admin' | 'supervisor' | 'cashier'>('admin');
   const [errorMessage, setErrorMessage] = useState('');
   const [successAnimation, setSuccessAnimation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const characterKeys = Object.keys(DUO_CHARACTERS);
   const currentCharacter: Character = DUO_CHARACTERS[selectedCharacter] || DUO_CHARACTERS.duo;
 
+  // Helper para mapear un row de Supabase profiles a User de TypeScript
+  const mapProfileToUser = (profile: any): User => ({
+    id: profile.id,
+    username: profile.username,
+    email: profile.email,
+    avatar: profile.avatar,
+    streak: profile.streak,
+    lastSaleDate: profile.last_sale_date,
+    xp: profile.xp,
+    level: profile.level,
+    dailyGoal: Number(profile.daily_goal),
+    levelTitle: profile.level_title,
+    role: profile.role,
+    gems: profile.gems,
+    gemsEarnedTotal: profile.gems_earned_total,
+    unlockedSkins: profile.unlocked_skins,
+    activeSkin: profile.active_skin,
+    unlockedBadges: profile.unlocked_badges,
+    completedMissionsToday: profile.completed_missions_today
+  });
+
+  // Crear un perfil por defecto en Supabase si no existe (self-healing)
+  const createDefaultProfile = (userId: string, userEmail: string, userName: string) => ({
+    id: userId,
+    username: userName,
+    email: userEmail,
+    avatar: selectedCharacter,
+    streak: 1,
+    xp: 120,
+    level: 1,
+    daily_goal: 150,
+    level_title: 'Cajero Novato 🦉',
+    role: role,
+    gems: 40,
+    gems_earned_total: 40,
+    unlocked_skins: ['standard'],
+    active_skin: 'standard',
+    unlocked_badges: [],
+    completed_missions_today: []
+  });
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('DEBUG: handleLogin iniciado con usuario:', username.trim());
     if (!username.trim()) {
       setErrorMessage('¡Por favor ingresa tu usuario o correo!');
       return;
@@ -40,13 +76,40 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     }
 
     setErrorMessage('');
+    setIsLoading(true);
     
     try {
+      // Si Supabase no está configurado, hacer login local
+      if (!isSupabaseConfigured()) {
+        const localUser: User = {
+          id: 'user-admin',
+          username: username.trim(),
+          email: email || `${username.trim()}@local.pos`,
+          avatar: selectedCharacter,
+          streak: 3,
+          lastSaleDate: null,
+          xp: 120,
+          level: 1,
+          dailyGoal: 150,
+          levelTitle: 'Cajero Novato 🦉',
+          role: role,
+          gems: 40,
+          gemsEarnedTotal: 40,
+          unlockedSkins: ['standard'],
+          activeSkin: 'standard',
+          unlockedBadges: [],
+          completedMissionsToday: []
+        };
+        localStorage.setItem('duo_pos_active_user', JSON.stringify(localUser));
+        setSuccessAnimation(true);
+        setTimeout(() => onLoginSuccess(localUser), 1200);
+        return;
+      }
+
       let emailToAuth = username.trim();
       
-      // Si el input no es un correo directo (no tiene '@'), buscamos el correo en el perfil
+      // Si el input no es un correo, buscar el correo asociado en profiles
       if (!emailToAuth.includes('@')) {
-        console.log('DEBUG: El usuario no es un correo. Buscando email asociado en perfiles para:', username.trim());
         const { data: profileData, error: profileErr } = await supabase
           .from('profiles')
           .select('email')
@@ -54,74 +117,66 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           .maybeSingle();
           
         if (profileErr) {
-          console.error('DEBUG: Error al buscar perfil por nombre de usuario:', profileErr);
           setErrorMessage('Error al buscar usuario: ' + profileErr.message);
+          setIsLoading(false);
           return;
         }
         
         if (!profileData) {
-          console.log('DEBUG: No se encontró perfil con el nombre de usuario:', username.trim());
           setErrorMessage('No se encontró ningún usuario con ese nombre.');
+          setIsLoading(false);
           return;
         }
         
         emailToAuth = profileData.email;
-        console.log('DEBUG: Email asociado encontrado:', emailToAuth);
       }
 
-      console.log('DEBUG: Intentando autenticación con Supabase Auth para email:', emailToAuth);
+      // Autenticación con Supabase
       const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
         email: emailToAuth,
         password: password
       });
 
       if (authErr) {
-        console.error('DEBUG: Error en Supabase Auth signInWithPassword:', authErr);
-        setErrorMessage('Error de inicio de sesión: ' + authErr.message);
+        // Manejar error 429 (Too Many Requests) de forma amigable
+        if (authErr.message?.includes('429') || authErr.message?.includes('Too Many') || authErr.message?.includes('rate')) {
+          setErrorMessage('⏳ Demasiados intentos. Espera 1 minuto antes de intentar de nuevo.');
+        } else if (authErr.message?.includes('Email not confirmed')) {
+          setErrorMessage('📧 Tu correo aún no está confirmado. Pide al administrador que lo confirme en Supabase.');
+        } else {
+          setErrorMessage('Error de inicio de sesión: ' + authErr.message);
+        }
+        setIsLoading(false);
         return;
       }
 
-      console.log('DEBUG: Autenticación de Supabase exitosa. UID del usuario:', authData.user?.id);
+      if (!authData.user) {
+        setErrorMessage('No se pudo obtener la información del usuario.');
+        setIsLoading(false);
+        return;
+      }
 
-      // Obtener el perfil completo de la base de datos
-      console.log('DEBUG: Buscando perfil en tabla "profiles" para UID:', authData.user?.id);
+      // Obtener perfil de la base de datos
       let { data: userProfile, error: profileFetchErr } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', authData.user?.id)
+        .eq('id', authData.user.id)
         .maybeSingle();
 
       if (profileFetchErr) {
-        console.error('DEBUG: Error obteniendo perfil de base de datos:', profileFetchErr);
-        setErrorMessage('Error al obtener perfil de base de datos: ' + profileFetchErr.message);
+        setErrorMessage('Error al obtener perfil: ' + profileFetchErr.message);
+        setIsLoading(false);
         return;
       }
 
-      console.log('DEBUG: Perfil obtenido de base de datos:', userProfile);
+      // Self-healing: crear perfil si no existe
+      if (!userProfile) {
+        const defaultProfile = createDefaultProfile(
+          authData.user.id,
+          authData.user.email || emailToAuth,
+          authData.user.user_metadata?.username || username.trim()
+        );
 
-      // Si no existe el perfil (por ejemplo, si el usuario fue creado antes del trigger SQL), lo autocreamos
-      if (!userProfile && authData.user) {
-        console.log('DEBUG: Self-healing (Login): Creando perfil faltante para el usuario...');
-        const defaultProfile = {
-          id: authData.user.id,
-          username: authData.user.user_metadata?.username || username.trim(),
-          email: authData.user.email || '',
-          avatar: selectedCharacter,
-          streak: 3,
-          xp: 120,
-          level: 1,
-          daily_goal: 150,
-          level_title: 'Cajero Novato 🦉',
-          role: authData.user.user_metadata?.role || role,
-          gems: 40,
-          gems_earned_total: 40,
-          unlocked_skins: ['standard'],
-          active_skin: 'standard',
-          unlocked_badges: [],
-          completed_missions_today: []
-        };
-
-        console.log('DEBUG: Intentando insertar perfil por defecto:', defaultProfile);
         const { data: newProfile, error: insertErr } = await supabase
           .from('profiles')
           .insert(defaultProfile)
@@ -129,39 +184,14 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           .maybeSingle();
 
         if (insertErr || !newProfile) {
-          console.error('DEBUG: Error al auto-crear perfil en la BD:', insertErr);
-          setErrorMessage('Error al crear perfil de usuario faltante: ' + (insertErr?.message || 'Error desconocido'));
+          setErrorMessage('Error al crear perfil: ' + (insertErr?.message || 'Error desconocido'));
+          setIsLoading(false);
           return;
         }
-        console.log('DEBUG: Auto-creación de perfil exitosa:', newProfile);
         userProfile = newProfile;
       }
 
-      console.log('DEBUG: Perfil final listo para iniciar sesión:', userProfile);
-
-
-      // Mapear de snake_case (BD) a camelCase (TypeScript User)
-      const user: User = {
-        id: userProfile.id,
-        username: userProfile.username,
-        email: userProfile.email,
-        avatar: userProfile.avatar,
-        streak: userProfile.streak,
-        lastSaleDate: userProfile.last_sale_date,
-        xp: userProfile.xp,
-        level: userProfile.level,
-        dailyGoal: Number(userProfile.daily_goal),
-        levelTitle: userProfile.level_title,
-        role: userProfile.role,
-        gems: userProfile.gems,
-        gemsEarnedTotal: userProfile.gems_earned_total,
-        unlockedSkins: userProfile.unlocked_skins,
-        activeSkin: userProfile.active_skin,
-        unlockedBadges: userProfile.unlocked_badges,
-        completedMissionsToday: userProfile.completed_missions_today
-      };
-
-      // Guardar sesión localmente también para persistencia offline si es necesario
+      const user = mapProfileToUser(userProfile);
       localStorage.setItem('duo_pos_active_user', JSON.stringify(user));
 
       setSuccessAnimation(true);
@@ -170,8 +200,12 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       }, 1200);
     } catch (err: any) {
       setErrorMessage('Ocurrió un error inesperado: ' + err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,8 +223,36 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     }
 
     setErrorMessage('');
+    setIsLoading(true);
 
     try {
+      // Si Supabase no está configurado, registrar localmente
+      if (!isSupabaseConfigured()) {
+        const localUser: User = {
+          id: 'user-admin',
+          username: username.trim(),
+          email: email.trim(),
+          avatar: selectedCharacter,
+          streak: 1,
+          lastSaleDate: null,
+          xp: 120,
+          level: 1,
+          dailyGoal: 150,
+          levelTitle: 'Cajero Novato 🦉',
+          role: role,
+          gems: 40,
+          gemsEarnedTotal: 40,
+          unlockedSkins: ['standard'],
+          activeSkin: 'standard',
+          unlockedBadges: [],
+          completedMissionsToday: []
+        };
+        localStorage.setItem('duo_pos_active_user', JSON.stringify(localUser));
+        setSuccessAnimation(true);
+        setTimeout(() => onLoginSuccess(localUser), 1200);
+        return;
+      }
+
       // Validar si el nombre de usuario ya está tomado
       const { data: existingUser, error: checkErr } = await supabase
         .from('profiles')
@@ -200,11 +262,13 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
       if (checkErr) {
         setErrorMessage('Error al validar nombre de usuario.');
+        setIsLoading(false);
         return;
       }
 
       if (existingUser) {
         setErrorMessage('Ese usuario ya existe. ¡Elige otro o inicia sesión!');
+        setIsLoading(false);
         return;
       }
 
@@ -221,18 +285,23 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       });
 
       if (signUpErr) {
-        setErrorMessage('Error al registrar: ' + signUpErr.message);
+        if (signUpErr.message?.includes('429') || signUpErr.message?.includes('Too Many')) {
+          setErrorMessage('⏳ Demasiados intentos. Espera 1 minuto antes de intentar de nuevo.');
+        } else {
+          setErrorMessage('Error al registrar: ' + signUpErr.message);
+        }
+        setIsLoading(false);
         return;
       }
 
       const authUser = signUpData.user;
       if (!authUser) {
         setErrorMessage('Registro exitoso. Revisa tu correo de confirmación si está habilitado.');
+        setIsLoading(false);
         return;
       }
 
-      // Actualizar los datos específicos en la tabla profiles
-      const levelTitle = 'Monolingüe Comercial 🦉';
+      // Actualizar datos del perfil creado por el trigger
       const { error: updateErr } = await supabase
         .from('profiles')
         .update({
@@ -241,7 +310,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           xp: 120,
           level: 1,
           daily_goal: 150,
-          level_title: levelTitle,
+          level_title: 'Cajero Novato 🦉',
           gems: 40,
           gems_earned_total: 40,
           unlocked_skins: ['standard'],
@@ -255,39 +324,16 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         console.error('Error actualizando perfil:', updateErr);
       }
 
-      // Obtener el perfil completo creado
-      let { data: userProfile, error: profileFetchErr } = await supabase
+      // Obtener el perfil completo
+      let { data: userProfile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', authUser.id)
         .maybeSingle();
 
-      if (profileFetchErr) {
-        setErrorMessage('Error al consultar perfil creado.');
-        return;
-      }
-
-      // Si por alguna razón el trigger no insertó el perfil (o hubo retardo), lo creamos aquí
+      // Self-healing: si el trigger no creó el perfil, lo creamos
       if (!userProfile) {
-        console.log('Self-healing (Register): Forzando la creación del perfil...');
-        const defaultProfile = {
-          id: authUser.id,
-          username: username.trim(),
-          email: email.trim(),
-          avatar: selectedCharacter,
-          streak: 1,
-          xp: 120,
-          level: 1,
-          daily_goal: 150,
-          level_title: 'Monolingüe Comercial 🦉',
-          role: role,
-          gems: 40,
-          gems_earned_total: 40,
-          unlocked_skins: ['standard'],
-          active_skin: 'standard',
-          unlocked_badges: [],
-          completed_missions_today: []
-        };
+        const defaultProfile = createDefaultProfile(authUser.id, email.trim(), username.trim());
 
         const { data: newProfile, error: insertErr } = await supabase
           .from('profiles')
@@ -296,32 +342,14 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           .maybeSingle();
 
         if (insertErr || !newProfile) {
-          setErrorMessage('Error al forzar la creación del perfil: ' + (insertErr?.message || 'Error desconocido'));
+          setErrorMessage('Error al crear perfil: ' + (insertErr?.message || 'Error desconocido'));
+          setIsLoading(false);
           return;
         }
         userProfile = newProfile;
       }
 
-      const newUser: User = {
-        id: userProfile.id,
-        username: userProfile.username,
-        email: userProfile.email,
-        avatar: userProfile.avatar,
-        streak: userProfile.streak,
-        lastSaleDate: userProfile.last_sale_date,
-        xp: userProfile.xp,
-        level: userProfile.level,
-        dailyGoal: Number(userProfile.daily_goal),
-        levelTitle: userProfile.level_title,
-        role: userProfile.role,
-        gems: userProfile.gems,
-        gemsEarnedTotal: userProfile.gems_earned_total,
-        unlockedSkins: userProfile.unlocked_skins,
-        activeSkin: userProfile.active_skin,
-        unlockedBadges: userProfile.unlocked_badges,
-        completedMissionsToday: userProfile.completed_missions_today
-      };
-
+      const newUser = mapProfileToUser(userProfile);
       localStorage.setItem('duo_pos_active_user', JSON.stringify(newUser));
 
       setSuccessAnimation(true);
@@ -330,8 +358,11 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       }, 1200);
     } catch (err: any) {
       setErrorMessage('Ocurrió un error inesperado: ' + err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-[#f7f7f7] flex flex-col items-center justify-center p-4 relative overflow-y-auto py-8 font-sans">
@@ -585,11 +616,22 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full bg-[#58cc02] text-white border-b-[6px] border-[#46a302] hover:bg-[#61e002] active:border-b-0 active:translate-y-[6px] font-black text-lg py-3.5 rounded-2xl transition-all duration-100 flex items-center justify-center gap-2 tracking-wide uppercase shadow-sm mt-8 cursor-pointer"
+                disabled={isLoading}
+                className={`w-full bg-[#58cc02] text-white border-b-[6px] border-[#46a302] hover:bg-[#61e002] active:border-b-0 active:translate-y-[6px] font-black text-lg py-3.5 rounded-2xl transition-all duration-100 flex items-center justify-center gap-2 tracking-wide uppercase shadow-sm mt-8 ${isLoading ? 'opacity-70 cursor-wait' : 'cursor-pointer'}`}
               >
-                {isRegistering ? 'Crear Cajero & Iniciar' : 'Entrar a Trabajar'}
-                <ChevronRight size={20} />
+                {isLoading ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin" />
+                    Conectando...
+                  </>
+                ) : (
+                  <>
+                    {isRegistering ? 'Crear Cajero & Iniciar' : 'Entrar a Trabajar'}
+                    <ChevronRight size={20} />
+                  </>
+                )}
               </button>
+
             </form>
           </div>
 
