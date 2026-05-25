@@ -259,35 +259,81 @@ export default function App() {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        const { data: userProfile, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+        try {
+          const { data: userProfile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle();
 
-        if (userProfile && !error) {
-          const mappedUser: User = {
-            id: userProfile.id,
-            username: userProfile.username,
-            email: userProfile.email,
-            avatar: userProfile.avatar,
-            streak: userProfile.streak,
-            lastSaleDate: userProfile.last_sale_date,
-            xp: userProfile.xp,
-            level: userProfile.level,
-            dailyGoal: Number(userProfile.daily_goal),
-            levelTitle: userProfile.level_title,
-            role: userProfile.role,
-            gems: userProfile.gems,
-            gemsEarnedTotal: userProfile.gems_earned_total,
-            unlockedSkins: userProfile.unlocked_skins,
-            activeSkin: userProfile.active_skin,
-            unlockedBadges: userProfile.unlocked_badges,
-            completedMissionsToday: userProfile.completed_missions_today
-          };
-          setUser(mappedUser);
-          setShowLanding(false);
-          localStorage.setItem('duo_pos_active_user', JSON.stringify(mappedUser));
+          if (error) {
+            console.error('Error fetching profile:', error);
+            return;
+          }
+
+          let finalProfile = userProfile;
+
+          // Autocorrección/Self-healing: Si el usuario existe en autenticación pero no tiene fila en profiles (por ejemplo, si se registró antes de correr el script SQL)
+          if (!finalProfile) {
+            console.log('Self-healing: Creando perfil faltante para el usuario autenticado...');
+            const defaultProfile = {
+              id: session.user.id,
+              username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'Cajero',
+              email: session.user.email || '',
+              avatar: 'duo',
+              streak: 1,
+              xp: 120,
+              level: 1,
+              daily_goal: 150,
+              level_title: 'Cajero Novato 🦉',
+              role: session.user.user_metadata?.role || 'cashier',
+              gems: 40,
+              gems_earned_total: 40,
+              unlocked_skins: ['standard'],
+              active_skin: 'standard',
+              unlocked_badges: [],
+              completed_missions_today: []
+            };
+
+            const { data: newProfile, error: insertErr } = await supabase
+              .from('profiles')
+              .insert(defaultProfile)
+              .select()
+              .single();
+
+            if (insertErr) {
+              console.error('Error al autocrear perfil faltante:', insertErr);
+            } else {
+              finalProfile = newProfile;
+            }
+          }
+
+          if (finalProfile) {
+            const mappedUser: User = {
+              id: finalProfile.id,
+              username: finalProfile.username,
+              email: finalProfile.email,
+              avatar: finalProfile.avatar,
+              streak: finalProfile.streak,
+              lastSaleDate: finalProfile.last_sale_date,
+              xp: finalProfile.xp,
+              level: finalProfile.level,
+              dailyGoal: Number(finalProfile.daily_goal),
+              levelTitle: finalProfile.level_title,
+              role: finalProfile.role,
+              gems: finalProfile.gems,
+              gems_earned_total: finalProfile.gems_earned_total,
+              unlockedSkins: finalProfile.unlocked_skins,
+              activeSkin: finalProfile.active_skin,
+              unlockedBadges: finalProfile.unlocked_badges,
+              completedMissionsToday: finalProfile.completed_missions_today
+            };
+            setUser(mappedUser);
+            setShowLanding(false);
+            localStorage.setItem('duo_pos_active_user', JSON.stringify(mappedUser));
+          }
+        } catch (err) {
+          console.error('Unexpected error in auth observer:', err);
         }
       } else {
         // Only clear if we aren't signed in as the simulated admin account
