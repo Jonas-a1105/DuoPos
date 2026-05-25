@@ -7,6 +7,8 @@ import React, { useState } from 'react';
 import { User } from '../types';
 import { DUO_CHARACTERS, Character } from '../initialData';
 import { KeyRound, Mail, User2, ChevronRight, Award } from 'lucide-react';
+import { supabase } from '../utils/supabaseClient';
+
 
 interface LoginScreenProps {
   onLoginSuccess: (user: User) => void;
@@ -25,110 +27,221 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const characterKeys = Object.keys(DUO_CHARACTERS);
   const currentCharacter: Character = DUO_CHARACTERS[selectedCharacter] || DUO_CHARACTERS.duo;
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) {
-      setErrorMessage('¡Por favor ingresa un nombre de usuario!');
+      setErrorMessage('¡Por favor ingresa tu usuario o correo!');
+      return;
+    }
+    if (!password) {
+      setErrorMessage('¡Por favor ingresa tu contraseña!');
       return;
     }
 
     setErrorMessage('');
     
-    // Simulate finding or creating user in localStorage
-    const savedUsersRaw = localStorage.getItem('duo_pos_users');
-    const users: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
-    
-    let user = users.find(u => u.username.toLowerCase() === username.trim().toLowerCase());
-    
-    if (!user) {
-      // If logging in normally, but user not found, auto-create it with selected role.
-      user = {
-        id: `user-${Date.now()}`,
-        username: username.trim(),
-        email: email || `${username.trim().toLowerCase()}@duopos.com`,
-        avatar: selectedCharacter,
-        streak: 3, // Start with a friendly 3-day sale streak to show off the asset
-        lastSaleDate: new Date().toISOString().split('T')[0],
-        xp: 120, // Start with some XP so they aren't level 0
-        level: 1,
-        dailyGoal: 150,
-        levelTitle: 'Cajero Novato 🦉',
-        role: role, // Use the selected role
-        gems: 40,
-        gemsEarnedTotal: 40,
-        unlockedSkins: ['skin-standard'],
-        activeSkin: 'standard',
-        unlockedBadges: [],
-        completedMissionsToday: []
-      };
+    try {
+      let emailToAuth = username.trim();
       
-      users.push(user);
-      localStorage.setItem('duo_pos_users', JSON.stringify(users));
-    } else {
-      // For seamless sandbox testing, we allow users to override/select their role upon logging in
-      user.avatar = selectedCharacter;
-      user.role = role ?? user.role ?? 'admin';
-      if (user.gems === undefined) user.gems = 40;
-      if (user.gemsEarnedTotal === undefined) user.gemsEarnedTotal = 40;
-      if (!user.unlockedSkins) user.unlockedSkins = ['skin-standard'];
-      if (!user.activeSkin) user.activeSkin = 'standard';
-      if (!user.unlockedBadges) user.unlockedBadges = [];
-      if (!user.completedMissionsToday) user.completedMissionsToday = [];
-      localStorage.setItem('duo_pos_users', JSON.stringify(users));
-    }
+      // Si el input no es un correo directo (no tiene '@'), buscamos el correo en el perfil
+      if (!emailToAuth.includes('@')) {
+        const { data: profileData, error: profileErr } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('username', username.trim())
+          .maybeSingle();
+          
+        if (profileErr) {
+          setErrorMessage('Error al buscar usuario: ' + profileErr.message);
+          return;
+        }
+        
+        if (!profileData) {
+          setErrorMessage('No se encontró ningún usuario con ese nombre.');
+          return;
+        }
+        
+        emailToAuth = profileData.email;
+      }
 
-    setSuccessAnimation(true);
-    setTimeout(() => {
-      onLoginSuccess(user!);
-    }, 1200);
+      const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
+        email: emailToAuth,
+        password: password
+      });
+
+      if (authErr) {
+        setErrorMessage('Error de inicio de sesión: ' + authErr.message);
+        return;
+      }
+
+      // Obtener el perfil completo de la base de datos
+      const { data: userProfile, error: profileFetchErr } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authData.user?.id)
+        .single();
+
+      if (profileFetchErr || !userProfile) {
+        setErrorMessage('Error al obtener perfil de base de datos.');
+        return;
+      }
+
+      // Mapear de snake_case (BD) a camelCase (TypeScript User)
+      const user: User = {
+        id: userProfile.id,
+        username: userProfile.username,
+        email: userProfile.email,
+        avatar: userProfile.avatar,
+        streak: userProfile.streak,
+        lastSaleDate: userProfile.last_sale_date,
+        xp: userProfile.xp,
+        level: userProfile.level,
+        dailyGoal: Number(userProfile.daily_goal),
+        levelTitle: userProfile.level_title,
+        role: userProfile.role,
+        gems: userProfile.gems,
+        gemsEarnedTotal: userProfile.gems_earned_total,
+        unlockedSkins: userProfile.unlocked_skins,
+        activeSkin: userProfile.active_skin,
+        unlockedBadges: userProfile.unlocked_badges,
+        completedMissionsToday: userProfile.completed_missions_today
+      };
+
+      // Guardar sesión localmente también para persistencia offline si es necesario
+      localStorage.setItem('duo_pos_active_user', JSON.stringify(user));
+
+      setSuccessAnimation(true);
+      setTimeout(() => {
+        onLoginSuccess(user);
+      }, 1200);
+    } catch (err: any) {
+      setErrorMessage('Ocurrió un error inesperado: ' + err.message);
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) {
       setErrorMessage('¡Por favor dinos tu nombre o apodo!');
       return;
     }
-
-    const savedUsersRaw = localStorage.getItem('duo_pos_users');
-    const users: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
-
-    const exists = users.some(u => u.username.toLowerCase() === username.trim().toLowerCase());
-    if (exists) {
-      setErrorMessage('Ese usuario ya existe. ¡Inicia sesión directamente!');
+    if (!email.trim() || !email.includes('@')) {
+      setErrorMessage('¡Por favor ingresa un correo electrónico válido!');
+      return;
+    }
+    if (!password || password.length < 6) {
+      setErrorMessage('¡La contraseña debe tener al menos 6 caracteres!');
       return;
     }
 
     setErrorMessage('');
 
-    // Establish a beautiful initial User record
-    const newUser: User = {
-      id: `user-${Date.now()}`,
-      username: username.trim(),
-      email: email || `${username.trim().toLowerCase()}@duopos.com`,
-      avatar: selectedCharacter,
-      streak: 1, // Fresh streak
-      lastSaleDate: new Date().toISOString().split('T')[0],
-      xp: 0,
-      level: 1,
-      dailyGoal: 150,
-      levelTitle: 'Monolingüe Comercial 🦉',
-      role: role, // Use selected role!
-      gems: 40,
-      gemsEarnedTotal: 40,
-      unlockedSkins: ['skin-standard'],
-      activeSkin: 'standard',
-      unlockedBadges: [],
-      completedMissionsToday: []
-    };
+    try {
+      // Validar si el nombre de usuario ya está tomado
+      const { data: existingUser, error: checkErr } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username.trim())
+        .maybeSingle();
 
-    users.push(newUser);
-    localStorage.setItem('duo_pos_users', JSON.stringify(users));
+      if (checkErr) {
+        setErrorMessage('Error al validar nombre de usuario.');
+        return;
+      }
 
-    setSuccessAnimation(true);
-    setTimeout(() => {
-      onLoginSuccess(newUser);
-    }, 1200);
+      if (existingUser) {
+        setErrorMessage('Ese usuario ya existe. ¡Elige otro o inicia sesión!');
+        return;
+      }
+
+      // Registro nativo en Supabase Auth
+      const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: password,
+        options: {
+          data: {
+            username: username.trim(),
+            role: role
+          }
+        }
+      });
+
+      if (signUpErr) {
+        setErrorMessage('Error al registrar: ' + signUpErr.message);
+        return;
+      }
+
+      const authUser = signUpData.user;
+      if (!authUser) {
+        setErrorMessage('Registro exitoso. Revisa tu correo de confirmación si está habilitado.');
+        return;
+      }
+
+      // Actualizar los datos específicos en la tabla profiles
+      const levelTitle = 'Monolingüe Comercial 🦉';
+      const { error: updateErr } = await supabase
+        .from('profiles')
+        .update({
+          avatar: selectedCharacter,
+          streak: 1,
+          xp: 120,
+          level: 1,
+          daily_goal: 150,
+          level_title: levelTitle,
+          gems: 40,
+          gems_earned_total: 40,
+          unlocked_skins: ['standard'],
+          active_skin: 'standard',
+          unlocked_badges: [],
+          completed_missions_today: []
+        })
+        .eq('id', authUser.id);
+
+      if (updateErr) {
+        console.error('Error actualizando perfil:', updateErr);
+      }
+
+      // Obtener el perfil completo creado
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (!userProfile) {
+        setErrorMessage('No se pudo inicializar tu perfil.');
+        return;
+      }
+
+      const newUser: User = {
+        id: userProfile.id,
+        username: userProfile.username,
+        email: userProfile.email,
+        avatar: userProfile.avatar,
+        streak: userProfile.streak,
+        lastSaleDate: userProfile.last_sale_date,
+        xp: userProfile.xp,
+        level: userProfile.level,
+        dailyGoal: Number(userProfile.daily_goal),
+        levelTitle: userProfile.level_title,
+        role: userProfile.role,
+        gems: userProfile.gems,
+        gemsEarnedTotal: userProfile.gems_earned_total,
+        unlockedSkins: userProfile.unlocked_skins,
+        activeSkin: userProfile.active_skin,
+        unlockedBadges: userProfile.unlocked_badges,
+        completedMissionsToday: userProfile.completed_missions_today
+      };
+
+      localStorage.setItem('duo_pos_active_user', JSON.stringify(newUser));
+
+      setSuccessAnimation(true);
+      setTimeout(() => {
+        onLoginSuccess(newUser);
+      }, 1200);
+    } catch (err: any) {
+      setErrorMessage('Ocurrió un error inesperado: ' + err.message);
+    }
   };
 
   return (

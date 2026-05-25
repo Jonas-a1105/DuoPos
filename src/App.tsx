@@ -8,6 +8,8 @@ import { User, Product, Transaction, CashShift, CashMovement, Customer, LegalBil
 import { DEFAULT_PRODUCTS, DUO_CHARACTERS, DEFAULT_CUSTOMERS, DEFAULT_BILLING_SETTINGS } from './initialData';
 import LoginScreen from './components/LoginScreen';
 import LandingPage from './components/LandingPage';
+import { supabase } from './utils/supabaseClient';
+
 import DashboardScreen from './components/DashboardScreen';
 import SalesScreen from './components/SalesScreen';
 import InventoryScreen from './components/InventoryScreen';
@@ -253,6 +255,65 @@ export default function App() {
     };
   }, []);
 
+  // Supabase Auth State Change Listener
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const { data: userProfile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (userProfile && !error) {
+          const mappedUser: User = {
+            id: userProfile.id,
+            username: userProfile.username,
+            email: userProfile.email,
+            avatar: userProfile.avatar,
+            streak: userProfile.streak,
+            lastSaleDate: userProfile.last_sale_date,
+            xp: userProfile.xp,
+            level: userProfile.level,
+            dailyGoal: Number(userProfile.daily_goal),
+            levelTitle: userProfile.level_title,
+            role: userProfile.role,
+            gems: userProfile.gems,
+            gemsEarnedTotal: userProfile.gems_earned_total,
+            unlockedSkins: userProfile.unlocked_skins,
+            activeSkin: userProfile.active_skin,
+            unlockedBadges: userProfile.unlocked_badges,
+            completedMissionsToday: userProfile.completed_missions_today
+          };
+          setUser(mappedUser);
+          setShowLanding(false);
+          localStorage.setItem('duo_pos_active_user', JSON.stringify(mappedUser));
+        }
+      } else {
+        // Only clear if we aren't signed in as the simulated admin account
+        const activeUserRaw = localStorage.getItem('duo_pos_active_user');
+        if (activeUserRaw) {
+          try {
+            const parsed = JSON.parse(activeUserRaw);
+            if (parsed.id !== 'user-admin') {
+              setUser(null);
+              setShowLanding(true);
+              localStorage.removeItem('duo_pos_active_user');
+            }
+          } catch {
+            setUser(null);
+            setShowLanding(true);
+            localStorage.removeItem('duo_pos_active_user');
+          }
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   // Level Up celebrate modal state
   const [levelUpAchieved, setLevelUpAchieved] = useState<{ oldLevel: number; newLevel: number; title: string } | null>(null);
 
@@ -414,7 +475,7 @@ export default function App() {
   }, [user?.role, activeTab]);
 
   // Sync user state to localStorage
-  const saveUserAndSyncList = (updatedUser: User) => {
+  const saveUserAndSyncList = async (updatedUser: User) => {
     setUser(updatedUser);
     localStorage.setItem('duo_pos_active_user', JSON.stringify(updatedUser));
 
@@ -428,6 +489,34 @@ export default function App() {
       users.push(updatedUser);
     }
     localStorage.setItem('duo_pos_users', JSON.stringify(users));
+
+    // Sync profiles to Supabase (if authenticated user, id is a valid uuid)
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(updatedUser.id);
+    if (isUuid) {
+      try {
+        await supabase
+          .from('profiles')
+          .update({
+            avatar: updatedUser.avatar,
+            streak: updatedUser.streak,
+            last_sale_date: updatedUser.lastSaleDate,
+            xp: updatedUser.xp,
+            level: updatedUser.level,
+            daily_goal: updatedUser.dailyGoal,
+            level_title: updatedUser.levelTitle,
+            role: updatedUser.role,
+            gems: updatedUser.gems,
+            gems_earned_total: updatedUser.gemsEarnedTotal,
+            unlocked_skins: updatedUser.unlockedSkins,
+            active_skin: updatedUser.activeSkin,
+            unlocked_badges: updatedUser.unlockedBadges,
+            completed_missions_today: updatedUser.completedMissionsToday
+          })
+          .eq('id', updatedUser.id);
+      } catch (err) {
+        console.error('Error syncing profile to Supabase:', err);
+      }
+    }
   };
 
   // Gamified XP / Level Booster Handler
@@ -977,9 +1066,10 @@ export default function App() {
     localStorage.setItem('duo_pos_sim_installed', 'true');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setUser(null);
     localStorage.removeItem('duo_pos_active_user');
+    await supabase.auth.signOut();
     setShowLanding(true);
   };
 
