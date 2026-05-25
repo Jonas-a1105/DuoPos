@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Trigger fresh rebuild on Vercel to force environment variables injection
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
