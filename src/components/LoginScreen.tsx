@@ -334,7 +334,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f7f7] flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-[#f7f7f7] flex flex-col items-center justify-center p-4 relative overflow-y-auto py-8 font-sans">
       {/* Decorative floating grids */}
       <div className="absolute top-10 left-10 text-6xl opacity-10 animate-pulse pointer-events-none">🦉</div>
       <div className="absolute bottom-10 right-10 text-6xl opacity-10 animate-bounce pointer-events-none">✨</div>
