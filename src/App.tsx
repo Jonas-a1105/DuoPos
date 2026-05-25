@@ -322,7 +322,7 @@ export default function App() {
               levelTitle: finalProfile.level_title,
               role: finalProfile.role,
               gems: finalProfile.gems,
-              gems_earned_total: finalProfile.gems_earned_total,
+              gemsEarnedTotal: finalProfile.gems_earned_total,
               unlockedSkins: finalProfile.unlocked_skins,
               activeSkin: finalProfile.active_skin,
               unlockedBadges: finalProfile.unlocked_badges,

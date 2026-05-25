@@ -75,15 +75,50 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       }
 
       // Obtener el perfil completo de la base de datos
-      const { data: userProfile, error: profileFetchErr } = await supabase
+      let { data: userProfile, error: profileFetchErr } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', authData.user?.id)
-        .single();
+        .maybeSingle();
 
-      if (profileFetchErr || !userProfile) {
-        setErrorMessage('Error al obtener perfil de base de datos.');
+      if (profileFetchErr) {
+        setErrorMessage('Error al obtener perfil de base de datos: ' + profileFetchErr.message);
         return;
+      }
+
+      // Si no existe el perfil (por ejemplo, si el usuario fue creado antes del trigger SQL), lo autocreamos
+      if (!userProfile && authData.user) {
+        console.log('Self-healing (Login): Creando perfil faltante para el usuario...');
+        const defaultProfile = {
+          id: authData.user.id,
+          username: authData.user.user_metadata?.username || username.trim(),
+          email: authData.user.email || '',
+          avatar: selectedCharacter,
+          streak: 3,
+          xp: 120,
+          level: 1,
+          daily_goal: 150,
+          level_title: 'Cajero Novato 🦉',
+          role: authData.user.user_metadata?.role || role,
+          gems: 40,
+          gems_earned_total: 40,
+          unlocked_skins: ['standard'],
+          active_skin: 'standard',
+          unlocked_badges: [],
+          completed_missions_today: []
+        };
+
+        const { data: newProfile, error: insertErr } = await supabase
+          .from('profiles')
+          .insert(defaultProfile)
+          .select()
+          .maybeSingle();
+
+        if (insertErr || !newProfile) {
+          setErrorMessage('Error al crear perfil de usuario faltante: ' + (insertErr?.message || 'Error desconocido'));
+          return;
+        }
+        userProfile = newProfile;
       }
 
       // Mapear de snake_case (BD) a camelCase (TypeScript User)
@@ -202,15 +237,50 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       }
 
       // Obtener el perfil completo creado
-      const { data: userProfile } = await supabase
+      let { data: userProfile, error: profileFetchErr } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', authUser.id)
-        .single();
+        .maybeSingle();
 
-      if (!userProfile) {
-        setErrorMessage('No se pudo inicializar tu perfil.');
+      if (profileFetchErr) {
+        setErrorMessage('Error al consultar perfil creado.');
         return;
+      }
+
+      // Si por alguna razón el trigger no insertó el perfil (o hubo retardo), lo creamos aquí
+      if (!userProfile) {
+        console.log('Self-healing (Register): Forzando la creación del perfil...');
+        const defaultProfile = {
+          id: authUser.id,
+          username: username.trim(),
+          email: email.trim(),
+          avatar: selectedCharacter,
+          streak: 1,
+          xp: 120,
+          level: 1,
+          daily_goal: 150,
+          level_title: 'Monolingüe Comercial 🦉',
+          role: role,
+          gems: 40,
+          gems_earned_total: 40,
+          unlocked_skins: ['standard'],
+          active_skin: 'standard',
+          unlocked_badges: [],
+          completed_missions_today: []
+        };
+
+        const { data: newProfile, error: insertErr } = await supabase
+          .from('profiles')
+          .insert(defaultProfile)
+          .select()
+          .maybeSingle();
+
+        if (insertErr || !newProfile) {
+          setErrorMessage('Error al forzar la creación del perfil: ' + (insertErr?.message || 'Error desconocido'));
+          return;
+        }
+        userProfile = newProfile;
       }
 
       const newUser: User = {
