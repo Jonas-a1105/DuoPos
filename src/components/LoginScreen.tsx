@@ -29,6 +29,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('DEBUG: handleLogin iniciado con usuario:', username.trim());
     if (!username.trim()) {
       setErrorMessage('¡Por favor ingresa tu usuario o correo!');
       return;
@@ -45,6 +46,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       
       // Si el input no es un correo directo (no tiene '@'), buscamos el correo en el perfil
       if (!emailToAuth.includes('@')) {
+        console.log('DEBUG: El usuario no es un correo. Buscando email asociado en perfiles para:', username.trim());
         const { data: profileData, error: profileErr } = await supabase
           .from('profiles')
           .select('email')
@@ -52,29 +54,37 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           .maybeSingle();
           
         if (profileErr) {
+          console.error('DEBUG: Error al buscar perfil por nombre de usuario:', profileErr);
           setErrorMessage('Error al buscar usuario: ' + profileErr.message);
           return;
         }
         
         if (!profileData) {
+          console.log('DEBUG: No se encontró perfil con el nombre de usuario:', username.trim());
           setErrorMessage('No se encontró ningún usuario con ese nombre.');
           return;
         }
         
         emailToAuth = profileData.email;
+        console.log('DEBUG: Email asociado encontrado:', emailToAuth);
       }
 
+      console.log('DEBUG: Intentando autenticación con Supabase Auth para email:', emailToAuth);
       const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
         email: emailToAuth,
         password: password
       });
 
       if (authErr) {
+        console.error('DEBUG: Error en Supabase Auth signInWithPassword:', authErr);
         setErrorMessage('Error de inicio de sesión: ' + authErr.message);
         return;
       }
 
+      console.log('DEBUG: Autenticación de Supabase exitosa. UID del usuario:', authData.user?.id);
+
       // Obtener el perfil completo de la base de datos
+      console.log('DEBUG: Buscando perfil en tabla "profiles" para UID:', authData.user?.id);
       let { data: userProfile, error: profileFetchErr } = await supabase
         .from('profiles')
         .select('*')
@@ -82,13 +92,16 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         .maybeSingle();
 
       if (profileFetchErr) {
+        console.error('DEBUG: Error obteniendo perfil de base de datos:', profileFetchErr);
         setErrorMessage('Error al obtener perfil de base de datos: ' + profileFetchErr.message);
         return;
       }
 
+      console.log('DEBUG: Perfil obtenido de base de datos:', userProfile);
+
       // Si no existe el perfil (por ejemplo, si el usuario fue creado antes del trigger SQL), lo autocreamos
       if (!userProfile && authData.user) {
-        console.log('Self-healing (Login): Creando perfil faltante para el usuario...');
+        console.log('DEBUG: Self-healing (Login): Creando perfil faltante para el usuario...');
         const defaultProfile = {
           id: authData.user.id,
           username: authData.user.user_metadata?.username || username.trim(),
@@ -108,6 +121,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           completed_missions_today: []
         };
 
+        console.log('DEBUG: Intentando insertar perfil por defecto:', defaultProfile);
         const { data: newProfile, error: insertErr } = await supabase
           .from('profiles')
           .insert(defaultProfile)
@@ -115,11 +129,16 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           .maybeSingle();
 
         if (insertErr || !newProfile) {
+          console.error('DEBUG: Error al auto-crear perfil en la BD:', insertErr);
           setErrorMessage('Error al crear perfil de usuario faltante: ' + (insertErr?.message || 'Error desconocido'));
           return;
         }
+        console.log('DEBUG: Auto-creación de perfil exitosa:', newProfile);
         userProfile = newProfile;
       }
+
+      console.log('DEBUG: Perfil final listo para iniciar sesión:', userProfile);
+
 
       // Mapear de snake_case (BD) a camelCase (TypeScript User)
       const user: User = {
