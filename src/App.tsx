@@ -9,7 +9,7 @@ import { DEFAULT_PRODUCTS, DUO_CHARACTERS, DEFAULT_CUSTOMERS, DEFAULT_BILLING_SE
 import LoginScreen from './components/LoginScreen';
 import LandingPage from './components/LandingPage';
 import { supabase, isSupabaseConfigured } from './utils/supabaseClient';
-import { syncLoad, syncSave, syncInsert, syncDelete, flushPendingQueue } from './utils/supabaseSync';
+import { syncLoad, syncSave, syncInsert, syncDelete, flushPendingQueue, generateUUID, syncInsertTransaction } from './utils/supabaseSync';
 
 import DashboardScreen from './components/DashboardScreen';
 import SalesScreen from './components/SalesScreen';
@@ -420,14 +420,19 @@ export default function App() {
     };
     loadProducts();
 
-
-    // 3. Load transactions
-    const savedTxnsRaw = localStorage.getItem('duo_pos_transactions');
-    if (savedTxnsRaw) {
-      setTransactions(JSON.parse(savedTxnsRaw));
-    } else {
-      setTransactions([]);
-    }
+    // 3. Load transactions (Local-First)
+    const loadTransactions = async () => {
+      try {
+        const loaded = await syncLoad<Transaction>('transactions', 'duo_pos_transactions', [], { orderBy: 'date', ascending: false });
+        setTransactions(loaded);
+      } catch {
+        const savedTxnsRaw = localStorage.getItem('duo_pos_transactions');
+        if (savedTxnsRaw) {
+          setTransactions(JSON.parse(savedTxnsRaw));
+        }
+      }
+    };
+    loadTransactions();
 
     // 4. Load install status
     const simInstallRaw = localStorage.getItem('duo_pos_sim_installed');
@@ -660,7 +665,7 @@ export default function App() {
   };
 
   // Inventory logic handlers
-  const handleAddProduct = (newProd: Omit<Product, 'id'>) => {
+  const handleAddProduct = async (newProd: Omit<Product, 'id'>) => {
     const defaultBStock = {
       'branch-centro': newProd.stock,
       'branch-central': newProd.stock * 3 + 40,
@@ -670,47 +675,58 @@ export default function App() {
 
     const formatted: Product = {
       ...newProd,
-      id: `prod-${Date.now()}`,
+      id: generateUUID(),
       branchesStock: defaultBStock
     };
     const updated = [formatted, ...products];
     setProducts(updated);
-    localStorage.setItem('duo_pos_products', JSON.stringify(updated));
+    
+    await syncInsert<Product>('products', 'duo_pos_products', updated, formatted);
+    
     toast.success(`Producto "${newProd.name}" creado con éxito.`, { title: 'Catálogo de Productos 📦' });
     
     // Reward with details creation XP!
     handleGrantXp(15);
   };
 
-  const handleUpdateProduct = (prod: Product) => {
+  const handleUpdateProduct = async (prod: Product) => {
+    let changedItem: Product | null = null;
     const updated = products.map(p => {
       if (p.id === prod.id) {
         const bStock = prod.branchesStock ? { ...prod.branchesStock } : (p.branchesStock ? { ...p.branchesStock } : {});
         bStock[activeBranchId] = prod.stock;
         
         const mainStock = activeBranchId === 'branch-centro' ? prod.stock : (bStock['branch-centro'] ?? p.stock);
-        return {
+        changedItem = {
           ...prod,
           branchesStock: bStock,
           stock: mainStock
         };
+        return changedItem;
       }
       return p;
     });
     setProducts(updated);
-    localStorage.setItem('duo_pos_products', JSON.stringify(updated));
+    
+    if (changedItem) {
+      await syncSave<Product>('products', 'duo_pos_products', updated, changedItem);
+    }
+    
     toast.success(`Producto "${prod.name}" fue actualizado correctamente.`, { title: 'Catálogo de Productos 📦' });
   };
 
-  const handleDeleteProduct = (id: string) => {
+  const handleDeleteProduct = async (id: string) => {
     const deletedName = products.find(p => p.id === id)?.name || '';
     const updated = products.filter(p => p.id !== id);
     setProducts(updated);
-    localStorage.setItem('duo_pos_products', JSON.stringify(updated));
+    
+    await syncDelete('products', 'duo_pos_products', updated, id);
+    
     toast.warning(`Producto ${deletedName ? `"${deletedName}"` : ''} eliminado del catálogo.`, { title: 'Catálogo de Productos 📦' });
   };
 
-  const handleDecreaseStock = (productId: string, qty: number) => {
+  const handleDecreaseStock = async (productId: string, qty: number) => {
+    let changedItem: Product | null = null;
     const updated = products.map(p => {
       if (p.id === productId) {
         const branchStock = p.branchesStock ? { ...p.branchesStock } : {};
@@ -719,20 +735,24 @@ export default function App() {
         
         // Also update standard stock attribute if activeBranch is 'branch-centro'
         const mainStock = activeBranchId === 'branch-centro' ? Math.max(0, currentBranchStock - qty) : p.stock;
-        return { 
+        changedItem = { 
           ...p, 
           branchesStock: branchStock,
           stock: mainStock
         };
+        return changedItem;
       }
       return p;
     });
     setProducts(updated);
-    localStorage.setItem('duo_pos_products', JSON.stringify(updated));
+    
+    if (changedItem) {
+      await syncSave<Product>('products', 'duo_pos_products', updated, changedItem);
+    }
   };
 
   // Customer handlers
-  const handleAddCustomer = (newCust: Omit<Customer, 'id' | 'registeredAt' | 'purchasesCount' | 'totalSpent' | 'gems' | 'league'>) => {
+  const handleAddCustomer = async (newCust: Omit<Customer, 'id' | 'registeredAt' | 'purchasesCount' | 'totalSpent' | 'gems' | 'league'>) => {
     if (customers.length >= licenseDetails.clientLimit) {
       playSound('error');
       toast.error(`Has completado el límite para el plan actual (${licenseDetails.clientLimit} clientes). Para registrar más clientes leales, actualiza tu licencia en Ajustes > Planes.`, {
@@ -744,7 +764,7 @@ export default function App() {
 
     const formatted: Customer = {
       ...newCust,
-      id: `cust-${Date.now()}`,
+      id: generateUUID(),
       registeredAt: new Date().toISOString(),
       purchasesCount: 0,
       totalSpent: 0,
@@ -753,7 +773,8 @@ export default function App() {
     };
     const updated = [formatted, ...customers];
     setCustomers(updated);
-    localStorage.setItem('duo_pos_customers', JSON.stringify(updated));
+    
+    await syncInsert<Customer>('customers', 'duo_pos_customers', updated, formatted);
     
     // Increment daily customer registry counts for gamification
     try {
@@ -767,8 +788,9 @@ export default function App() {
     toast.success(`Cliente "${newCust.name}" registrado correctamente en Duo Loyalty. 🎉`, { title: 'Panel de Clientes 👥' });
   };
 
-  const handleUpdateCustomer = (cust: Customer) => {
+  const handleUpdateCustomer = async (cust: Customer) => {
     const previousCust = customers.find(c => c.id === cust.id);
+    let changedItem: Customer | null = null;
     const updated = customers.map(c => {
       if (c.id === cust.id) {
         // Dynamic league upgrade based on totalSpent
@@ -788,22 +810,30 @@ export default function App() {
           }, 300);
         }
 
-        return { ...cust, league: newLeague };
+        changedItem = { ...cust, league: newLeague };
+        return changedItem;
       }
       return c;
     });
     setCustomers(updated);
-    localStorage.setItem('duo_pos_customers', JSON.stringify(updated));
+    
+    if (changedItem) {
+      await syncSave<Customer>('customers', 'duo_pos_customers', updated, changedItem);
+    }
+    
     toast.success(`Datos de "${cust.name}" actualizados con éxito.`, { title: 'Panel de Clientes 👥' });
   };
 
-  const handleDeleteCustomer = (id: string) => {
+  const handleDeleteCustomer = async (id: string) => {
     const deletedName = customers.find(c => c.id === id)?.name || '';
     const updated = customers.filter(c => c.id !== id);
     setCustomers(updated);
-    localStorage.setItem('duo_pos_customers', JSON.stringify(updated));
+    
+    await syncDelete('customers', 'duo_pos_customers', updated, id);
+    
     toast.warning(`Cliente ${deletedName ? `"${deletedName}"` : ''} eliminado de los registros.`, { title: 'Panel de Clientes 👥' });
   };
+
 
   const handleSaveBillingSettings = (updated: LegalBillingSettings) => {
     setBillingSettings(updated);
@@ -816,7 +846,7 @@ export default function App() {
   };
 
   // Transactions logic handlers
-  const handleAddTransaction = (txn: Transaction) => {
+  const handleAddTransaction = async (txn: Transaction) => {
     if (transactions.length >= licenseDetails.salesLimit) {
       playSound('error');
       toast.error(`Has completado el límite para el plan actual (${licenseDetails.salesLimit} ventas). Para seguir procesando transacciones, actualiza tu licencia en Ajustes > Planes.`, {
@@ -833,7 +863,8 @@ export default function App() {
     };
     const updatedTxns = [txnWithBranch, ...transactions];
     setTransactions(updatedTxns);
-    localStorage.setItem('duo_pos_transactions', JSON.stringify(updatedTxns));
+    
+    await syncInsertTransaction(txnWithBranch, updatedTxns);
 
     // Increment billingSettings invoice sequence if transaction has invoiceData
     if (txn.invoiceData && billingSettings) {
@@ -881,7 +912,7 @@ export default function App() {
           if (txn.paymentMethod === 'credit') {
             creditUsed = Number((creditUsed + txn.total).toFixed(2));
             creditHistory.unshift({
-              id: `chhist-${Date.now()}-${Math.floor(Math.random()*1000)}`,
+              id: generateUUID(),
               amount: txn.total,
               type: 'charge',
               date: new Date().toISOString(),
@@ -904,8 +935,13 @@ export default function App() {
         return c;
       });
       setCustomers(updatedCustList);
-      localStorage.setItem('duo_pos_customers', JSON.stringify(updatedCustList));
+      
+      const changedCust = updatedCustList.find(c => c.id === txn.customerId);
+      if (changedCust) {
+        await syncSave<Customer>('customers', 'duo_pos_customers', updatedCustList, changedCust);
+      }
     }
+
 
     // Update active cash shift diagnostics if active
     if (activeShift) {
