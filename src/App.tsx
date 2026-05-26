@@ -106,9 +106,13 @@ export default function App() {
   
   // Multi-Sucursal, Multi-Caja & Almacén Central (CEDIS) State Managers
   const [branches, setBranches] = useState<Branch[]>([]);
-  const [activeBranchId, setActiveBranchId] = useState<string>('branch-centro');
+  const [activeBranchId, setActiveBranchId] = useState<string>(() => {
+    return localStorage.getItem('duo_pos_active_branch_id') || 'branch-centro';
+  });
   const [registers, setRegisters] = useState<CashRegister[]>([]);
-  const [activeRegisterId, setActiveRegisterId] = useState<string>('reg-centro-1');
+  const [activeRegisterId, setActiveRegisterId] = useState<string>(() => {
+    return localStorage.getItem('duo_pos_active_register_id') || 'reg-centro-1';
+  });
   const [stockTransfers, setStockTransfers] = useState<StockTransfer[]>([]);
   const [billingSettings, setBillingSettings] = useState<LegalBillingSettings>({
     taxName: 'IVA',
@@ -337,32 +341,40 @@ export default function App() {
           console.error('Unexpected error in auth observer:', err);
         }
       } else {
-        // Only clear if we aren't signed in as the simulated admin account
-        const activeUserRaw = localStorage.getItem('duo_pos_active_user');
-        if (activeUserRaw) {
-          try {
-            const parsed = JSON.parse(activeUserRaw);
-            // Conservar usuarios locales (prefix local-) y admin, solo limpiar usuarios de Supabase real
-            if (!parsed.id.startsWith('local-') && parsed.id !== 'user-admin') {
+        // Si estamos offline, no cerrar sesión automáticamente; conservar la sesión local
+        if (!navigator.onLine) {
+          console.log("🌐 [OFFLINE AUTH] Detectado modo offline. Conservando sesión local de Supabase.");
+          return;
+        }
+
+        // Si el evento es explícito de salida o si realmente estamos online y la sesión caducó
+        if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && navigator.onLine)) {
+          const activeUserRaw = localStorage.getItem('duo_pos_active_user');
+          if (activeUserRaw) {
+            try {
+              const parsed = JSON.parse(activeUserRaw);
+              // Conservar usuarios locales (prefix local-) y admin, solo limpiar usuarios de Supabase real
+              if (!parsed.id.startsWith('local-') && parsed.id !== 'user-admin') {
+                setUser(null);
+                setShowLanding(true);
+                localStorage.removeItem('duo_pos_active_user');
+              }
+            } catch {
               setUser(null);
               setShowLanding(true);
               localStorage.removeItem('duo_pos_active_user');
             }
-          } catch {
-            setUser(null);
-            setShowLanding(true);
-            localStorage.removeItem('duo_pos_active_user');
           }
-        }
-        // Limpiar tokens de sesión Supabase caducados para evitar bucles de evento
-        const keysToRemove: string[] = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith('sb-')) {
-            keysToRemove.push(key);
+          // Limpiar tokens de sesión Supabase caducados para evitar bucles de evento
+          const keysToRemove: string[] = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('sb-')) {
+              keysToRemove.push(key);
+            }
           }
+          keysToRemove.forEach(key => localStorage.removeItem(key));
         }
-        keysToRemove.forEach(key => localStorage.removeItem(key));
       }
     });
 
@@ -408,9 +420,13 @@ export default function App() {
         syncLoad<Transaction>('transactions', 'duo_pos_transactions', [], { orderBy: 'date', ascending: false }).then(setTransactions),
         syncLoad<Customer>('customers', 'duo_pos_customers', []).then(setCustomers),
         syncLoad<CashShift>('cash_shifts', 'duo_pos_shift_history', [], { orderBy: 'opening_time', ascending: false }).then(loaded => {
-          const active = loaded.find(s => s.status === 'open');
-          if (active) setActiveShift(active);
-          setShiftHistory(loaded.filter(s => s.status === 'closed'));
+          const active = loaded.find(s => s.status === 'open' && s.branchId === activeBranchId && s.registerId === activeRegisterId);
+          if (active) {
+            setActiveShift(active);
+          } else {
+            setActiveShift(null);
+          }
+          setShiftHistory(loaded.filter(s => s.status === 'closed' && s.branchId === activeBranchId && s.registerId === activeRegisterId));
         }),
         syncLoad<Branch>('branches', 'duo_pos_branches', []).then(setBranches),
         syncLoad<CashRegister>('cash_registers', 'duo_pos_registers', []).then(setRegisters),
@@ -518,33 +534,7 @@ export default function App() {
       setShowInstallBanner(false);
     }
 
-    // 5. Load Active shift and Shift history (Local-First)
-    const loadShifts = async () => {
-      try {
-        const loaded = await syncLoad<CashShift>('cash_shifts', 'duo_pos_shift_history', [], { orderBy: 'opening_time', ascending: false });
-        const active = loaded.find(s => s.status === 'open');
-        if (active) {
-          setActiveShift(active);
-        } else {
-          const activeShiftRaw = localStorage.getItem('duo_pos_active_shift');
-          if (activeShiftRaw) {
-            setActiveShift(JSON.parse(activeShiftRaw));
-          }
-        }
-        const closed = loaded.filter(s => s.status === 'closed');
-        setShiftHistory(closed);
-      } catch {
-        const activeShiftRaw = localStorage.getItem('duo_pos_active_shift');
-        if (activeShiftRaw) {
-          setActiveShift(JSON.parse(activeShiftRaw));
-        }
-        const shiftHistoryRaw = localStorage.getItem('duo_pos_shift_history');
-        if (shiftHistoryRaw) {
-          setShiftHistory(JSON.parse(shiftHistoryRaw));
-        }
-      }
-    };
-    loadShifts();
+
 
     // 6. Load customers (Local-First)
     const loadCustomers = async () => {
@@ -656,6 +646,55 @@ export default function App() {
     // 11. Sincronizar operaciones pendientes offline
     flushPendingQueue();
   }, []);
+
+  // Recargar turno activo e historial cuando se cambia de sucursal o de caja registradora
+  useEffect(() => {
+    const reloadShiftsForCurrentRegister = async () => {
+      try {
+        const loaded = await syncLoad<CashShift>('cash_shifts', 'duo_pos_shift_history', [], { orderBy: 'opening_time', ascending: false });
+        
+        const active = loaded.find(s => s.status === 'open' && s.branchId === activeBranchId && s.registerId === activeRegisterId);
+        if (active) {
+          setActiveShift(active);
+        } else {
+          const activeShiftRaw = localStorage.getItem('duo_pos_active_shift');
+          if (activeShiftRaw) {
+            const parsed = JSON.parse(activeShiftRaw);
+            if (parsed.branchId === activeBranchId && parsed.registerId === activeRegisterId) {
+              setActiveShift(parsed);
+            } else {
+              setActiveShift(null);
+            }
+          } else {
+            setActiveShift(null);
+          }
+        }
+        
+        const closed = loaded.filter(s => s.status === 'closed' && s.branchId === activeBranchId && s.registerId === activeRegisterId);
+        setShiftHistory(closed);
+      } catch {
+        const activeShiftRaw = localStorage.getItem('duo_pos_active_shift');
+        if (activeShiftRaw) {
+          const parsed = JSON.parse(activeShiftRaw);
+          if (parsed.branchId === activeBranchId && parsed.registerId === activeRegisterId) {
+            setActiveShift(parsed);
+          } else {
+            setActiveShift(null);
+          }
+        } else {
+          setActiveShift(null);
+        }
+        
+        const shiftHistoryRaw = localStorage.getItem('duo_pos_shift_history');
+        if (shiftHistoryRaw) {
+          const parsedHistory: CashShift[] = JSON.parse(shiftHistoryRaw);
+          setShiftHistory(parsedHistory.filter(s => s.branchId === activeBranchId && s.registerId === activeRegisterId));
+        }
+      }
+    };
+    
+    reloadShiftsForCurrentRegister();
+  }, [activeBranchId, activeRegisterId]);
 
   // Guard the active Tab if active user role changes
   useEffect(() => {

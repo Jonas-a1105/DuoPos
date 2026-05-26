@@ -445,7 +445,26 @@ export async function syncLoad<T>(
       const { data, error } = await query;
 
       if (!error && data) {
-        const mappedData = data.map(sanitizeAndMap);
+        let mappedData = data.map(sanitizeAndMap);
+
+        // Fusión inteligente con la cola de operaciones pendientes localmente
+        const localPending = getPendingQueue().filter(op => op.table === table);
+        if (localPending.length > 0) {
+          localPending.forEach(op => {
+            if (op.action === 'delete') {
+              const deleteId = op.data.id || op.data[Object.keys(op.data)[0]];
+              mappedData = mappedData.filter((item: any) => item.id !== deleteId);
+            } else {
+              const pendingMapped = sanitizeAndMap(op.data) as any;
+              const index = mappedData.findIndex((item: any) => item.id === pendingMapped.id);
+              if (index >= 0) {
+                mappedData[index] = { ...mappedData[index], ...pendingMapped };
+              } else {
+                mappedData.push(pendingMapped);
+              }
+            }
+          });
+        }
         
         // Si estamos cargando clientes, intentar también precargar creditHistory de Supabase
         if (table === 'customers') {
@@ -993,12 +1012,10 @@ export async function flushPendingQueue(): Promise<{ synced: number; failed: num
       let error: any = null;
 
       if (op.action === 'upsert') {
-        const dbData = mapToDbRecord(op.table, op.data);
-        const res = await supabase.from(op.table).upsert(dbData);
+        const res = await supabase.from(op.table).upsert(op.data);
         error = res.error;
       } else if (op.action === 'insert') {
-        const dbData = mapToDbRecord(op.table, op.data);
-        const res = await supabase.from(op.table).insert(dbData);
+        const res = await supabase.from(op.table).insert(op.data);
         error = res.error;
       } else if (op.action === 'delete') {
         const idField = Object.keys(op.data)[0];
