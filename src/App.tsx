@@ -26,7 +26,7 @@ import { playSound } from './utils/sounds';
 import { HardwareDeviceSettings, DEFAULT_HARDWARE_SETTINGS } from './utils/hardware';
 import HardwareHubModal from './components/HardwareHubModal';
 import { FlashNotifications, toast } from './components/FlashNotifications';
-import { LicenseDetails, validateLicenseKey, generateHardwareFingerprint, PLANS } from './utils/licensing';
+import { LicenseDetails, validateLicenseKeyOnline, generateHardwareFingerprint, PLANS } from './utils/licensing';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -182,9 +182,9 @@ export default function App() {
     });
   }, [transactions.length]);
 
-  const handleActivateLicenseKey = (key: string) => {
+  const handleActivateLicenseKey = async (key: string, companyName?: string) => {
     const seed = licenseDetails.offlineActivationSeed;
-    const res = validateLicenseKey(key, seed);
+    const res = await validateLicenseKeyOnline(key, seed, companyName);
     if (res.valid) {
       const plan = PLANS[res.tier];
       const updated: LicenseDetails = {
@@ -195,14 +195,15 @@ export default function App() {
         expiresAt: 'Nunca',
         clientLimit: plan.clientLimit,
         salesLimit: plan.salesLimit,
-        activatedAt: new Date().toISOString()
+        activatedAt: new Date().toISOString(),
+        companyName: companyName || ''
       };
       setLicenseDetails(updated);
       try {
         localStorage.setItem('duo_pos_licensing_details', JSON.stringify(updated));
       } catch (err) {}
       playSound('levelup');
-      return { success: true, message: `¡Licencia activada con éxito!\nFelicidades, tu DuoPOS ahora tiene el plan [${plan.name}] activo en este terminal offline.` };
+      return { success: true, message: `¡Licencia activada con éxito!\nFelicidades, tu DuoPOS ahora tiene el plan [${plan.name}] activo en este terminal.` };
     } else {
       return { success: false, message: res.error || 'La llave ingresada es inválida.' };
     }
@@ -2079,6 +2080,7 @@ export default function App() {
               onResetLicenseToFree={handleResetLicenseToFree}
               appVersion={appVersion}
               onUpdateAppVersion={handleUpdateAppVersion}
+              user={user}
             />
           )}
 

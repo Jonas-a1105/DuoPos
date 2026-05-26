@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
-import { LegalBillingSettings, TaxCategoryOverride } from '../types';
+import { LegalBillingSettings, TaxCategoryOverride, User } from '../types';
 import { Percent, FileText, Building2, Receipt, ShieldCheck, Save, HelpCircle, Sparkles, Plus, Trash2, Key, Info, CheckCircle2, Sliders, Volume2, ChefHat, ShoppingBag, Briefcase, Trophy, Award, Zap, ShieldAlert, Cpu, Laptop, Check, RefreshCw, Database, Globe } from 'lucide-react';
 import { playSound } from '../utils/sounds';
-import { LicenseDetails, PLANS, generateKeyForFingerprint, SubscriptionTier } from '../utils/licensing';
+import { toast } from './FlashNotifications';
+import { LicenseDetails, PLANS, SubscriptionTier, createLicenseOnline, revokeLicenseOnline, listLicensesOnline } from '../utils/licensing';
 
 interface SettingsScreenProps {
   settings: LegalBillingSettings;
   onSaveSettings: (settings: LegalBillingSettings) => void;
   onGrantXp: (amount: number) => void;
   licenseDetails: LicenseDetails;
-  onActivateLicenseKey: (key: string) => { success: boolean; message: string };
+  onActivateLicenseKey: (key: string, companyName?: string) => Promise<{ success: boolean; message: string }>;
   onResetLicenseToFree: () => void;
   appVersion: string;
   onUpdateAppVersion: (newVersion: string) => void;
+  user: User | null;
 }
 
 export default function SettingsScreen({
@@ -23,10 +25,34 @@ export default function SettingsScreen({
   onActivateLicenseKey,
   onResetLicenseToFree,
   appVersion,
-  onUpdateAppVersion
+  onUpdateAppVersion,
+  user
 }: SettingsScreenProps) {
   const [activeSubTab, setActiveSubTab] = useState<'taxes' | 'company' | 'sequence' | 'app' | 'license' | 'updates'>('license');
   const [compilationWrapper, setCompilationWrapper] = useState<'tauri' | 'electron' | 'capacitor'>('tauri');
+  
+  // Licensing Admin Panel States
+  const [licenses, setLicenses] = useState<any[]>([]);
+  const [loadingLicenses, setLoadingLicenses] = useState(false);
+  const [adminNotes, setAdminNotes] = useState('');
+  const [adminTier, setAdminTier] = useState<SubscriptionTier>('standard');
+  const [isValidatingLicense, setIsValidatingLicense] = useState(false);
+  
+  const fetchLicenses = async () => {
+    if (user?.role !== 'admin') return;
+    setLoadingLicenses(true);
+    const res = await listLicensesOnline();
+    if (res.success && res.data) {
+      setLicenses(res.data);
+    }
+    setLoadingLicenses(false);
+  };
+
+  React.useEffect(() => {
+    if (activeSubTab === 'license' && user?.role === 'admin') {
+      fetchLicenses();
+    }
+  }, [activeSubTab, user?.role]);
   
   // Local states for inputs
   const [taxName, setTaxName] = useState(settings.taxName);
@@ -1324,7 +1350,7 @@ export default function SettingsScreen({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
                     <div className="md:col-span-2 space-y-1">
                       <label className="text-[10px] uppercase font-black text-slate-500 tracking-wider block">
-                        Ingresa la Llave de Activación Offline (Licencia)
+                        Ingresa la Llave de Activación Online (Licencia)
                       </label>
                       <input
                         id="activation-key-input"
@@ -1337,24 +1363,33 @@ export default function SettingsScreen({
                     <div className="flex gap-2">
                       <button
                         type="button"
-                        onClick={() => {
+                        disabled={isValidatingLicense}
+                        onClick={async () => {
                           const val = (document.getElementById('activation-key-input') as HTMLInputElement)?.value;
                           if (!val) {
                             playSound('error');
                             alert('Por favor ingresa un código.');
                             return;
                           }
-                          const res = onActivateLicenseKey(val);
-                          if (res.success) {
-                            onGrantXp(200);
-                          } else {
+                          setIsValidatingLicense(true);
+                          try {
+                            const res = await onActivateLicenseKey(val, companyName);
+                            if (res.success) {
+                              onGrantXp(200);
+                            } else {
+                              playSound('error');
+                            }
+                            alert(res.message);
+                          } catch (err: any) {
                             playSound('error');
+                            alert(`Error de activación: ${err.message || err}`);
+                          } finally {
+                            setIsValidatingLicense(false);
                           }
-                          alert(res.message);
                         }}
-                        className="flex-1 py-2.5 bg-amber-550 bg-amber-500 text-white border-b-4 border-amber-700 hover:bg-amber-400 active:border-b-0 active:translate-y-1 rounded-xl text-center uppercase font-black text-xs cursor-pointer select-none"
+                        className="flex-1 py-2.5 bg-amber-500 text-white border-b-4 border-amber-700 hover:bg-amber-400 active:border-b-0 active:translate-y-1 rounded-xl text-center uppercase font-black text-xs cursor-pointer select-none disabled:opacity-50"
                       >
-                        Validar y Activar
+                        {isValidatingLicense ? 'Validando...' : 'Validar y Activar'}
                       </button>
 
                       {licenseDetails.activated && (
@@ -1378,45 +1413,164 @@ export default function SettingsScreen({
                   </div>
                 </div>
 
-                {/* DEMO KEY GENERATOR COMPONENT */}
-                <div className="bg-[#eff6ff] border border-blue-200 rounded-2xl p-4 space-y-3 mt-2">
-                  <div className="flex items-center gap-1.5">
-                    <Sparkles size={16} className="text-blue-500" />
-                    <span className="text-xs font-black text-blue-950 uppercase tracking-wide">
-                      🔧 Generador Demostrativo de Llaves Offline (Simulador de Compra)
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-blue-700 font-semibold leading-relaxed">
-                    Dado que estás en modo de prueba local, puedes emular una compra exitosa generando una clave matemática offline que corresponde exactamente al hardware fingerprint de esta máquina. Selecciona un plan para auto-completar e instalar la licencia:
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1.5">
-                    {[
-                      { id: 'standard', name: 'Standard ⚡', color: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' },
-                      { id: 'pro', name: 'Pro 🏆', color: 'bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100' }
-                    ].map(btn => (
+                {/* ADMIN LICENSING PANEL (ONLY FOR ADMINS) */}
+                {user?.role === 'admin' && (
+                  <div className="bg-indigo-50/50 border-2 border-indigo-200 rounded-2xl p-4 space-y-4 mt-2">
+                    <div className="flex items-center justify-between border-b border-indigo-250 pb-2">
+                      <div className="flex items-center gap-1.5">
+                        <Key size={16} className="text-indigo-600 animate-pulse" />
+                        <span className="text-xs font-black text-indigo-950 uppercase tracking-wide">
+                          🔑 Control de Licencias SaaS (Solo Admin)
+                        </span>
+                      </div>
                       <button
-                        key={btn.id}
                         type="button"
-                        onClick={() => {
-                          const compiledKey = generateKeyForFingerprint(btn.id as SubscriptionTier, licenseDetails.offlineActivationSeed);
-                          const inputEl = document.getElementById('activation-key-input') as HTMLInputElement;
-                          if (inputEl) {
-                            inputEl.value = compiledKey;
-                          }
-                          // trigger auto activation
-                          const res = onActivateLicenseKey(compiledKey);
+                        onClick={fetchLicenses}
+                        disabled={loadingLicenses}
+                        className="flex items-center gap-1 text-[9px] font-black uppercase text-indigo-700 bg-indigo-100 hover:bg-indigo-200 px-2.5 py-1 rounded-lg transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        <RefreshCw size={10} className={loadingLicenses ? 'animate-spin' : ''} />
+                        Actualizar
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end bg-white border border-indigo-100 p-3 rounded-xl">
+                      <div className="space-y-1">
+                        <label className="text-[9px] uppercase font-black text-indigo-800 tracking-wider block">
+                          Nivel de Plan
+                        </label>
+                        <select
+                          value={adminTier}
+                          onChange={(e) => setAdminTier(e.target.value as SubscriptionTier)}
+                          className="w-full text-xs font-bold px-3 py-2 bg-slate-50 border border-gray-300 rounded-lg outline-none focus:border-indigo-500"
+                        >
+                          <option value="standard">Plan Standard (⚡)</option>
+                          <option value="pro">Plan Pro (🏆)</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[9px] uppercase font-black text-indigo-800 tracking-wider block">
+                          Cliente / Notas Internas
+                        </label>
+                        <input
+                          type="text"
+                          value={adminNotes}
+                          onChange={(e) => setAdminNotes(e.target.value)}
+                          placeholder="Ej: Inversiones C.A."
+                          className="w-full text-xs font-bold px-3 py-2 bg-slate-50 border border-gray-300 rounded-lg outline-none focus:border-indigo-500"
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const res = await createLicenseOnline(adminTier, adminNotes);
                           if (res.success) {
-                            onGrantXp(200);
-                            alert(`🤖 LLAVE DEMO DETECTADA Y VALIDADA:\n\nTu aplicación local DuoPOS ha sido actualizada exitosamente al plan [${PLANS[btn.id as SubscriptionTier].name}]. Las restricciones del almacén y del CRM de clientes han sido reajustadas.`);
+                            setAdminNotes('');
+                            playSound('levelup');
+                            fetchLicenses();
+                            alert(`Licencia creada con éxito en Supabase:\n\n${res.data?.license_key}`);
+                          } else {
+                            playSound('error');
+                            alert(`Error: ${res.error}`);
                           }
                         }}
-                        className={`py-2 px-3 border rounded-xl text-[10px] font-black uppercase text-center cursor-pointer transition-all ${btn.color}`}
+                        className="w-full py-2 bg-indigo-600 text-white hover:bg-indigo-500 rounded-lg text-center uppercase font-black text-xs cursor-pointer select-none transition-all"
                       >
-                        Generar e Instalar {btn.name}
+                        Generar Licencia
                       </button>
-                    ))}
+                    </div>
+
+                    <div className="space-y-2">
+                      <span className="text-[9px] uppercase font-black text-indigo-800 tracking-wider block">
+                        Llaves en Base de Datos ({licenses.length})
+                      </span>
+                      
+                      {loadingLicenses ? (
+                        <div className="text-center py-4 text-xs text-indigo-600 font-bold uppercase tracking-wider animate-pulse">
+                          Cargando...
+                        </div>
+                      ) : licenses.length === 0 ? (
+                        <div className="text-center py-4 text-xs text-gray-400 font-medium bg-white border border-dashed rounded-xl">
+                          No hay llaves registradas.
+                        </div>
+                      ) : (
+                        <div className="max-h-48 overflow-y-auto border rounded-xl bg-white divide-y">
+                          {licenses.map((lic) => (
+                            <div key={lic.id} className="p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-slate-50 transition-all text-[11px]">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-mono font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border select-all">
+                                    {lic.license_key}
+                                  </span>
+                                  <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md ${
+                                    lic.tier === 'pro' 
+                                      ? 'bg-violet-100 text-violet-800' 
+                                      : 'bg-emerald-100 text-emerald-800'
+                                  }`}>
+                                    {lic.tier}
+                                  </span>
+                                  <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md ${
+                                    lic.status === 'available'
+                                      ? 'bg-green-100 text-green-800'
+                                      : lic.status === 'activated'
+                                      ? 'bg-sky-100 text-sky-800'
+                                      : 'bg-red-100 text-red-800'
+                                  }`}>
+                                    {lic.status === 'available' ? 'disponible' : lic.status === 'activated' ? 'activa' : 'revocada'}
+                                  </span>
+                                </div>
+                                {lic.notes && (
+                                  <div className="text-[10px] text-gray-500 font-semibold">
+                                    Notas: {lic.notes}
+                                  </div>
+                                )}
+                                {lic.status === 'activated' && (
+                                  <div className="text-[9px] text-slate-500 font-bold uppercase leading-none">
+                                    Activo en: <span className="font-mono text-gray-700">{lic.activated_by}</span> {lic.company_name ? `(${lic.company_name})` : ''}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(lic.license_key);
+                                    toast.success('Clave copiada al portapapeles.');
+                                  }}
+                                  className="px-2 py-1 border border-indigo-200 text-indigo-700 hover:bg-indigo-50 rounded-md font-black text-[9px] uppercase cursor-pointer"
+                                >
+                                  Copiar
+                                </button>
+                                {lic.status !== 'revoked' && (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      if (confirm(`¿Estás seguro de que deseas revocar la licencia ${lic.license_key}?`)) {
+                                        const res = await revokeLicenseOnline(lic.license_key);
+                                        if (res.success) {
+                                          fetchLicenses();
+                                          toast.success('Licencia revocada.');
+                                        } else {
+                                          alert(`Error: ${res.error}`);
+                                        }
+                                      }
+                                    }}
+                                    className="px-2 py-1 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-md font-black text-[9px] uppercase cursor-pointer"
+                                  >
+                                    Revocar
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* DETAILED COMPARATIVE PLANS GRID */}
@@ -1481,18 +1635,14 @@ export default function SettingsScreen({
                             <button
                               type="button"
                               onClick={() => {
-                                const compiledKey = generateKeyForFingerprint(key, licenseDetails.offlineActivationSeed);
-                                const inputEl = document.getElementById('activation-key-input') as HTMLInputElement;
+                                alert(`Para actualizar tu negocio al plan ${plan.name}, por favor adquiere una llave de licencia válida con tu administrador y regístrala en el formulario de arriba.`);
+                                const inputEl = document.getElementById('activation-key-input');
                                 if (inputEl) {
-                                  inputEl.value = compiledKey;
-                                }
-                                const res = onActivateLicenseKey(compiledKey);
-                                if (res.success) {
-                                  onGrantXp(200);
-                                  alert(`¡Plan actualizado con éxito al código demo de ${plan.name}!`);
+                                  inputEl.scrollIntoView({ behavior: 'smooth' });
+                                  inputEl.focus();
                                 }
                               }}
-                              className="w-full py-1.5 bg-gray-50 border border-gray-250 hover:bg-gray-100 text-gray-700 rounded-xl font-black text-[9px] uppercase text-center block transition-all"
+                              className="w-full py-1.5 bg-indigo-50 border border-indigo-250 hover:bg-indigo-100 text-indigo-700 rounded-xl font-black text-[9px] uppercase text-center block transition-all cursor-pointer"
                             >
                               Mejorar a este nivel
                             </button>
