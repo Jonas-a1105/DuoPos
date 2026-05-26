@@ -4,12 +4,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { User, Product, Transaction, CashShift, CashMovement, Customer, LegalBillingSettings, Branch, CashRegister, StockTransfer } from './types';
+import { User, Product, Transaction, CashShift, CashMovement, Customer, LegalBillingSettings, Branch, CashRegister, StockTransfer, Supplier, PurchaseOrder } from './types';
 import { DEFAULT_PRODUCTS, DUO_CHARACTERS, DEFAULT_CUSTOMERS, DEFAULT_BILLING_SETTINGS } from './initialData';
 import LoginScreen from './components/LoginScreen';
 import LandingPage from './components/LandingPage';
 import { supabase, isSupabaseConfigured } from './utils/supabaseClient';
-import { syncLoad, syncSave, syncInsert, syncDelete, flushPendingQueue, generateUUID, syncInsertTransaction, syncSaveShift, syncSaveStockTransfer } from './utils/supabaseSync';
+import { syncLoad, syncSave, syncInsert, syncDelete, flushPendingQueue, generateUUID, syncInsertTransaction, syncSaveShift, syncSaveStockTransfer, syncSavePurchaseOrder } from './utils/supabaseSync';
 
 import DashboardScreen from './components/DashboardScreen';
 import SalesScreen from './components/SalesScreen';
@@ -34,6 +34,8 @@ export default function App() {
   const [products, setProducts] = useState<Product[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'sales' | 'shifts' | 'inventory' | 'history' | 'customers' | 'settings' | 'logistics' | 'gamification'>('dashboard');
   
   // Real-time Venezuelan Exchange rates state (ve.dolarapi.com)
@@ -431,6 +433,8 @@ export default function App() {
         syncLoad<Branch>('branches', 'duo_pos_branches', []).then(setBranches),
         syncLoad<CashRegister>('cash_registers', 'duo_pos_registers', []).then(setRegisters),
         syncLoad<StockTransfer>('stock_transfers', 'duo_pos_stock_transfers', [], { orderBy: 'created_at', ascending: false }).then(setStockTransfers),
+        syncLoad<Supplier>('suppliers', 'duo_pos_suppliers', []).then(setSuppliers),
+        syncLoad<PurchaseOrder>('purchase_orders', 'duo_pos_purchase_orders', [], { orderBy: 'created_at', ascending: false }).then(setPurchaseOrders),
       ]);
 
       const synced = results.filter(r => r.status === 'fulfilled').length;
@@ -642,8 +646,35 @@ export default function App() {
     };
     loadTransfers();
 
+    // 11. Load suppliers (Local-First)
+    const loadSuppliers = async () => {
+      try {
+        const loaded = await syncLoad<Supplier>('suppliers', 'duo_pos_suppliers', []);
+        setSuppliers(loaded);
+      } catch {
+        const savedSuppliersRaw = localStorage.getItem('duo_pos_suppliers');
+        if (savedSuppliersRaw) {
+          setSuppliers(JSON.parse(savedSuppliersRaw));
+        }
+      }
+    };
+    loadSuppliers();
 
-    // 11. Sincronizar operaciones pendientes offline
+    // 12. Load purchase orders (Local-First)
+    const loadPurchaseOrders = async () => {
+      try {
+        const loaded = await syncLoad<PurchaseOrder>('purchase_orders', 'duo_pos_purchase_orders', [], { orderBy: 'created_at', ascending: false });
+        setPurchaseOrders(loaded);
+      } catch {
+        const savedOrdersRaw = localStorage.getItem('duo_pos_purchase_orders');
+        if (savedOrdersRaw) {
+          setPurchaseOrders(JSON.parse(savedOrdersRaw));
+        }
+      }
+    };
+    loadPurchaseOrders();
+
+    // 13. Sincronizar operaciones pendientes offline
     flushPendingQueue();
   }, []);
 
@@ -1027,6 +1058,184 @@ export default function App() {
     allSettings.push(newRow);
 
     await syncSave<{ id: string; data: any }>('settings', 'duo_pos_settings', allSettings, newRow);
+  };
+
+  // Suppliers and Purchase Orders handlers
+  const handleAddSupplier = async (supplierData: Omit<Supplier, 'id' | 'balance'>) => {
+    const formatted: Supplier = {
+      ...supplierData,
+      id: `sup-${Date.now()}`,
+      balance: 0
+    };
+    const updated = [formatted, ...suppliers];
+    setSuppliers(updated);
+    await syncInsert<Supplier>('suppliers', 'duo_pos_suppliers', updated, formatted);
+    toast.success(`Proveedor "${formatted.name}" agregado con éxito.`, { title: 'Gestión de Proveedores 🚚' });
+  };
+
+  const handleUpdateSupplier = async (supplier: Supplier) => {
+    const updated = suppliers.map(s => s.id === supplier.id ? supplier : s);
+    setSuppliers(updated);
+    await syncSave<Supplier>('suppliers', 'duo_pos_suppliers', updated, supplier);
+    toast.success(`Proveedor "${supplier.name}" actualizado correctamente.`, { title: 'Gestión de Proveedores 🚚' });
+  };
+
+  const handleDeleteSupplier = async (id: string) => {
+    const deletedName = suppliers.find(s => s.id === id)?.name || '';
+    const updated = suppliers.filter(s => s.id !== id);
+    setSuppliers(updated);
+    await syncDelete('suppliers', 'duo_pos_suppliers', updated, id);
+    toast.warning(`Proveedor ${deletedName ? `"${deletedName}"` : ''} eliminado.`, { title: 'Gestión de Proveedores 🚚' });
+  };
+
+  const handleSavePurchaseOrder = async (po: PurchaseOrder) => {
+    const updated = purchaseOrders.some(p => p.id === po.id)
+      ? purchaseOrders.map(p => p.id === po.id ? po : p)
+      : [po, ...purchaseOrders];
+    setPurchaseOrders(updated);
+    await syncSavePurchaseOrder(po, updated);
+    toast.success(`Orden de compra "${po.id}" guardada correctamente.`, { title: 'Órdenes de Compra 📦' });
+  };
+
+  const handleTransitPurchaseOrder = async (id: string, carrier: string, estimatedDelivery: string) => {
+    const order = purchaseOrders.find(p => p.id === id);
+    if (!order) return;
+    const updatedOrder: PurchaseOrder = {
+      ...order,
+      status: 'transit',
+      carrier,
+      estimatedDelivery
+    };
+    const updated = purchaseOrders.map(p => p.id === id ? updatedOrder : p);
+    setPurchaseOrders(updated);
+    await syncSavePurchaseOrder(updatedOrder, updated);
+    toast.info(`Orden "${id}" enviada en tránsito con transportista: ${carrier}.`, { title: 'Órdenes de Compra 📦' });
+  };
+
+  const handleReceivePurchaseOrder = async (id: string) => {
+    const order = purchaseOrders.find(p => p.id === id);
+    if (!order) return;
+    
+    // Update order status to received
+    const updatedOrder: PurchaseOrder = {
+      ...order,
+      status: 'received',
+      receivedAt: new Date().toISOString()
+    };
+    const updatedOrders = purchaseOrders.map(p => p.id === id ? updatedOrder : p);
+    setPurchaseOrders(updatedOrders);
+    await syncSavePurchaseOrder(updatedOrder, updatedOrders);
+
+    // Increase product stock in active sucursal/branch
+    let updatedProducts = [...products];
+    for (const item of order.items) {
+      if (item.productId) {
+        let changedProd: Product | null = null;
+        updatedProducts = updatedProducts.map(p => {
+          if (p.id === item.productId) {
+            const bStock = p.branchesStock ? { ...p.branchesStock } : {};
+            const curStock = bStock[activeBranchId] ?? p.stock;
+            bStock[activeBranchId] = curStock + Number(item.quantity);
+            
+            const mainStock = activeBranchId === 'branch-centro' ? bStock['branch-centro'] : p.stock;
+            changedProd = {
+              ...p,
+              branchesStock: bStock,
+              stock: mainStock
+            };
+            return changedProd;
+          }
+          return p;
+        });
+        if (changedProd) {
+          await syncSave<Product>('products', 'duo_pos_products', updatedProducts, changedProd);
+        }
+      }
+    }
+    setProducts(updatedProducts);
+
+    // Purchase payment logistics:
+    // If paid by credit, increase the supplier's outstanding liability (balance)
+    if (order.paymentMethod === 'credit') {
+      const supplier = suppliers.find(s => s.id === order.supplierId);
+      if (supplier) {
+        const updatedSupplier: Supplier = {
+          ...supplier,
+          balance: Number(supplier.balance) + Number(order.total)
+        };
+        const updatedSups = suppliers.map(s => s.id === supplier.id ? updatedSupplier : s);
+        setSuppliers(updatedSups);
+        await syncSave<Supplier>('suppliers', 'duo_pos_suppliers', updatedSups, updatedSupplier);
+      }
+      toast.success(`Mercancía recibida. Se sumó $${order.total.toFixed(2)} a las Cuentas por Pagar del proveedor.`, { title: 'Órdenes de Compra 📦' });
+    } else {
+      // If paid by cash, deduct from the current active shift (caja drawer) as an OUT cash movement
+      if (activeShift) {
+        const movementId = `move-${Date.now()}`;
+        const newMovement: CashMovement = {
+          id: movementId,
+          type: 'out',
+          amount: order.total,
+          reason: `Pago Compra Contado ${order.id}`,
+          timestamp: new Date().toISOString()
+        };
+        const updatedShift = {
+          ...activeShift,
+          expectedCash: Number(activeShift.expectedCash) - Number(order.total),
+          movements: [...(activeShift.movements || []), newMovement]
+        };
+        await syncSaveShift(updatedShift, true);
+        setActiveShift(updatedShift);
+      }
+      toast.success(`Mercancía recibida. Se retiraron $${order.total.toFixed(2)} de la caja registradora activa.`, { title: 'Órdenes de Compra 📦' });
+    }
+  };
+
+  const handleCancelPurchaseOrder = async (id: string) => {
+    const order = purchaseOrders.find(p => p.id === id);
+    if (!order) return;
+    const updatedOrder: PurchaseOrder = {
+      ...order,
+      status: 'cancelled'
+    };
+    const updated = purchaseOrders.map(p => p.id === id ? updatedOrder : p);
+    setPurchaseOrders(updated);
+    await syncSavePurchaseOrder(updatedOrder, updated);
+    toast.warning(`Orden de compra "${id}" fue cancelada.`, { title: 'Órdenes de Compra 📦' });
+  };
+
+  const handleRegisterSupplierPayout = async (supplierId: string, amount: number, notes: string) => {
+    const supplier = suppliers.find(s => s.id === supplierId);
+    if (!supplier) return;
+
+    // Deduct payout amount from supplier outstanding liability (balance)
+    const updatedSupplier: Supplier = {
+      ...supplier,
+      balance: Math.max(0, Number(supplier.balance) - amount)
+    };
+    const updatedSups = suppliers.map(s => s.id === supplierId ? updatedSupplier : s);
+    setSuppliers(updatedSups);
+    await syncSave<Supplier>('suppliers', 'duo_pos_suppliers', updatedSups, updatedSupplier);
+
+    // Record payout as cash withdrawal (OUT movement) from the active register shift
+    if (activeShift) {
+      const movementId = `move-${Date.now()}`;
+      const newMovement: CashMovement = {
+        id: movementId,
+        type: 'out',
+        amount,
+        reason: `Abono Prov: ${supplier.name}. Notas: ${notes}`,
+        timestamp: new Date().toISOString()
+      };
+      const updatedShift = {
+        ...activeShift,
+        expectedCash: Number(activeShift.expectedCash) - amount,
+        movements: [...(activeShift.movements || []), newMovement]
+      };
+      await syncSaveShift(updatedShift, true);
+      setActiveShift(updatedShift);
+    }
+    toast.success(`Abono de $${amount.toFixed(2)} a ${supplier.name} registrado con éxito.`, { title: 'Cuentas por Pagar 💳' });
   };
 
   // Transactions logic handlers
@@ -1833,6 +2042,16 @@ export default function App() {
               activeShift={activeShift}
               onAddShiftMovement={handleAddShiftMovement}
               currentUser={user}
+              suppliers={suppliers}
+              purchaseOrders={purchaseOrders}
+              onAddSupplier={handleAddSupplier}
+              onUpdateSupplier={handleUpdateSupplier}
+              onDeleteSupplier={handleDeleteSupplier}
+              onSavePurchaseOrder={handleSavePurchaseOrder}
+              onTransitPurchaseOrder={handleTransitPurchaseOrder}
+              onReceivePurchaseOrder={handleReceivePurchaseOrder}
+              onCancelPurchaseOrder={handleCancelPurchaseOrder}
+              onRegisterSupplierPayout={handleRegisterSupplierPayout}
             />
           )}
 

@@ -127,6 +127,72 @@ export function mapCustomerFromDb(db: any): any {
   };
 }
 
+// ─── MAPPER FUNCTIONS FOR SUPPLIERS & PURCHASE ORDERS ────────────────────────
+export function mapSupplierToDb(s: any): any {
+  return {
+    id: s.id,
+    name: s.name,
+    contact: s.contact || '',
+    phone: s.phone || '',
+    email: s.email || '',
+    category: s.category || '',
+    address: s.address || '',
+    delivery_days: s.deliveryDays !== undefined ? Number(s.deliveryDays) : 2,
+    reliability: s.reliability !== undefined ? Number(s.reliability) : 90,
+    balance: s.balance !== undefined ? Number(s.balance) : 0
+  };
+}
+
+export function mapSupplierFromDb(db: any): any {
+  return {
+    id: db.id,
+    name: db.name,
+    contact: db.contact || '',
+    phone: db.phone || '',
+    email: db.email || '',
+    category: db.category || '',
+    address: db.address || '',
+    deliveryDays: db.delivery_days !== undefined ? Number(db.delivery_days) : 2,
+    reliability: db.reliability !== undefined ? Number(db.reliability) : 90,
+    balance: db.balance !== undefined ? Number(db.balance) : 0
+  };
+}
+
+export function mapPurchaseOrderToDb(po: any): any {
+  return {
+    id: po.id,
+    supplier_id: po.supplierId || null,
+    supplier_name: po.supplierName || '',
+    subtotal: Number(po.subtotal),
+    tax: Number(po.tax),
+    total: Number(po.total),
+    payment_method: po.paymentMethod || 'cash',
+    status: po.status || 'draft',
+    created_at: po.createdAt || new Date().toISOString(),
+    estimated_delivery: po.estimatedDelivery || null,
+    received_at: po.receivedAt || null,
+    carrier: po.carrier || ''
+  };
+}
+
+export function mapPurchaseOrderFromDb(db: any): any {
+  return {
+    id: db.id,
+    supplierId: db.supplier_id || '',
+    supplierName: db.supplier_name || '',
+    subtotal: Number(db.subtotal),
+    tax: Number(db.tax),
+    total: Number(db.total),
+    paymentMethod: db.payment_method || 'cash',
+    status: db.status || 'draft',
+    createdAt: db.created_at || new Date().toISOString(),
+    estimatedDelivery: db.estimated_delivery || '',
+    receivedAt: db.received_at || undefined,
+    carrier: db.carrier || '',
+    items: []
+  };
+}
+
 // ─── MAPPER FUNCTIONS FOR CASH SHIFTS & MOVEMENTS ────────────────────────────
 export function mapShiftToDb(s: any): any {
   return {
@@ -225,6 +291,8 @@ export function mapToDbRecord(table: string, item: any): any {
   if (table === 'customers') return mapCustomerToDb(item);
   if (table === 'branches') return mapBranchToDb(item);
   if (table === 'cash_registers') return mapRegisterToDb(item);
+  if (table === 'suppliers') return mapSupplierToDb(item);
+  if (table === 'purchase_orders') return mapPurchaseOrderToDb(item);
   return item;
 }
 
@@ -281,9 +349,9 @@ export async function syncLoad<T>(
   const prefix = table === 'products' ? 'prod' : table === 'customers' ? 'cust' : table === 'cash_shifts' ? 'shift' : 'txn';
 
   const sanitizeAndMap = (rawItem: any): T => {
-    // Si la tabla no requiere UUIDs estrictos en Postgres (ej. text IDs para branches/registers), no usar ensureValidUuid
+    // Si la tabla no requiere UUIDs estrictos en Postgres (ej. text IDs para branches/registers/suppliers/purchase_orders), no usar ensureValidUuid
     let cleanId = rawItem.id;
-    if (table !== 'branches' && table !== 'cash_registers' && table !== 'settings') {
+    if (table !== 'branches' && table !== 'cash_registers' && table !== 'settings' && table !== 'suppliers' && table !== 'purchase_orders') {
       cleanId = ensureValidUuid(rawItem.id, prefix as any);
     }
     let item = { ...rawItem, id: cleanId };
@@ -432,6 +500,35 @@ export async function syncLoad<T>(
       return mapped as unknown as T;
     }
 
+    if (table === 'suppliers') {
+      const mapped = 'delivery_days' in item || 'reliability' in item ? mapSupplierFromDb(item) : item;
+      return mapped as unknown as T;
+    }
+
+    if (table === 'purchase_orders') {
+      const mapped = 'payment_method' in item || 'supplier_name' in item ? mapPurchaseOrderFromDb(item) : item;
+      
+      if (mapped.id) {
+        try {
+          const allItemsRaw = localStorage.getItem('duo_pos_purchase_order_items');
+          if (allItemsRaw) {
+            const allItems = JSON.parse(allItemsRaw);
+            const parentItems = allItems.filter((i: any) => i.purchase_order_id === mapped.id || i.purchaseOrderId === mapped.id);
+            mapped.items = parentItems.map((i: any) => ({
+              productId: i.product_id || i.productId || '',
+              name: i.name,
+              emoji: i.emoji || '📦',
+              cost: Number(i.cost),
+              quantity: Number(i.quantity)
+            }));
+          }
+        } catch {
+          mapped.items = [];
+        }
+      }
+      return mapped as unknown as T;
+    }
+
     return item as T;
   };
 
@@ -563,6 +660,31 @@ export async function syncLoad<T>(
             }
           } catch (e) {
             console.warn('⚠️ Error al cargar items de traspasos de Supabase.', e);
+          }
+        }
+
+        // Si estamos cargando órdenes de compra, precargar items de Supabase
+        if (table === 'purchase_orders') {
+          try {
+            const { data: poItemsData, error: poItemsError } = await supabase
+              .from('purchase_order_items')
+              .select('*');
+            
+            if (!poItemsError && poItemsData) {
+              localStorage.setItem('duo_pos_purchase_order_items', JSON.stringify(poItemsData));
+              mappedData.forEach((po: any) => {
+                const parentItems = poItemsData.filter((i: any) => i.purchase_order_id === po.id);
+                po.items = parentItems.map((i: any) => ({
+                  productId: i.product_id || '',
+                  name: i.name,
+                  emoji: i.emoji || '📦',
+                  cost: Number(i.cost),
+                  quantity: Number(i.quantity)
+                }));
+              });
+            }
+          } catch (e) {
+            console.warn('⚠️ Error al cargar items de órdenes de compra de Supabase.', e);
           }
         }
 
@@ -1009,6 +1131,69 @@ export async function syncSaveStockTransfer(
     }
   } catch (e: any) {
     console.error('Error procesando traspaso', e);
+    return { success: false, error: e.message };
+  }
+}
+
+// ─── REGISTRAR ÓRDEN DE COMPRA COMPLETA (Cabecera + Detalles) ─────────────────────
+export async function syncSavePurchaseOrder(
+  po: any,
+  allPurchaseOrders: any[]
+): Promise<{ success: boolean; error?: string }> {
+  localStorage.setItem('duo_pos_purchase_orders', JSON.stringify(allPurchaseOrders));
+
+  const dbPoId = po.id; // po-1001 o UUID
+
+  try {
+    const allItemsRaw = localStorage.getItem('duo_pos_purchase_order_items');
+    let allItems = allItemsRaw ? JSON.parse(allItemsRaw) : [];
+
+    const mappedItems = (po.items || []).map((item: any) => ({
+      id: generateUUID(),
+      purchase_order_id: dbPoId,
+      product_id: item.productId ? ensureValidUuid(item.productId, 'prod') : null,
+      name: item.name,
+      emoji: item.emoji || '📦',
+      cost: Number(item.cost),
+      quantity: Number(item.quantity)
+    }));
+
+    allItems = allItems.filter((i: any) => i.purchase_order_id !== dbPoId);
+    allItems.push(...mappedItems);
+    localStorage.setItem('duo_pos_purchase_order_items', JSON.stringify(allItems));
+
+    const dbPo = mapPurchaseOrderToDb(po);
+
+    if (isOnline()) {
+      try {
+        const { error: poError } = await supabase.from('purchase_orders').upsert(dbPo);
+        if (poError) throw poError;
+
+        // Delete existing items to handle modifications / draft updates cleanly
+        await supabase.from('purchase_order_items').delete().eq('purchase_order_id', dbPoId);
+
+        if (mappedItems.length > 0) {
+          const { error: itemsError } = await supabase.from('purchase_order_items').insert(mappedItems);
+          if (itemsError) throw itemsError;
+        }
+        return { success: true };
+      } catch (err: any) {
+        console.warn('⚠️ syncSavePurchaseOrder: Supabase falló, encolando.', err.message);
+        addToPendingQueue({ table: 'purchase_orders', action: 'upsert', data: dbPo });
+        mappedItems.forEach((i: any) => {
+          addToPendingQueue({ table: 'purchase_order_items', action: 'insert', data: i });
+        });
+        return { success: true, error: 'Guardado localmente. Pendiente de sincronización.' };
+      }
+    } else {
+      addToPendingQueue({ table: 'purchase_orders', action: 'upsert', data: dbPo });
+      mappedItems.forEach((i: any) => {
+        addToPendingQueue({ table: 'purchase_order_items', action: 'insert', data: i });
+      });
+      return { success: true, error: 'Sin conexión. Guardado localmente.' };
+    }
+  } catch (e: any) {
+    console.error('Error procesando orden de compra', e);
     return { success: false, error: e.message };
   }
 }

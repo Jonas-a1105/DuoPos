@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { Product, User } from '../types';
+import { Product, User, Supplier, PurchaseOrder, PurchaseOrderItem } from '../types';
 import { CATEGORIES } from '../initialData';
 import { playSound } from '../utils/sounds';
 import { 
@@ -13,43 +13,6 @@ import {
   DollarSign, Send, ArrowRight, ShieldCheck, RefreshCw, Layers, 
   HelpCircle, UserCheck, Star, Sparkles, CheckCircle2, PlusCircle
 } from 'lucide-react';
-
-interface Supplier {
-  id: string;
-  name: string;
-  contact: string;
-  phone: string;
-  email: string;
-  category: string;
-  address: string;
-  deliveryDays: number;
-  reliability: number; // 0 - 100
-  balance: number; // outstanding liability
-}
-
-interface PurchaseOrderItem {
-  productId: string;
-  name: string;
-  emoji: string;
-  cost: number;
-  quantity: number;
-}
-
-interface PurchaseOrder {
-  id: string;
-  supplierId: string;
-  supplierName: string;
-  items: PurchaseOrderItem[];
-  subtotal: number;
-  tax: number;
-  total: number;
-  paymentMethod: 'cash' | 'credit'; // Contado (cash drawer) or Crédito (accounts payable)
-  status: 'draft' | 'sent' | 'transit' | 'received' | 'cancelled';
-  createdAt: string;
-  estimatedDelivery: string;
-  receivedAt?: string;
-  carrier: string;
-}
 
 interface InventoryScreenProps {
   products: Product[];
@@ -60,6 +23,16 @@ interface InventoryScreenProps {
   activeShift?: any;
   onAddShiftMovement?: (type: 'in' | 'out', amount: number, reason: string) => void;
   currentUser: User;
+  suppliers: Supplier[];
+  purchaseOrders: PurchaseOrder[];
+  onAddSupplier: (sup: Omit<Supplier, 'id' | 'balance'>) => void;
+  onUpdateSupplier: (sup: Supplier) => void;
+  onDeleteSupplier: (id: string) => void;
+  onSavePurchaseOrder: (po: PurchaseOrder) => void;
+  onTransitPurchaseOrder: (id: string, carrier: string, estimatedDelivery: string) => void;
+  onReceivePurchaseOrder: (id: string) => void;
+  onCancelPurchaseOrder: (id: string) => void;
+  onRegisterSupplierPayout: (supplierId: string, amount: number, notes: string) => void;
 }
 
 const QUICK_EMOJIS = ['☕', '🍵', '🥤', '🍩', '🍰', '🍪', '🍎', '🍇', '🍫', '🍬', '🧪', '🩹', '🦉', '🧢', '👕', '🧸', '🎒', '🎟️', '⚡', '📦'];
@@ -72,7 +45,17 @@ export default function InventoryScreen({
   onGrantXp, 
   activeShift, 
   onAddShiftMovement,
-  currentUser
+  currentUser,
+  suppliers,
+  purchaseOrders,
+  onAddSupplier,
+  onUpdateSupplier,
+  onDeleteSupplier,
+  onSavePurchaseOrder,
+  onTransitPurchaseOrder,
+  onReceivePurchaseOrder,
+  onCancelPurchaseOrder,
+  onRegisterSupplierPayout
 }: InventoryScreenProps) {
   
   // Tabs & Filters
@@ -80,61 +63,7 @@ export default function InventoryScreen({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
 
-  // Suppliers & Orders persistence
-  const [suppliers, setSuppliers] = useState<Supplier[]>(() => {
-    const saved = localStorage.getItem('duo_pos_suppliers');
-    if (saved) return JSON.parse(saved);
-    const defaults: Supplier[] = [
-      { id: 'sup-1', name: '🦉 Cafes del Nido Supremo', contact: 'Abelardo Verde', phone: '555-0100', email: 'cafe.nido@duomail.com', category: 'Bebidas', address: 'Carretera Cafetal #44, Veracruz', deliveryDays: 1, reliability: 98, balance: 350.00 },
-      { id: 'sup-2', name: '🍩 Repostería de Racha Especial', contact: 'Zari Pastelera', phone: '555-0122', email: 'donas.racha@duomail.com', category: 'Postres', address: 'Av. Tristeza #15, CDMX', deliveryDays: 2, reliability: 95, balance: 0.00 },
-      { id: 'sup-3', name: '🧪 Pociones & Elixires Falstaff', contact: 'Dr. Falstaff', phone: '555-0144', email: 'pociones.falstaff@duomail.com', category: 'Consumibles', address: 'Cueva del Valle #3, Sierra Madre', deliveryDays: 3, reliability: 88, balance: 640.00 },
-      { id: 'sup-4', name: '👕 Merchandising Oficial Duo', contact: 'Eddy Senior', phone: '555-0188', email: 'caps.duo@duomail.com', category: 'Merch', address: 'Pradera del Sol #8, Monterrey', deliveryDays: 2, reliability: 94, balance: 0.00 }
-    ];
-    localStorage.setItem('duo_pos_suppliers', JSON.stringify(defaults));
-    return defaults;
-  });
-
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => {
-    const saved = localStorage.getItem('duo_pos_purchase_orders');
-    if (saved) return JSON.parse(saved);
-    const defaults: PurchaseOrder[] = [
-      {
-        id: 'po-1001',
-        supplierId: 'sup-1',
-        supplierName: '🦉 Cafes del Nido Supremo',
-        items: [
-          { productId: 'prod-1', name: 'Café de la Racha (Espresso)', emoji: '☕', cost: 1.20, quantity: 40 }
-        ],
-        subtotal: 48.00,
-        tax: 7.68,
-        total: 55.68,
-        paymentMethod: 'credit',
-        status: 'received',
-        createdAt: new Date(Date.now() - 4 * 24 * 3600 * 1000).toISOString(),
-        estimatedDelivery: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
-        receivedAt: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
-        carrier: 'DuoExpress Air 🦉'
-      },
-      {
-        id: 'po-1002',
-        supplierId: 'sup-3',
-        supplierName: '🧪 Pociones & Elixires Falstaff',
-        items: [
-          { productId: 'prod-2', name: 'Poción de Vida Extra', emoji: '🧪', cost: 1.50, quantity: 30 }
-        ],
-        subtotal: 45.00,
-        tax: 7.20,
-        total: 52.20,
-        paymentMethod: 'credit',
-        status: 'transit',
-        createdAt: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString(),
-        estimatedDelivery: new Date(Date.now() + 2 * 24 * 3600 * 1000).toISOString(),
-        carrier: 'Lily-Cargo Express 🛒'
-      }
-    ];
-    localStorage.setItem('duo_pos_purchase_orders', JSON.stringify(defaults));
-    return defaults;
-  });
+  // Suppliers & Orders are now managed globally via props.
 
   // Core Product Forms States
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -325,10 +254,9 @@ export default function InventoryScreen({
     e.preventDefault();
     if (!supName.trim()) { setSupError('Nombre requerido.'); return; }
 
-    let updatedList;
     if (editingSupplier) {
-      updatedList = suppliers.map(s => s.id === editingSupplier.id ? {
-        ...s,
+      const updated: Supplier = {
+        ...editingSupplier,
         name: supName.trim(),
         contact: supContact.trim(),
         phone: supPhone.trim(),
@@ -337,10 +265,10 @@ export default function InventoryScreen({
         address: supAddress.trim(),
         deliveryDays: Number(supDeliveryDays),
         reliability: Number(supReliability)
-      } : s);
+      };
+      onUpdateSupplier(updated);
     } else {
-      const newS: Supplier = {
-        id: `sup-${Date.now()}`,
+      const newS: Omit<Supplier, 'id' | 'balance'> = {
         name: supName.trim(),
         contact: supContact.trim(),
         phone: supPhone.trim(),
@@ -348,24 +276,19 @@ export default function InventoryScreen({
         category: supCategory,
         address: supAddress.trim(),
         deliveryDays: Number(supDeliveryDays),
-        reliability: Number(supReliability),
-        balance: 0.00
+        reliability: Number(supReliability)
       };
-      updatedList = [...suppliers, newS];
+      onAddSupplier(newS);
       if (onGrantXp) onGrantXp(25);
     }
 
-    setSuppliers(updatedList);
-    localStorage.setItem('duo_pos_suppliers', JSON.stringify(updatedList));
     setIsSupplierFormOpen(false);
     playSound('levelup');
   };
 
   const handleDeleteSupplier = (id: string) => {
     if (confirm('¿Eliminar este proveedor de la cadena?')) {
-      const updated = suppliers.filter(s => s.id !== id);
-      setSuppliers(updated);
-      localStorage.setItem('duo_pos_suppliers', JSON.stringify(updated));
+      onDeleteSupplier(id);
       playSound('swoosh');
     }
   };
@@ -450,9 +373,7 @@ export default function InventoryScreen({
       carrier: orderCarrier
     };
 
-    const updated = [newPO, ...purchaseOrders];
-    setPurchaseOrders(updated);
-    localStorage.setItem('duo_pos_purchase_orders', JSON.stringify(updated));
+    onSavePurchaseOrder(newPO);
     setIsOrderFormOpen(false);
 
     if (status === 'sent') {
@@ -464,40 +385,16 @@ export default function InventoryScreen({
   };
 
   const handleTransitOrder = (id: string) => {
-    const updated = purchaseOrders.map(po => po.id === id ? { ...po, status: 'transit' as const } : po);
-    setPurchaseOrders(updated);
-    localStorage.setItem('duo_pos_purchase_orders', JSON.stringify(updated));
+    const carrier = prompt("Transportista / Chofer:", "DuoExpress Air 🦉") || "DuoExpress Air 🦉";
+    const estimatedDelivery = new Date(Date.now() + 2 * 24 * 3600 * 1000).toISOString();
+    onTransitPurchaseOrder(id, carrier, estimatedDelivery);
     playSound('click');
   };
 
   const handleReceiveOrder = (id: string) => {
     const o = purchaseOrders.find(po => po.id === id);
     if (!o) return;
-
-    // 1. ADD STOCKS
-    o.items.forEach(item => {
-      const p = products.find(prod => prod.id === item.productId);
-      if (p) {
-        onUpdateProduct({ ...p, stock: p.stock + item.quantity });
-      }
-    });
-
-    // 2. CASH / AP
-    if (o.paymentMethod === 'cash') {
-      if (onAddShiftMovement && activeShift) {
-        onAddShiftMovement('out', o.total, `Logística: Pago contado PO-${o.id}`);
-      }
-    } else {
-      const updatedS = suppliers.map(s => s.id === o.supplierId ? { ...s, balance: Number((s.balance + o.total).toFixed(2)) } : s);
-      setSuppliers(updatedS);
-      localStorage.setItem('duo_pos_suppliers', JSON.stringify(updatedS));
-    }
-
-    // 3. Status update
-    const updatedPO = purchaseOrders.map(po => po.id === id ? { ...po, status: 'received' as const, receivedAt: new Date().toISOString() } : po);
-    setPurchaseOrders(updatedPO);
-    localStorage.setItem('duo_pos_purchase_orders', JSON.stringify(updatedPO));
-
+    onReceivePurchaseOrder(id);
     if (onGrantXp) onGrantXp(85);
     playSound('levelup');
     alert(`🎉 ¡Lote recibido! Insumos de la orden PO-${o.id} agregados a bodega.`);
@@ -505,9 +402,7 @@ export default function InventoryScreen({
 
   const handleCancelOrder = (id: string) => {
     if (confirm('¿Cancelar esta orden?')) {
-      const updated = purchaseOrders.map(po => po.id === id ? { ...po, status: 'cancelled' as const } : po);
-      setPurchaseOrders(updated);
-      localStorage.setItem('duo_pos_purchase_orders', JSON.stringify(updated));
+      onCancelPurchaseOrder(id);
       playSound('error');
     }
   };
@@ -525,13 +420,7 @@ export default function InventoryScreen({
       return;
     }
 
-    const updated = suppliers.map(s => s.id === paySupId ? { ...s, balance: Number((s.balance - val).toFixed(2)) } : s);
-    setSuppliers(updated);
-    localStorage.setItem('duo_pos_suppliers', JSON.stringify(updated));
-
-    if (payMethod === 'cash' && onAddShiftMovement && activeShift) {
-      onAddShiftMovement('out', val, `Logística: Liquidación adeudo prov "${sup.name}"`);
-    }
+    onRegisterSupplierPayout(paySupId, val, `Abono de cuentas por pagar: ${payMethod === 'cash' ? 'Efectivo' : 'Transferencia'}`);
 
     if (onGrantXp) onGrantXp(40);
     playSound('kaching');
@@ -1091,9 +980,8 @@ export default function InventoryScreen({
                           <>
                             <button
                               onClick={() => {
-                                const updated = purchaseOrders.map(po => po.id === order.id ? { ...po, status: 'sent' as const } : po);
-                                setPurchaseOrders(updated);
-                                localStorage.setItem('duo_pos_purchase_orders', JSON.stringify(updated));
+                                const updatedOrder: PurchaseOrder = { ...order, status: 'sent' };
+                                onSavePurchaseOrder(updatedOrder);
                                 if (onGrantXp) onGrantXp(40);
                                 playSound('success');
                               }}

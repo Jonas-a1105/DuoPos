@@ -246,4 +246,41 @@ export interface StockTransfer {
   carrier?: string;
 }
 
+export interface Supplier {
+  id: string;
+  name: string;
+  contact: string;
+  phone: string;
+  email: string;
+  category: string;
+  address: string;
+  deliveryDays: number;
+  reliability: number; // 0 - 100
+  balance: number; // outstanding liability
+}
+
+export interface PurchaseOrderItem {
+  productId: string;
+  name: string;
+  emoji: string;
+  cost: number;
+  quantity: number;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  supplierId: string;
+  supplierName: string;
+  items: PurchaseOrderItem[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  paymentMethod: 'cash' | 'credit'; // Contado (cash drawer) or Crédito (accounts payable)
+  status: 'draft' | 'sent' | 'transit' | 'received' | 'cancelled';
+  createdAt: string;
+  estimatedDelivery: string;
+  receivedAt?: string;
+  carrier: string;
+}
+
 
