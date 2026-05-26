@@ -364,6 +364,10 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     setErrorMessage('');
     setIsLoading(true);
 
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('TIMEOUT_LIMIT')), 15000)
+    );
+
     try {
       // Si Supabase no está configurado, registrar localmente
       if (!isSupabaseConfigured()) {
@@ -392,36 +396,66 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         return;
       }
 
-      // Validar si el nombre de usuario ya está tomado
-      const { data: existingUser, error: checkErr } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', username.trim())
-        .maybeSingle();
+      // Validar si el nombre de usuario ya está tomado con Timeout
+      console.log("🔍 [REGISTER DEBUG] Validando si el nombre de usuario ya está tomado...");
+      let checkData: any = null;
+      let checkErr: any = null;
+
+      try {
+        const result: any = await Promise.race([
+          supabase.from('profiles').select('id').eq('username', username.trim()).maybeSingle(),
+          timeoutPromise
+        ]);
+        checkData = result.data;
+        checkErr = result.error;
+      } catch (err: any) {
+        if (err.message === 'TIMEOUT_LIMIT') {
+          console.warn("⚠️ [REGISTER DEBUG] Timeout al validar nombre de usuario.");
+          throw new Error('TIMEOUT_LIMIT');
+        }
+        throw err;
+      }
 
       if (checkErr) {
-        setErrorMessage('Error al validar nombre de usuario.');
+        setErrorMessage('Error al validar nombre de usuario: ' + checkErr.message);
         setIsLoading(false);
         return;
       }
 
-      if (existingUser) {
+      if (checkData) {
         setErrorMessage('Ese usuario ya existe. ¡Elige otro o inicia sesión!');
         setIsLoading(false);
         return;
       }
 
-      // Registro nativo en Supabase Auth
-      const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
-        email: email.trim(),
-        password: password,
-        options: {
-          data: {
-            username: username.trim(),
-            role: role
-          }
+      // Registro nativo en Supabase Auth con Timeout
+      console.log("🔍 [REGISTER DEBUG] Creando cuenta en Supabase Auth...");
+      let signUpData: any = null;
+      let signUpErr: any = null;
+
+      try {
+        const result: any = await Promise.race([
+          supabase.auth.signUp({
+            email: email.trim(),
+            password: password,
+            options: {
+              data: {
+                username: username.trim(),
+                role: role
+              }
+            }
+          }),
+          timeoutPromise
+        ]);
+        signUpData = result.data;
+        signUpErr = result.error;
+      } catch (err: any) {
+        if (err.message === 'TIMEOUT_LIMIT') {
+          console.warn("⚠️ [REGISTER DEBUG] Timeout en supabase.auth.signUp.");
+          throw new Error('TIMEOUT_LIMIT');
         }
-      });
+        throw err;
+      }
 
       if (signUpErr) {
         if (signUpErr.message?.includes('429') || signUpErr.message?.includes('Too Many')) {
@@ -440,52 +474,72 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         return;
       }
 
-      // Actualizar datos del perfil creado por el trigger
-      const { error: updateErr } = await supabase
-        .from('profiles')
-        .update({
-          avatar: selectedCharacter,
-          streak: 1,
-          xp: 120,
-          level: 1,
-          daily_goal: 150,
-          level_title: 'Cajero Novato 🦉',
-          gems: 40,
-          gems_earned_total: 40,
-          unlocked_skins: ['standard'],
-          active_skin: 'standard',
-          unlocked_badges: [],
-          completed_missions_today: []
-        })
-        .eq('id', authUser.id);
-
-      if (updateErr) {
-        console.error('Error actualizando perfil:', updateErr);
+      // Actualizar datos del perfil creado por el trigger con Timeout
+      console.log("🔍 [REGISTER DEBUG] Actualizando datos de perfil...");
+      try {
+        await Promise.race([
+          supabase
+            .from('profiles')
+            .update({
+              avatar: selectedCharacter,
+              streak: 1,
+              xp: 120,
+              level: 1,
+              daily_goal: 150,
+              level_title: 'Cajero Novato 🦉',
+              gems: 40,
+              gems_earned_total: 40,
+              unlocked_skins: ['standard'],
+              active_skin: 'standard',
+              unlocked_badges: [],
+              completed_missions_today: []
+            })
+            .eq('id', authUser.id),
+          timeoutPromise
+        ]);
+      } catch (err: any) {
+        console.error('⚠️ [REGISTER DEBUG] Error o Timeout actualizando perfil (se intentará autoreparar):', err);
       }
 
-      // Obtener el perfil completo
-      let { data: userProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', authUser.id)
-        .maybeSingle();
+      // Obtener el perfil completo con Timeout
+      console.log("🔍 [REGISTER DEBUG] Obteniendo perfil final...");
+      let userProfile: any = null;
+      try {
+        const result: any = await Promise.race([
+          supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', authUser.id)
+            .maybeSingle(),
+          timeoutPromise
+        ]);
+        userProfile = result.data;
+      } catch (err: any) {
+        console.error('⚠️ [REGISTER DEBUG] Error o Timeout leyendo perfil final:', err);
+      }
 
-      // Self-healing: si el trigger no creó el perfil, lo creamos
+      // Self-healing: si el trigger o la lectura fallaron, lo creamos
       if (!userProfile) {
+        console.log("🔍 [REGISTER DEBUG] Perfil no encontrado (Autoreparación). Creando perfil...");
         const defaultProfile = createDefaultProfile(authUser.id, email.trim(), username.trim());
 
-        const { data: newProfile, error: insertErr } = await supabase
-          .from('profiles')
-          .insert(defaultProfile)
-          .select()
-          .maybeSingle();
-
-        if (insertErr || !newProfile) {
-          setErrorMessage('Error al crear perfil: ' + (insertErr?.message || 'Error desconocido'));
+        try {
+          const result: any = await Promise.race([
+            supabase
+              .from('profiles')
+              .insert(defaultProfile)
+              .select()
+              .maybeSingle(),
+            timeoutPromise
+          ]);
+          userProfile = result.data;
+          if (result.error) throw result.error;
+        } catch (err: any) {
+          console.error("❌ [REGISTER DEBUG] Error fatal de autoreparación de perfil:", err);
+          setErrorMessage('Error al crear perfil: ' + (err.message || 'Error desconocido'));
           setIsLoading(false);
           return;
         }
-        userProfile = newProfile;
       }
 
       const newUser = mapProfileToUser(userProfile);
@@ -496,6 +550,32 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         onLoginSuccess(newUser);
       }, 1200);
     } catch (err: any) {
+      if (err.message === 'TIMEOUT_LIMIT') {
+        console.warn("⚠️ [REGISTER DEBUG] Conexión lenta o bloqueada. Entrando en modo local offline automático...");
+        const localUser: User = {
+          id: `local-${username.trim().toLowerCase()}`,
+          username: username.trim(),
+          email: email.trim(),
+          avatar: selectedCharacter,
+          streak: 1,
+          lastSaleDate: null,
+          xp: 120,
+          level: 1,
+          dailyGoal: 150,
+          levelTitle: 'Cajero Novato 🦉',
+          role: role,
+          gems: 40,
+          gemsEarnedTotal: 40,
+          unlockedSkins: ['standard'],
+          activeSkin: 'standard',
+          unlockedBadges: [],
+          completedMissionsToday: []
+        };
+        localStorage.setItem('duo_pos_active_user', JSON.stringify(localUser));
+        setSuccessAnimation(true);
+        setTimeout(() => onLoginSuccess(localUser), 1200);
+        return;
+      }
       setErrorMessage('Ocurrió un error inesperado: ' + err.message);
     } finally {
       setIsLoading(false);
