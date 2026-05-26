@@ -36,6 +36,11 @@ self.addEventListener('fetch', (event) => {
   // Only handle standard HTTP/HTTPS requests (avoid chrome-extension:// etc)
   if (!event.request.url.startsWith('http')) return;
 
+  // Evitar interceptar o cachear peticiones de la API de Supabase para prevenir bloqueos
+  if (event.request.url.includes('supabase.co')) {
+    return; // Pasa directo a la red sin pasar por el caché del Service Worker
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
