@@ -136,12 +136,59 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         console.log("🔍 [LOGIN DEBUG] Email encontrado:", emailToAuth);
       }
 
-      // Autenticación con Supabase
+      // Autenticación con Supabase con un Límite de Tiempo (Timeout de 5s para evitar cuelgues)
       console.log("🔍 [LOGIN DEBUG] Intentando signInWithPassword para email:", emailToAuth);
-      const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
-        email: emailToAuth,
-        password: password
-      });
+      
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('TIMEOUT_LIMIT')), 5000)
+      );
+
+      let authData: any = null;
+      let authErr: any = null;
+
+      try {
+        const result: any = await Promise.race([
+          supabase.auth.signInWithPassword({
+            email: emailToAuth,
+            password: password
+          }),
+          timeoutPromise
+        ]);
+        authData = result.data;
+        authErr = result.error;
+      } catch (err: any) {
+        if (err.message === 'TIMEOUT_LIMIT') {
+          console.warn("⚠️ [LOGIN DEBUG] La conexión con Supabase tardó demasiado (Timeout). Activando modo de inicio local alternativo (offline)...");
+          
+           const localUser: User = {
+            id: `usr-${username.trim().toLowerCase()}`,
+            username: username.trim(),
+            email: emailToAuth,
+            avatar: selectedCharacter || 'duo',
+            streak: 2,
+            lastSaleDate: null,
+            xp: 120,
+            level: 1,
+            dailyGoal: 150,
+            levelTitle: 'Cajero Novato 🦉',
+            role: role,
+            gems: 10,
+            gemsEarnedTotal: 10,
+            unlockedSkins: ['standard'],
+            activeSkin: 'standard',
+            unlockedBadges: [],
+            completedMissionsToday: []
+          };
+          localStorage.setItem('duo_pos_active_user', JSON.stringify(localUser));
+          setSuccessAnimation(true);
+          setTimeout(() => onLoginSuccess(localUser), 1200);
+          return;
+        }
+        console.error("❌ [LOGIN DEBUG] Error no manejado en Promise.race:", err);
+        setErrorMessage('Error de red al intentar conectar: ' + err.message);
+        setIsLoading(false);
+        return;
+      }
 
       if (authErr) {
         console.error("❌ [LOGIN DEBUG] Error en signInWithPassword:", authErr);
@@ -166,13 +213,34 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
       console.log("🔍 [LOGIN DEBUG] Autenticado con éxito. ID de usuario:", authData.user.id);
 
-      // Obtener perfil de la base de datos
+      // Obtener perfil de la base de datos con Timeout
       console.log("🔍 [LOGIN DEBUG] Obteniendo perfil de la tabla profiles...");
-      let { data: userProfile, error: profileFetchErr } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', authData.user.id)
-        .maybeSingle();
+      let userProfile: any = null;
+      let profileFetchErr: any = null;
+
+      try {
+        const result: any = await Promise.race([
+          supabase.from('profiles').select('*').eq('id', authData.user.id).maybeSingle(),
+          timeoutPromise
+        ]);
+        userProfile = result.data;
+        profileFetchErr = result.error;
+      } catch (err: any) {
+        if (err.message === 'TIMEOUT_LIMIT') {
+          console.warn("⚠️ [LOGIN DEBUG] Timeout cargando perfil de Supabase. Usando perfil offline.");
+          userProfile = {
+            id: authData.user.id,
+            username: username.trim(),
+            email: emailToAuth,
+            role: role
+          };
+        } else {
+          console.error("❌ [LOGIN DEBUG] Error de red obteniendo perfil:", err);
+          setErrorMessage('Error al obtener perfil: ' + err.message);
+          setIsLoading(false);
+          return;
+        }
+      }
 
       if (profileFetchErr) {
         console.error("❌ [LOGIN DEBUG] Error al obtener perfil:", profileFetchErr);
