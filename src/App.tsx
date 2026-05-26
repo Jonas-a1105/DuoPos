@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { User, Product, Transaction, CashShift, CashMovement, Customer, LegalBillingSettings, Branch, CashRegister, StockTransfer, Supplier, PurchaseOrder, ExpressEvent } from './types';
 import { DEFAULT_PRODUCTS, DUO_CHARACTERS, DEFAULT_CUSTOMERS, DEFAULT_BILLING_SETTINGS } from './initialData';
 import LoginScreen from './components/LoginScreen';
@@ -204,7 +205,14 @@ export default function App() {
     (user.email && user.email.toLowerCase().includes('jonas')) || 
     user.username.toLowerCase() === 'admin'
   );
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'sales' | 'shifts' | 'inventory' | 'history' | 'customers' | 'settings' | 'logistics' | 'gamification'>('dashboard');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const activeTab = location.pathname === '/' ? 'dashboard' : (location.pathname.substring(1) as any);
+
+  const setActiveTab = (tab: 'dashboard' | 'sales' | 'shifts' | 'inventory' | 'history' | 'customers' | 'settings' | 'logistics' | 'gamification') => {
+    navigate(tab === 'dashboard' ? '/' : '/' + tab);
+  };
 
   // ─── DuoMascot reactive mood state ───
 
@@ -2422,152 +2430,154 @@ export default function App() {
           )}
 
           {/* Active Screen Selection Switcher router */}
-          {activeTab === 'dashboard' && (
-            <DashboardScreen
-              user={user}
-              transactions={transactions}
-              products={products}
-              onSetNewGoal={(val) => {
-                const refreshed = { ...user, dailyGoal: val };
-                saveUserAndSyncList(refreshed);
-              }}
-              onNavigateToSell={() => setActiveTab('sales')}
-              onGrantXp={handleGrantXp}
-              onUpdateUser={saveUserAndSyncList}
-            />
-          )}
+          <Routes>
+            <Route path="/" element={
+              <DashboardScreen
+                user={user}
+                transactions={transactions}
+                products={products}
+                onSetNewGoal={(val) => {
+                  const refreshed = { ...user, dailyGoal: val };
+                  saveUserAndSyncList(refreshed);
+                }}
+                onNavigateToSell={() => setActiveTab('sales')}
+                onGrantXp={handleGrantXp}
+                onUpdateUser={saveUserAndSyncList}
+              />
+            } />
 
-          {activeTab === 'sales' && (
-            <SalesScreen
-              products={products.map(p => ({ ...p, stock: p.branchesStock?.[activeBranchId] ?? p.stock }))}
-              user={user}
-              onGrantXp={handleGrantXp}
-              onAddTransaction={handleAddTransaction}
-              onDecreaseStock={handleDecreaseStock}
-              activeShift={activeShift}
-              shiftHistory={shiftHistory}
-              onOpenShift={handleOpenShift}
-              onCloseShift={handleCloseShift}
-              onAddShiftMovement={handleAddShiftMovement}
-              customers={customers}
-              billingSettings={billingSettings}
-              hardwareSettings={hardwareSettings}
-              onOpenHardwareSettings={() => setIsHardwareHubOpen(true)}
-              onUpdateCustomer={handleUpdateCustomer}
-              exchangeRate={exchangeRates[activeRateType]}
-              activeRateType={activeRateType}
-              exchangeRates={exchangeRates}
-              activeEvent={activeEvent}
-              onTriggerEventProgress={handleTriggerEventProgress}
-            />
-          )}
+            <Route path="/sales" element={
+              <SalesScreen
+                products={products.map(p => ({ ...p, stock: p.branchesStock?.[activeBranchId] ?? p.stock }))}
+                user={user}
+                onGrantXp={handleGrantXp}
+                onAddTransaction={handleAddTransaction}
+                onDecreaseStock={handleDecreaseStock}
+                activeShift={activeShift}
+                shiftHistory={shiftHistory}
+                onOpenShift={handleOpenShift}
+                onCloseShift={handleCloseShift}
+                onAddShiftMovement={handleAddShiftMovement}
+                customers={customers}
+                billingSettings={billingSettings}
+                hardwareSettings={hardwareSettings}
+                onOpenHardwareSettings={() => setIsHardwareHubOpen(true)}
+                onUpdateCustomer={handleUpdateCustomer}
+                exchangeRate={exchangeRates[activeRateType]}
+                activeRateType={activeRateType}
+                exchangeRates={exchangeRates}
+                activeEvent={activeEvent}
+                onTriggerEventProgress={handleTriggerEventProgress}
+              />
+            } />
 
-          {activeTab === 'customers' && (
-            <CustomersScreen
-              customers={customers}
-              onAddCustomer={handleAddCustomer}
-              onUpdateCustomer={handleUpdateCustomer}
-              onDeleteCustomer={handleDeleteCustomer}
-              onGrantXp={handleGrantXp}
-              activeShift={activeShift}
-              onAddShiftMovement={handleAddShiftMovement}
-            />
-          )}
+            <Route path="/customers" element={
+              <CustomersScreen
+                customers={customers}
+                onAddCustomer={handleAddCustomer}
+                onUpdateCustomer={handleUpdateCustomer}
+                onDeleteCustomer={handleDeleteCustomer}
+                onGrantXp={handleGrantXp}
+                activeShift={activeShift}
+                onAddShiftMovement={handleAddShiftMovement}
+              />
+            } />
 
-          {activeTab === 'inventory' && (
-            <InventoryScreen
-              products={products.map(p => ({ ...p, stock: p.branchesStock?.[activeBranchId] ?? p.stock }))}
-              onAddProduct={handleAddProduct}
-              onUpdateProduct={handleUpdateProduct}
-              onDeleteProduct={handleDeleteProduct}
-              onGrantXp={handleGrantXp}
-              activeShift={activeShift}
-              onAddShiftMovement={handleAddShiftMovement}
-              currentUser={user}
-              suppliers={suppliers}
-              purchaseOrders={purchaseOrders}
-              onAddSupplier={handleAddSupplier}
-              onUpdateSupplier={handleUpdateSupplier}
-              onDeleteSupplier={handleDeleteSupplier}
-              onSavePurchaseOrder={handleSavePurchaseOrder}
-              onTransitPurchaseOrder={handleTransitPurchaseOrder}
-              onReceivePurchaseOrder={handleReceivePurchaseOrder}
-              onCancelPurchaseOrder={handleCancelPurchaseOrder}
-              onRegisterSupplierPayout={handleRegisterSupplierPayout}
-            />
-          )}
+            <Route path="/inventory" element={
+              <InventoryScreen
+                products={products.map(p => ({ ...p, stock: p.branchesStock?.[activeBranchId] ?? p.stock }))}
+                onAddProduct={handleAddProduct}
+                onUpdateProduct={handleUpdateProduct}
+                onDeleteProduct={handleDeleteProduct}
+                onGrantXp={handleGrantXp}
+                activeShift={activeShift}
+                onAddShiftMovement={handleAddShiftMovement}
+                currentUser={user}
+                suppliers={suppliers}
+                purchaseOrders={purchaseOrders}
+                onAddSupplier={handleAddSupplier}
+                onUpdateSupplier={handleUpdateSupplier}
+                onDeleteSupplier={handleDeleteSupplier}
+                onSavePurchaseOrder={handleSavePurchaseOrder}
+                onTransitPurchaseOrder={handleTransitPurchaseOrder}
+                onReceivePurchaseOrder={handleReceivePurchaseOrder}
+                onCancelPurchaseOrder={handleCancelPurchaseOrder}
+                onRegisterSupplierPayout={handleRegisterSupplierPayout}
+              />
+            } />
 
-          {activeTab === 'history' && (
-            <HistoryScreen
-              transactions={transactions}
-              onRefundTransaction={handleRefundTransaction}
-              currentUser={user}
-              billingSettings={billingSettings}
-            />
-          )}
+            <Route path="/history" element={
+              <HistoryScreen
+                transactions={transactions}
+                onRefundTransaction={handleRefundTransaction}
+                currentUser={user}
+                billingSettings={billingSettings}
+              />
+            } />
 
-          {activeTab === 'settings' && (
-            <SettingsScreen
-              settings={billingSettings}
-              onSaveSettings={handleSaveBillingSettings}
-              onGrantXp={handleGrantXp}
-              licenseDetails={licenseDetails}
-              onActivateLicenseKey={handleActivateLicenseKey}
-              onResetLicenseToFree={handleResetLicenseToFree}
-              appVersion={appVersion}
-              onUpdateAppVersion={handleUpdateAppVersion}
-              user={user}
-            />
-          )}
+            <Route path="/settings" element={
+              <SettingsScreen
+                settings={billingSettings}
+                onSaveSettings={handleSaveBillingSettings}
+                onGrantXp={handleGrantXp}
+                licenseDetails={licenseDetails}
+                onActivateLicenseKey={handleActivateLicenseKey}
+                onResetLicenseToFree={handleResetLicenseToFree}
+                appVersion={appVersion}
+                onUpdateAppVersion={handleUpdateAppVersion}
+                user={user}
+              />
+            } />
 
-          {activeTab === 'gamification' && (
-            <GamificationScreen
-              user={user}
-              onUpdateUser={saveUserAndSyncList}
-              transactions={transactions}
-              products={products}
-              customers={customers}
-              licenseDetails={licenseDetails}
-              activeEvent={activeEvent}
-              onTriggerExpressEvent={handleTriggerExpressEvent}
-            />
-          )}
+            <Route path="/gamification" element={
+              <GamificationScreen
+                user={user}
+                onUpdateUser={saveUserAndSyncList}
+                transactions={transactions}
+                products={products}
+                customers={customers}
+                licenseDetails={licenseDetails}
+                activeEvent={activeEvent}
+                onTriggerExpressEvent={handleTriggerExpressEvent}
+              />
+            } />
 
-          {activeTab === 'shifts' && (
-            <ShiftsScreen
-              user={user}
-              transactions={transactions}
-              activeShift={activeShift}
-              shiftHistory={shiftHistory}
-              onOpenShift={handleOpenShift}
-              onCloseShift={handleCloseShift}
-              onAddShiftMovement={handleAddShiftMovement}
-              onGrantXp={handleGrantXp}
-            />
-          )}
+            <Route path="/shifts" element={
+              <ShiftsScreen
+                user={user}
+                transactions={transactions}
+                activeShift={activeShift}
+                shiftHistory={shiftHistory}
+                onOpenShift={handleOpenShift}
+                onCloseShift={handleCloseShift}
+                onAddShiftMovement={handleAddShiftMovement}
+                onGrantXp={handleGrantXp}
+              />
+            } />
 
-          {activeTab === 'logistics' && (
-            <LogisticsScreen
-              products={products}
-              onUpdateProduct={handleUpdateProduct}
-              transactions={transactions}
-              activeShift={activeShift}
-              shiftHistory={shiftHistory}
-              onGrantXp={handleGrantXp}
-              branches={branches}
-              setBranches={setBranches}
-              activeBranchId={activeBranchId}
-              setActiveBranchId={setActiveBranchId}
-              registers={registers}
-              setRegisters={setRegisters}
-              activeRegisterId={activeRegisterId}
-              setActiveRegisterId={setActiveRegisterId}
-              stockTransfers={stockTransfers}
-              setStockTransfers={setStockTransfers}
-              currentUser={user}
-              licenseDetails={licenseDetails}
-            />
-          )}
+            <Route path="/logistics" element={
+              <LogisticsScreen
+                products={products}
+                onUpdateProduct={handleUpdateProduct}
+                transactions={transactions}
+                activeShift={activeShift}
+                shiftHistory={shiftHistory}
+                onGrantXp={handleGrantXp}
+                branches={branches}
+                setBranches={setBranches}
+                activeBranchId={activeBranchId}
+                setActiveBranchId={setActiveBranchId}
+                registers={registers}
+                setRegisters={setRegisters}
+                activeRegisterId={activeRegisterId}
+                setActiveRegisterId={setActiveRegisterId}
+                stockTransfers={stockTransfers}
+                setStockTransfers={setStockTransfers}
+                currentUser={user}
+                licenseDetails={licenseDetails}
+              />
+            } />
+          </Routes>
 
         </main>
 
