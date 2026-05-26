@@ -12,11 +12,13 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
+      // Desregistrar todos los Service Workers activos para solucionar y prevenir bloqueos de caché
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
-            .catch(err => console.log('Fallo al registrar Service Worker:', err));
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (let registration of registrations) {
+            registration.unregister();
+            console.log('🔄 Service Worker desregistrado con éxito para evitar conflictos.');
+          }
         });
       }
     </script>
