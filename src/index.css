@@ -13,7 +13,179 @@
   }
 }
 
-/* Custom bounce and Duolingo-style click behavior */
+/* Theme Engine Variables */
+
+:root, .theme-standard {
+  --duo-primary: #58cc02;
+  --duo-primary-dark: #46a302;
+  --duo-bg: #f7f7f7;
+  --duo-card-bg: #ffffff;
+  --duo-card-border: #e5e5e5;
+  --duo-text: #3c3c3c;
+  --duo-text-muted: #afafaf;
+  --duo-sidebar-bg: #ffffff;
+  --duo-progress-bar: #58cc02;
+  --duo-accent-gradient: linear-gradient(135deg, #58cc02, #7dde12);
+  --duo-button-text: #ffffff;
+  --theme-glow: 0px 4px 10px rgba(88, 204, 2, 0.1);
+}
+
+.theme-dark-galaxy {
+  --duo-primary: #8c52ff;
+  --duo-primary-dark: #6a34d0;
+  --duo-bg: #0b0c16;
+  --duo-card-bg: #151728;
+  --duo-card-border: #222544;
+  --duo-text: #f0f2ff;
+  --duo-text-muted: #7982a6;
+  --duo-sidebar-bg: #0d0f20;
+  --duo-progress-bar: #8c52ff;
+  --duo-accent-gradient: linear-gradient(135deg, #8c52ff, #00d9ff);
+  --duo-button-text: #ffffff;
+  --theme-glow: 0px 0px 15px rgba(140, 82, 255, 0.4);
+}
+
+.theme-neon-cyberpunk {
+  --duo-primary: #ff007f;
+  --duo-primary-dark: #c90060;
+  --duo-bg: #07070f;
+  --duo-card-bg: #0f1026;
+  --duo-card-border: #ff007f66;
+  --duo-text: #00f0ff;
+  --duo-text-muted: #5e6488;
+  --duo-sidebar-bg: #090a18;
+  --duo-progress-bar: #00f0ff;
+  --duo-accent-gradient: linear-gradient(135deg, #ff007f, #00f0ff);
+  --duo-button-text: #ffffff;
+  --theme-glow: 0 0 10px rgba(255, 0, 127, 0.5), 0 0 5px rgba(0, 240, 255, 0.3);
+}
+
+.theme-emerald-palace {
+  --duo-primary: #059669;
+  --duo-primary-dark: #047857;
+  --duo-bg: #f0fdf4;
+  --duo-card-bg: #ffffff;
+  --duo-card-border: #d1fae5;
+  --duo-text: #064e3b;
+  --duo-text-muted: #6ee7b7;
+  --duo-sidebar-bg: #ffffff;
+  --duo-progress-bar: #059669;
+  --duo-accent-gradient: linear-gradient(135deg, #059669, #34d399);
+  --duo-button-text: #ffffff;
+  --theme-glow: 0 4px 12px rgba(5, 150, 105, 0.15);
+}
+
+.theme-bubblegum-cute {
+  --duo-primary: #ff8da1;
+  --duo-primary-dark: #e86d83;
+  --duo-bg: #fff0f3;
+  --duo-card-bg: #ffffff;
+  --duo-card-border: #ffe3e8;
+  --duo-text: #c94a61;
+  --duo-text-muted: #ffa6b9;
+  --duo-sidebar-bg: #ffffff;
+  --duo-progress-bar: #ff8da1;
+  --duo-accent-gradient: linear-gradient(135deg, #ff8da1, #ffb3c1);
+  --duo-button-text: #ffffff;
+  --theme-glow: 0px 4px 10px rgba(255, 141, 161, 0.2);
+}
+
+.theme-retro-8bit {
+  --duo-primary: #f59e0b;
+  --duo-primary-dark: #d97706;
+  --duo-bg: #1c1917;
+  --duo-card-bg: #292524;
+  --duo-card-border: #44403c;
+  --duo-text: #e7e5e4;
+  --duo-text-muted: #78716c;
+  --duo-sidebar-bg: #171514;
+  --duo-progress-bar: #f59e0b;
+  --duo-accent-gradient: linear-gradient(90deg, #f59e0b, #ef4444);
+  --duo-button-text: #000000;
+  --theme-glow: 0px 0px 0px 2px #f59e0b;
+}
+
+.theme-executive-gold {
+  --duo-primary: #ffd700;
+  --duo-primary-dark: #aa841c;
+  --duo-bg: #111111;
+  --duo-card-bg: #1c1c1c;
+  --duo-card-border: #333333;
+  --duo-text: #ffd700;
+  --duo-text-muted: #888888;
+  --duo-sidebar-bg: #090909;
+  --duo-progress-bar: #ffd700;
+  --duo-accent-gradient: linear-gradient(135deg, #ffd700, #b8860b);
+  --duo-button-text: #000000;
+  --theme-glow: 0 4px 15px rgba(255, 215, 0, 0.15);
+}
+
+.theme-deep-ocean {
+  --duo-primary: #0284c7;
+  --duo-primary-dark: #0369a1;
+  --duo-bg: #072a40;
+  --duo-card-bg: #0f172a;
+  --duo-card-border: #1e293b;
+  --duo-text: #f0f9ff;
+  --duo-text-muted: #38bdf8;
+  --duo-sidebar-bg: #021a2b;
+  --duo-progress-bar: #38bdf8;
+  --duo-accent-gradient: linear-gradient(135deg, #0284c7, #38bdf8);
+  --duo-button-text: #ffffff;
+  --theme-glow: 0 4px 12px rgba(2, 132, 199, 0.25);
+}
+
+/* Theme Layout and Component Classes */
+
+.duo-theme-card {
+  background-color: var(--duo-card-bg) !important;
+  border: 2px solid var(--duo-card-border) !important;
+  border-bottom-width: 6px !important;
+  border-radius: 1.5rem !important; /* rounded-3xl */
+  color: var(--duo-text) !important;
+  transition: all 0.2s ease-in-out;
+  box-shadow: var(--theme-glow);
+}
+
+.duo-theme-btn-primary {
+  background-color: var(--duo-primary) !important;
+  color: var(--duo-button-text) !important;
+  border-bottom: 4px solid var(--duo-primary-dark) !important;
+  transition: all 0.1s ease;
+}
+.duo-theme-btn-primary:hover {
+  filter: brightness(1.15) !important;
+}
+.duo-theme-btn-primary:active {
+  border-bottom-width: 0px !important;
+  transform: translateY(4px) !important;
+}
+
+.duo-theme-btn-secondary {
+  background-color: var(--duo-card-bg) !important;
+  color: var(--duo-text) !important;
+  border: 2px solid var(--duo-card-border) !important;
+  border-bottom-width: 4px !important;
+  transition: all 0.1s ease;
+}
+.duo-theme-btn-secondary:hover {
+  background-color: var(--duo-bg) !important;
+}
+.duo-theme-btn-secondary:active {
+  border-bottom-width: 2px !important;
+  transform: translateY(2px) !important;
+}
+
+/* Animation utilities for specific themes */
+.theme-neon-cyberpunk .duo-theme-card {
+  text-shadow: 0 0 5px rgba(0, 240, 255, 0.4);
+}
+
+.theme-retro-8bit * {
+  image-rendering: pixelated;
+}
+
+/* Custom bounce and Duolingo-style click behavior (Legacy compatibility) */
 .duo-btn-primary {
   background-color: #58cc02;
   color: white;
@@ -45,5 +217,150 @@
 .duo-btn-secondary:active {
   border-bottom-width: 2px;
   transform: translateY(2px);
+}
+
+/* ========= SAGA MAP (ISOMETRIC 2.5D) ========= */
+
+.saga-map-container {
+  perspective: 900px;
+  overflow: hidden;
+}
+
+.saga-map-inner {
+  transform: rotateX(5deg);
+  transform-origin: center bottom;
+  transform-style: preserve-3d;
+}
+
+.saga-node-platform {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.saga-node-claimed {
+  background: linear-gradient(135deg, #1cb0f6, #0891b2);
+  border: 3px solid #0e7490;
+  box-shadow: 0 6px 0 #0c5f74, 0 8px 20px rgba(28, 176, 246, 0.2);
+}
+
+.saga-node-claimable {
+  background: linear-gradient(135deg, #ffd700, #ffb800);
+  border: 3px solid #e6a800;
+  box-shadow: 0 6px 0 #cc9600, 0 8px 20px rgba(255, 215, 0, 0.35);
+  animation: sagaGlow 2s ease-in-out infinite;
+}
+
+.saga-node-locked {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  border: 3px solid #374151;
+  box-shadow: 0 6px 0 #1f2937, 0 8px 10px rgba(0, 0, 0, 0.2);
+  opacity: 0.65;
+}
+
+.saga-node-chest {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  border-color: #b45309 !important;
+  box-shadow: 0 6px 0 #92400e, 0 0 25px rgba(245, 158, 11, 0.4) !important;
+}
+
+.saga-node-boss {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  border-color: #991b1b !important;
+  box-shadow: 0 6px 0 #7f1d1d, 0 0 30px rgba(239, 68, 68, 0.5) !important;
+  width: 88px !important;
+  height: 88px !important;
+}
+
+@keyframes sagaGlow {
+  0%, 100% { box-shadow: 0 6px 0 #cc9600, 0 8px 20px rgba(255, 215, 0, 0.35); }
+  50% { box-shadow: 0 6px 0 #cc9600, 0 0 40px rgba(255, 215, 0, 0.65); }
+}
+
+@keyframes sagaFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.iso-grid-bg {
+  background-image:
+    linear-gradient(30deg, rgba(255,255,255,0.03) 12%, transparent 12.5%, transparent 87%, rgba(255,255,255,0.03) 87.5%),
+    linear-gradient(150deg, rgba(255,255,255,0.03) 12%, transparent 12.5%, transparent 87%, rgba(255,255,255,0.03) 87.5%),
+    linear-gradient(60deg, rgba(119,136,153,0.07) 25%, transparent 25.5%, transparent 75%, rgba(119,136,153,0.07) 75%);
+  background-size: 80px 140px;
+}
+
+/* ═══════════════════════════════════════════════════
+   DuoMascot SVG — Animaciones Premium
+   ═══════════════════════════════════════════════════ */
+
+/* Respiración suave y natural */
+@keyframes duoBreathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.025); }
+}
+.duo-breathe {
+  animation: duoBreathe 3.5s ease-in-out infinite;
+}
+
+/* Rebote feliz al completar acciones */
+@keyframes duoBounceHappy {
+  0%, 100% { transform: translateY(0) scale(1); }
+  15% { transform: translateY(-8px) scale(1.05); }
+  30% { transform: translateY(0) scale(0.97); }
+  45% { transform: translateY(-4px) scale(1.02); }
+  60% { transform: translateY(0) scale(1); }
+}
+.duo-bounce-happy {
+  animation: duoBounceHappy 0.8s ease-out;
+}
+
+/* Zzz flotante para modo sleepy */
+@keyframes duoZzzFloat {
+  0% { opacity: 0; transform: translateY(0) scale(0.7); }
+  30% { opacity: 0.9; }
+  100% { opacity: 0; transform: translateY(-18px) translateX(6px) scale(1.1); }
+}
+.duo-zzz-1 { animation: duoZzzFloat 2.5s ease-out infinite; }
+.duo-zzz-2 { animation: duoZzzFloat 2.5s ease-out 0.5s infinite; }
+.duo-zzz-3 { animation: duoZzzFloat 2.5s ease-out 1s infinite; }
+
+/* Destellos de celebración */
+@keyframes duoSparkle {
+  0% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1.3); }
+  100% { opacity: 0; transform: scale(0); }
+}
+.duo-sparkle-1 { animation: duoSparkle 1s ease-out 0s infinite; }
+.duo-sparkle-2 { animation: duoSparkle 1s ease-out 0.15s infinite; }
+.duo-sparkle-3 { animation: duoSparkle 1s ease-out 0.3s infinite; }
+.duo-sparkle-4 { animation: duoSparkle 1s ease-out 0.45s infinite; }
+.duo-sparkle-5 { animation: duoSparkle 1s ease-out 0.6s infinite; }
+.duo-sparkle-6 { animation: duoSparkle 1s ease-out 0.75s infinite; }
+
+/* Capa ondulante con efecto de viento */
+@keyframes duoCapeWave {
+  0%, 100% { d: path("M30 45 Q28 70 22 100 Q20 115 30 125 Q45 135 60 130 Q75 135 90 125 Q100 115 98 100 Q92 70 90 45"); }
+  33% { d: path("M30 45 Q25 72 18 102 Q16 118 28 127 Q44 138 60 132 Q76 138 92 127 Q104 118 102 102 Q95 72 90 45"); }
+  66% { d: path("M30 45 Q30 68 24 98 Q22 112 32 123 Q46 132 60 128 Q74 132 88 123 Q98 112 96 98 Q90 68 90 45"); }
+}
+.duo-cape-wave {
+  animation: duoCapeWave 4s ease-in-out infinite;
+}
+
+/* Mascot wrapper transitions */
+.duo-mascot-wrapper {
+  transition: transform 0.3s ease, filter 0.3s ease;
+  will-change: transform;
+}
+.duo-mascot-wrapper:hover {
+  transform: scale(1.08) rotate(-3deg);
+  filter: drop-shadow(0 4px 12px rgba(88, 204, 2, 0.3));
 }
 

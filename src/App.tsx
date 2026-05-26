@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { User, Product, Transaction, CashShift, CashMovement, Customer, LegalBillingSettings, Branch, CashRegister, StockTransfer, Supplier, PurchaseOrder } from './types';
+import { User, Product, Transaction, CashShift, CashMovement, Customer, LegalBillingSettings, Branch, CashRegister, StockTransfer, Supplier, PurchaseOrder, ExpressEvent } from './types';
 import { DEFAULT_PRODUCTS, DUO_CHARACTERS, DEFAULT_CUSTOMERS, DEFAULT_BILLING_SETTINGS } from './initialData';
 import LoginScreen from './components/LoginScreen';
 import LandingPage from './components/LandingPage';
@@ -21,6 +21,8 @@ import ShiftsScreen from './components/ShiftsScreen';
 import LogisticsScreen from './components/LogisticsScreen';
 import InstallModal from './components/InstallModal';
 import GamificationScreen from './components/GamificationScreen';
+import DuoMascot from './components/DuoMascot';
+import type { DuoMood } from './components/DuoMascot';
 import { Home, ShoppingBag, Package, History, LogOut, Download, Flame, Award, Smartphone, Laptop, Sparkles, Volume2, VolumeX, Users, Settings, Wallet, Globe, Cpu, Trophy, RefreshCw, Cloud } from 'lucide-react';
 import { playSound } from './utils/sounds';
 import { HardwareDeviceSettings, DEFAULT_HARDWARE_SETTINGS } from './utils/hardware';
@@ -43,6 +45,46 @@ export default function App() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'sales' | 'shifts' | 'inventory' | 'history' | 'customers' | 'settings' | 'logistics' | 'gamification'>('dashboard');
+  const [activeEvent, setActiveEvent] = useState<ExpressEvent | null>(null);
+
+  // ─── DuoMascot reactive mood state ───
+  const [duoMood, setDuoMood] = useState<DuoMood>('neutral');
+  const [duoSparkles, setDuoSparkles] = useState(false);
+
+  // Inactivity timer: 2 minutes → sleepy
+  useEffect(() => {
+    let inactivityTimer: ReturnType<typeof setTimeout>;
+    const resetInactivity = () => {
+      // Don't override happy mood while it's showing
+      setDuoMood(prev => prev === 'happy' ? prev : 'neutral');
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        setDuoMood('sleepy');
+      }, 120000); // 2 minutes
+    };
+    resetInactivity();
+    window.addEventListener('mousemove', resetInactivity);
+    window.addEventListener('keydown', resetInactivity);
+    window.addEventListener('click', resetInactivity);
+    window.addEventListener('touchstart', resetInactivity);
+    return () => {
+      clearTimeout(inactivityTimer);
+      window.removeEventListener('mousemove', resetInactivity);
+      window.removeEventListener('keydown', resetInactivity);
+      window.removeEventListener('click', resetInactivity);
+      window.removeEventListener('touchstart', resetInactivity);
+    };
+  }, []);
+
+  // Helper: trigger happy mood for 5 seconds
+  const triggerDuoHappy = () => {
+    setDuoMood('happy');
+    setDuoSparkles(true);
+    setTimeout(() => {
+      setDuoMood('neutral');
+      setDuoSparkles(false);
+    }, 5000);
+  };
   
   // Real-time Venezuelan Exchange rates state (ve.dolarapi.com)
   const [exchangeRates, setExchangeRates] = useState<{ oficial: number; paralelo: number }>(() => {
@@ -488,6 +530,114 @@ export default function App() {
     return () => clearInterval(interval);
   }, [user]);
 
+  // Timer effect for active express events
+  useEffect(() => {
+    if (!activeEvent) return;
+    const interval = setInterval(() => {
+      setActiveEvent(prev => {
+        if (!prev) return null;
+        if (prev.remainingSeconds <= 1) {
+          toast.info(`El evento "${prev.title}" ha finalizado sin completarse.`, { title: 'Reto Express Expirado ⏰' });
+          return null;
+        }
+        return {
+          ...prev,
+          remainingSeconds: prev.remainingSeconds - 1
+        };
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [activeEvent]);
+
+  // Handler to trigger event progress
+  const handleTriggerEventProgress = (type: 'scan' | 'loyalty' | 'sale') => {
+    if (!activeEvent) return;
+    
+    if (
+      (type === 'scan' && activeEvent.type === 'scan_challenge') ||
+      (type === 'loyalty' && activeEvent.type === 'loyalty_challenge')
+    ) {
+      setActiveEvent(prev => {
+        if (!prev) return null;
+        const nextCount = prev.currentCount + 1;
+        if (nextCount >= prev.targetCount) {
+          playSound('levelup');
+          toast.achievement(`¡RETO CUMPLIDO! 🏆 Ganaste +${prev.gemsReward} gemas por "${prev.title}".`, {
+            title: 'Reto Express Completado 🎉',
+            duration: 6000
+          });
+          if (user) {
+            const updatedUser = {
+              ...user,
+              gems: (user.gems ?? 40) + prev.gemsReward,
+              gemsEarnedTotal: (user.gemsEarnedTotal ?? 40) + prev.gemsReward
+            };
+            saveUserAndSyncList(updatedUser);
+          }
+          return null;
+        }
+        return {
+          ...prev,
+          currentCount: nextCount
+        };
+      });
+    }
+  };
+
+  // Triggering express events
+  const handleTriggerExpressEvent = (type: 'happy_hour' | 'scan_challenge' | 'loyalty_challenge') => {
+    playSound('levelup');
+    const now = Date.now();
+    let newEvent: ExpressEvent;
+    
+    if (type === 'happy_hour') {
+      newEvent = {
+        id: `event-${now}`,
+        type: 'happy_hour',
+        title: 'Hora Feliz de Ventas ⚡',
+        description: '¡Doble XP en todas las ventas concretadas durante los próximos 5 minutos! Acelera el paso y factura ya.',
+        durationSeconds: 300,
+        remainingSeconds: 300,
+        gemsReward: 0,
+        targetCount: 0,
+        currentCount: 0,
+        expiresAt: now + 300 * 1000
+      };
+    } else if (type === 'scan_challenge') {
+      newEvent = {
+        id: `event-${now}`,
+        type: 'scan_challenge',
+        title: 'Reto Express de Escaneo 🔍',
+        description: 'Escanear 2 productos en menos de 60 segundos para obtener un bono de 20 gemas extra.',
+        durationSeconds: 60,
+        remainingSeconds: 60,
+        gemsReward: 20,
+        targetCount: 2,
+        currentCount: 0,
+        expiresAt: now + 60 * 1000
+      };
+    } else {
+      newEvent = {
+        id: `event-${now}`,
+        type: 'loyalty_challenge',
+        title: 'Fidelización Relámpago 🤝',
+        description: 'Registrar o asociar un cliente en Duo loyalty en menos de 3 minutos para ganar 20 gemas de inmediato.',
+        durationSeconds: 180,
+        remainingSeconds: 180,
+        gemsReward: 20,
+        targetCount: 1,
+        currentCount: 0,
+        expiresAt: now + 180 * 1000
+      };
+    }
+    
+    setActiveEvent(newEvent);
+    toast.achievement(`¡EVENTO EXPRESS INICIADO! ⚡ "${newEvent.title}" está activo.`, {
+      title: 'Reto de Duo Activo 🦉',
+      duration: 5000
+    });
+  };
+
   // Local storage initialization
   useEffect(() => {
     // 1. Load active user if logged in
@@ -502,6 +652,12 @@ export default function App() {
         if (!parsed.activeSkin) parsed.activeSkin = 'standard';
         if (!parsed.unlockedBadges) parsed.unlockedBadges = [];
         if (!parsed.completedMissionsToday) parsed.completedMissionsToday = [];
+        if (!parsed.unlockedAccessories) parsed.unlockedAccessories = [];
+        if (!parsed.activeAccessory) parsed.activeAccessory = '';
+        if (!parsed.employeeLeague) parsed.employeeLeague = 'bronce';
+        if (parsed.weeklyXp === undefined) parsed.weeklyXp = 0;
+        if (parsed.seasonXp === undefined) parsed.seasonXp = 0;
+        if (!parsed.seasonRewardsClaimed) parsed.seasonRewardsClaimed = [];
         setUser(parsed);
         setShowLanding(false);
       } catch (e) {
@@ -829,6 +985,11 @@ export default function App() {
       toast.achievement(`🧪 ¡Poción de Doble XP Activa! Ganaste el doble: +${xpGained} XP`, { title: 'Booster de Fila 🧪' });
     }
 
+    if (activeEvent && activeEvent.type === 'happy_hour') {
+      xpGained = xpGained * 2;
+      toast.achievement(`⚡ ¡Hora Feliz Activa! XP duplicado: +${xpGained} XP`, { title: 'Hora Feliz de Ventas ⚡' });
+    }
+
     let updatedXp = user.xp + xpGained;
     let currentLevel = user.level;
     let title = user.levelTitle;
@@ -881,7 +1042,9 @@ export default function App() {
       ...user,
       xp: updatedXp,
       level: currentLevel,
-      levelTitle: title
+      levelTitle: title,
+      weeklyXp: (user.weeklyXp ?? 0) + xpGained,
+      seasonXp: (user.seasonXp ?? 0) + xpGained
     };
 
     saveUserAndSyncList(updatedUser);
@@ -1425,6 +1588,11 @@ export default function App() {
         toast.achievement(`🧪 ¡Poción de Doble XP Activa! Ganaste el doble: +${xpGained} XP`, { title: 'Booster de Fila 🧪' });
       }
 
+      if (activeEvent && activeEvent.type === 'happy_hour') {
+        xpGained = xpGained * 2;
+        toast.achievement(`⚡ ¡Hora Feliz Activa! XP duplicado en venta: +${xpGained} XP`, { title: 'Hora Feliz de Ventas ⚡' });
+      }
+
       let updatedXp = user.xp + xpGained;
       let currentLevel = user.level;
       let title = user.levelTitle;
@@ -1455,6 +1623,9 @@ export default function App() {
         toast.info(`¡Ganaste +${xpGained} XP y +${gainedGems} 💎 por esta venta! 🦉`, { title: 'Operación Registrada', duration: 3000 });
       }
 
+      // Trigger happy owl reaction on sale
+      triggerDuoHappy();
+
       // Automatically register the first sale everyday in daily simulation stats to unlock quests too!
       try {
         const dayStatsRaw = localStorage.getItem(`duo_pos_daily_acts_${today}`);
@@ -1471,7 +1642,9 @@ export default function App() {
         gemsEarnedTotal: nextGemsTotal,
         xp: updatedXp,
         level: currentLevel,
-        levelTitle: title
+        levelTitle: title,
+        weeklyXp: (user.weeklyXp ?? 0) + xpGained,
+        seasonXp: (user.seasonXp ?? 0) + xpGained
       };
 
       saveUserAndSyncList(updatedUser);
@@ -1526,7 +1699,8 @@ export default function App() {
     if (user) {
       const updatedUser: User = {
         ...user,
-        xp: Math.max(0, user.xp - 10) // Small deduction for backing out
+        xp: Math.max(0, user.xp - 10), // Small deduction for backing out
+        weeklyXp: Math.max(0, (user.weeklyXp ?? 0) - 10)
       };
       saveUserAndSyncList(updatedUser);
     }
@@ -1650,7 +1824,9 @@ export default function App() {
             unlockedSkins: ['skin-standard', 'skin-dark-galaxy', 'skin-neon-cyberpunk'],
             activeSkin: 'standard',
             unlockedBadges: [],
-            completedMissionsToday: []
+            completedMissionsToday: [],
+            seasonXp: 0,
+            seasonRewardsClaimed: []
           };
           setUser(adminUser);
           localStorage.setItem('duo_pos_active_user', JSON.stringify(adminUser));
@@ -1706,6 +1882,30 @@ export default function App() {
           accentText: "text-[#ff4b93]",
           logoText: "text-[#ff4b93] font-extrabold"
         };
+      case 'retro-8bit':
+        return {
+          outer: "bg-stone-900 text-stone-200 selection:bg-amber-600 font-mono",
+          card: "bg-stone-800 border-stone-700 text-stone-200",
+          sidebarActive: "bg-stone-850 border-amber-500 border-2 border-b-4 text-amber-500 font-bold shadow-[0_0_10px_rgba(245,158,11,0.15)]",
+          accentText: "text-amber-500",
+          logoText: "text-amber-500 font-bold uppercase"
+        };
+      case 'executive-gold':
+        return {
+          outer: "bg-[#0a0a0a] text-yellow-500/90 selection:bg-yellow-600 font-sans",
+          card: "bg-[#151515] border-yellow-600/30 text-yellow-500",
+          sidebarActive: "bg-[#1a1a1a] border-[#ffd700] border-2 border-b-4 text-[#ffd700] font-black shadow-[0_0_15px_rgba(255,215,0,0.15)]",
+          accentText: "text-[#ffd700]",
+          logoText: "text-[#ffd700] font-black uppercase"
+        };
+      case 'deep-ocean':
+        return {
+          outer: "bg-[#072a40] text-sky-150 selection:bg-sky-600",
+          card: "bg-[#0f172a] border-sky-950 text-sky-50 shadow-[0_0_15px_rgba(56,189,248,0.06)]",
+          sidebarActive: "bg-[#0f172a] border-sky-450 border-2 border-b-4 text-sky-400 font-black shadow-[0_0_12px_rgba(56,189,248,0.2)]",
+          accentText: "text-sky-400",
+          logoText: "text-sky-400 font-extrabold"
+        };
       case 'standard':
       default:
         return {
@@ -1721,7 +1921,7 @@ export default function App() {
   const themeClasses = getSkinThemeClasses();
 
   return (
-    <div className={`min-h-screen font-sans flex flex-col relative antialiased transition-all duration-300 ${themeClasses.outer}`}>
+    <div className={`min-h-screen font-sans flex flex-col relative antialiased transition-all duration-300 theme-${user?.activeSkin || 'standard'} ${themeClasses.outer}`}>
 
       {/* 1. TOP DISMISSIBLE PWA MARKETING BANNER */}
       {showInstallBanner && !isSimInstalled && (
@@ -1754,7 +1954,13 @@ export default function App() {
             
             {/* Duolingo Character logo header */}
             <div className="flex items-center gap-2 px-2 cursor-pointer transform hover:scale-102 transition-transform duration-100">
-              <span className="text-4xl filter drop-shadow-sm select-none">{activeChar.avatar}</span>
+              <div className="relative inline-block">
+                {user.avatar === 'duo' ? (
+                  <DuoMascot size={44} activeAccessory={user.activeAccessory} mood={duoMood} showSparkles={duoSparkles} />
+                ) : (
+                  <span className="text-4xl filter drop-shadow-sm select-none">{activeChar.avatar}</span>
+                )}
+              </div>
               <div>
                 <h1 className={`text-2xl font-black tracking-wider leading-none ${themeClasses.logoText}`}>
                   Duo<span className={user?.activeSkin === 'standard' ? 'text-[#3c3c3c]' : 'text-inherit opacity-85'}>POS</span>
@@ -2006,6 +2212,61 @@ export default function App() {
             </div>
           </div>
 
+          {/* DYNAMIC EXPRESS EVENT ALERT BANNER */}
+          {activeEvent && (
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 border-b-8 rounded-3xl p-4.5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-bounce" style={{ animationDuration: '4s' }}>
+              <div className="flex items-center gap-4.5 w-full sm:w-auto">
+                <div className="bg-amber-100 dark:bg-amber-950 p-3 h-14 w-14 rounded-2xl flex items-center justify-center text-3xl shadow-sm animate-pulse flex-shrink-0">
+                  {activeEvent.type === 'happy_hour' ? '⚡' : activeEvent.type === 'scan_challenge' ? '🔍' : '🤝'}
+                </div>
+                <div className="text-left space-y-1">
+                  <span className="bg-amber-200 text-amber-950 text-[10px] uppercase font-black px-2 py-0.5 rounded-lg border-b border-amber-300">
+                    Reto Express Activo ⏰
+                  </span>
+                  <h4 className="text-lg font-black tracking-tight text-gray-800">
+                    {activeEvent.title}
+                  </h4>
+                  <p className="text-xs text-gray-500 font-extrabold leading-relaxed max-w-lg">
+                    {activeEvent.description}
+                  </p>
+                  
+                  {/* Progress Tracker for challenges */}
+                  {activeEvent.targetCount > 0 && (
+                    <div className="flex items-center gap-2 pt-1 w-full">
+                      <div className="w-40 bg-gray-200 h-2.5 rounded-full overflow-hidden border border-gray-300">
+                        <div 
+                          className="bg-amber-500 h-full transition-all duration-300"
+                          style={{ width: `${(activeEvent.currentCount / activeEvent.targetCount) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] font-black text-amber-700">
+                        Progreso: {activeEvent.currentCount} / {activeEvent.targetCount}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4.5 w-full sm:w-auto justify-end">
+                {/* Timer Clock */}
+                <div className="bg-amber-100 border-2 border-amber-200 rounded-2xl p-2 px-3.5 flex items-center gap-2 shadow-xs">
+                  <span className="text-xl font-black text-amber-600 font-mono tracking-tight animate-pulse">
+                    {Math.floor(activeEvent.remainingSeconds / 60)}:{(activeEvent.remainingSeconds % 60).toString().padStart(2, '0')}
+                  </span>
+                </div>
+                
+                {/* Dismiss button */}
+                <button
+                  type="button"
+                  onClick={() => { playSound('click'); setActiveEvent(null); }}
+                  className="p-1 px-2 border-2 border-amber-200 text-amber-600 bg-white hover:bg-amber-50 font-black text-xs uppercase py-1.5 rounded-xl transition-all cursor-pointer"
+                >
+                  Omitir
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Active Screen Selection Switcher router */}
           {activeTab === 'dashboard' && (
             <DashboardScreen
@@ -2018,6 +2279,7 @@ export default function App() {
               }}
               onNavigateToSell={() => setActiveTab('sales')}
               onGrantXp={handleGrantXp}
+              onUpdateUser={saveUserAndSyncList}
             />
           )}
 
@@ -2041,6 +2303,8 @@ export default function App() {
               exchangeRate={exchangeRates[activeRateType]}
               activeRateType={activeRateType}
               exchangeRates={exchangeRates}
+              activeEvent={activeEvent}
+              onTriggerEventProgress={handleTriggerEventProgress}
             />
           )}
 
@@ -2110,6 +2374,8 @@ export default function App() {
               products={products}
               customers={customers}
               licenseDetails={licenseDetails}
+              activeEvent={activeEvent}
+              onTriggerExpressEvent={handleTriggerExpressEvent}
             />
           )}
 

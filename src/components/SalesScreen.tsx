@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Product, CartItem, Transaction, User, CashShift, CashMovement, Customer, LegalBillingSettings } from '../types';
+import { Product, CartItem, Transaction, User, CashShift, CashMovement, Customer, LegalBillingSettings, ExpressEvent } from '../types';
 import { CATEGORIES, DUO_CHARACTERS, Character } from '../initialData';
 import { Search, ShoppingCart, Trash2, Plus, Minus, Tag, Check, Award, Flame, Sparkles, CreditCard, DollarSign, Wallet, Barcode, Camera, RefreshCw, Users, HelpCircle, Gem, Cpu, ChefHat } from 'lucide-react';
 import { playSound } from '../utils/sounds';
@@ -41,6 +41,8 @@ interface SalesScreenProps {
   exchangeRate?: number;
   activeRateType?: 'oficial' | 'paralelo';
   exchangeRates?: { oficial: number; paralelo: number };
+  activeEvent?: ExpressEvent | null;
+  onTriggerEventProgress?: (type: 'scan' | 'loyalty' | 'sale') => void;
 }
 
 // Browser Web Audio API Synthesizer Helper for cash register "Ka-ching!" sound!
@@ -112,7 +114,9 @@ export default function SalesScreen({
   onUpdateCustomer,
   exchangeRate = 53.05,
   activeRateType = 'oficial',
-  exchangeRates = { oficial: 53.05, paralelo: 57.10 }
+  exchangeRates = { oficial: 53.05, paralelo: 57.10 },
+  activeEvent,
+  onTriggerEventProgress
 }: SalesScreenProps) {
   const activeChar: Character = DUO_CHARACTERS[user.avatar] || DUO_CHARACTERS.duo;
 
@@ -361,6 +365,7 @@ export default function SalesScreen({
               playSound('success');
               setIsMobileCartOpen(true);
               toast.success(`Código de barras escaneado: ${found.emoji} ${found.name}`, { title: 'Escáner Inteligente 🔍' });
+              if (onTriggerEventProgress) onTriggerEventProgress('scan');
               
               setPromoMessage(`⚡ ¡Escaneado: ${found.name} (EAN-${rawBuffer})!`);
               setTimeout(() => setPromoMessage(''), 3000);
@@ -429,6 +434,7 @@ export default function SalesScreen({
       addToCart(product);
       playSound('success');
       setActiveScanStatus(`✅ Éxito: ¡Escaneado correctamente ${product.name}!`);
+      if (onTriggerEventProgress) onTriggerEventProgress('scan');
       setPromoMessage(`⚡ Escáner: ${product.name}`);
       setTimeout(() => setPromoMessage(''), 2500);
     } else {
@@ -2362,6 +2368,7 @@ export default function SalesScreen({
                         if (cust) {
                           setSelectedCustomer(cust);
                           playSound('success');
+                          if (onTriggerEventProgress) onTriggerEventProgress('loyalty');
                         }
                       }}
                       className="text-[#1cb0f6] border border-sky-150 bg-sky-50 rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wider outline-none cursor-pointer max-w-[110px]"

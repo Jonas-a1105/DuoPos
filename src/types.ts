@@ -26,6 +26,88 @@ export interface User {
   completedMissionsToday?: string[]; // Mission keys completed today
   completedMissionsTimestamp?: string; // Timestamp day check YYYY-MM-DD
   dailyStreakSavedCount?: number; // Saved Streak Freeze count
+  
+  // League System
+  employeeLeague?: LeagueTier;
+  weeklyXp?: number;
+  weeklyXpResetDate?: string; // ISO Monday date
+  
+  // Progression Map
+  progressionClaimed?: string[]; // Node IDs claimed
+  
+  // Owl Accessories
+  unlockedAccessories?: string[];
+  activeAccessory?: string;
+  
+  // Season Pass
+  seasonXp?: number;
+  seasonRewardsClaimed?: number[]; // Tier numbers claimed
+}
+
+// League System
+export type LeagueTier = 'bronce' | 'plata' | 'oro' | 'zafiro' | 'rubi' | 'esmeralda' | 'diamante' | 'obsidiana';
+
+export interface LeagueParticipant {
+  id: string;
+  name: string;
+  avatar: string;
+  weeklyXp: number;
+  league: LeagueTier;
+  isCurrentUser?: boolean;
+}
+
+export interface WeeklyLeague {
+  tier: LeagueTier;
+  participants: LeagueParticipant[];
+  weekStart: string; // ISO date string (Monday)
+  weekEnd: string;   // ISO date string (Sunday)
+  promotionZone: number;  // Top N get promoted
+  demotionZone: number;   // Bottom N get demoted
+}
+
+// Progression Map (Saga Map)
+export interface ProgressionNode {
+  id: string;
+  title: string;
+  description: string;
+  type: 'milestone' | 'chest' | 'boss' | 'rest';
+  requirement: {
+    metric: 'totalSales' | 'totalTransactions' | 'streak' | 'level' | 'customers' | 'perfectShifts';
+    target: number;
+  };
+  reward: {
+    xp: number;
+    gems: number;
+    unlockId?: string; // skin/title/accessory to unlock
+  };
+  position: number; // Order in the path
+  isUnlocked: boolean;
+  isClaimed: boolean;
+}
+
+// Extended Store
+export interface OwlAccessory {
+  id: string;
+  name: string;
+  type: 'hat' | 'glasses' | 'outfit' | 'effect';
+  emoji: string;  // Visual representation
+  cost: number;
+  rarity: 'comun' | 'raro' | 'epico' | 'legendario';
+  levelRequired: number;
+}
+
+// Season / Battle Pass
+export interface SeasonReward {
+  tier: number;
+  xpRequired: number;
+  reward: {
+    type: 'gems' | 'skin' | 'title' | 'accessory' | 'xpBoost';
+    value: string | number;
+    name: string;
+    icon: string;
+    rarity: 'comun' | 'raro' | 'epico' | 'legendario';
+  };
+  isClaimed: boolean;
 }
 
 export interface Product {
@@ -284,3 +366,16 @@ export interface PurchaseOrder {
 }
 
 
+
+export interface ExpressEvent {
+  id: string;
+  type: 'happy_hour' | 'scan_challenge' | 'loyalty_challenge';
+  title: string;
+  description: string;
+  durationSeconds: number;
+  remainingSeconds: number;
+  gemsReward: number;
+  targetCount: number;
+  currentCount: number;
+  expiresAt: number;
+}
