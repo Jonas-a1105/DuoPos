@@ -114,7 +114,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         console.log("🔍 [LOGIN DEBUG] Buscando email asociado al username:", username.trim());
         
         const profileTimeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('TIMEOUT_LIMIT')), 5000)
+          setTimeout(() => reject(new Error('TIMEOUT_LIMIT')), 15000)
         );
         
         let profileData: any = null;
@@ -183,7 +183,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       console.log("🔍 [LOGIN DEBUG] Intentando signInWithPassword para email:", emailToAuth);
       
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('TIMEOUT_LIMIT')), 5000)
+        setTimeout(() => reject(new Error('TIMEOUT_LIMIT')), 15000)
       );
 
       let authData: any = null;
