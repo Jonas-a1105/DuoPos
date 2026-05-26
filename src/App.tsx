@@ -12,6 +12,11 @@ import { supabase, isSupabaseConfigured, setSupabaseToken } from './utils/supaba
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { syncLoad, syncSave, syncInsert, syncDelete, flushPendingQueue, generateUUID, syncInsertTransaction, syncSaveShift, syncSaveStockTransfer, syncSavePurchaseOrder, getLocalData, setLocalData } from './utils/supabaseSync';
 
+import { useUserStore } from './stores/useUserStore';
+import { useSalesStore } from './stores/useSalesStore';
+import { useInventoryStore } from './stores/useInventoryStore';
+import { useCustomerStore } from './stores/useCustomerStore';
+
 import DashboardScreen from './components/DashboardScreen';
 import SalesScreen from './components/SalesScreen';
 import InventoryScreen from './components/InventoryScreen';
@@ -130,31 +135,79 @@ function ClerkSessionSync({ onSyncUser }: { onSyncUser: (user: User | null) => v
 }
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
+  // Zustand Stores Hooks
+  const user = useUserStore(state => state.user);
+  const setUser = useUserStore(state => state.setUser);
+  const users = useUserStore(state => state.users);
+  const setUsers = useUserStore(state => state.setUsers);
+  const showLanding = useUserStore(state => state.showLanding);
+  const setShowLanding = useUserStore(state => state.setShowLanding);
+  const isLicenseExpired = useUserStore(state => state.isLicenseExpired);
+  const setIsLicenseExpired = useUserStore(state => state.setIsLicenseExpired);
+  const isClockTampered = useUserStore(state => state.isClockTampered);
+  const setIsClockTampered = useUserStore(state => state.setIsClockTampered);
+  const duoMood = useUserStore(state => state.duoMood);
+  const setDuoMood = useUserStore(state => state.setDuoMood);
+  const duoSparkles = useUserStore(state => state.duoSparkles);
+  const setDuoSparkles = useUserStore(state => state.setDuoSparkles);
+  const levelUpAchieved = useUserStore(state => state.levelUpAchieved);
+  const setLevelUpAchieved = useUserStore(state => state.setLevelUpAchieved);
+  const roleLockWarning = useUserStore(state => state.roleLockWarning);
+  const setRoleLockWarning = useUserStore(state => state.setRoleLockWarning);
+  const lastSyncTime = useUserStore(state => state.lastSyncTime);
+  const setLastSyncTime = useUserStore(state => state.setLastSyncTime);
+
+  const activeBranchId = useSalesStore(state => state.activeBranchId);
+  const setActiveBranchId = useSalesStore(state => state.setActiveBranchId);
+  const activeRegisterId = useSalesStore(state => state.activeRegisterId);
+  const setActiveRegisterId = useSalesStore(state => state.setActiveRegisterId);
+  const branches = useSalesStore(state => state.branches);
+  const setBranches = useSalesStore(state => state.setBranches);
+  const registers = useSalesStore(state => state.registers);
+  const setRegisters = useSalesStore(state => state.setRegisters);
+  const activeShift = useSalesStore(state => state.activeShift);
+  const setActiveShift = useSalesStore(state => state.setActiveShift);
+  const shiftHistory = useSalesStore(state => state.shiftHistory);
+  const setShiftHistory = useSalesStore(state => state.setShiftHistory);
+  const transactions = useSalesStore(state => state.transactions);
+  const setTransactions = useSalesStore(state => state.setTransactions);
+  const exchangeRates = useSalesStore(state => state.exchangeRates);
+  const setExchangeRates = useSalesStore(state => state.setExchangeRates);
+  const activeRateType = useSalesStore(state => state.activeRateType);
+  const setActiveRateType = useSalesStore(state => state.setActiveRateType);
+  const hardwareSettings = useSalesStore(state => state.hardwareSettings);
+  const setHardwareSettings = useSalesStore(state => state.setHardwareSettings);
+  const billingSettings = useSalesStore(state => state.billingSettings);
+  const setBillingSettings = useSalesStore(state => state.setBillingSettings);
+
+  const products = useInventoryStore(state => state.products);
+  const setProducts = useInventoryStore(state => state.setProducts);
+  const suppliers = useInventoryStore(state => state.suppliers);
+  const setSuppliers = useInventoryStore(state => state.setSuppliers);
+  const purchaseOrders = useInventoryStore(state => state.purchaseOrders);
+  const setPurchaseOrders = useInventoryStore(state => state.setPurchaseOrders);
+  const stockTransfers = useInventoryStore(state => state.stockTransfers);
+  const setStockTransfers = useInventoryStore(state => state.setStockTransfers);
+  const activeEvent = useInventoryStore(state => state.activeEvent);
+  const setActiveEvent = useInventoryStore(state => state.setActiveEvent);
+
+  const customers = useCustomerStore(state => state.customers);
+  const setCustomers = useCustomerStore(state => state.setCustomers);
+
+  // Local UI-scoped states
   const isDev = user && (
     user.username.toLowerCase() === 'jonas' || 
     user.username.toLowerCase() === 'jonas_mendoza' || 
     (user.email && user.email.toLowerCase().includes('jonas')) || 
     user.username.toLowerCase() === 'admin'
   );
-  const [showLanding, setShowLanding] = useState<boolean>(true);
-  const [isLicenseExpired, setIsLicenseExpired] = useState<boolean>(false);
-  const [isClockTampered, setIsClockTampered] = useState<boolean>(false);
   const [blockKey, setBlockKey] = useState<string>('');
   const [blockCompany, setBlockCompany] = useState<string>('');
   const [blockError, setBlockError] = useState<string>('');
   const [blockLoading, setBlockLoading] = useState<boolean>(false);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'sales' | 'shifts' | 'inventory' | 'history' | 'customers' | 'settings' | 'logistics' | 'gamification'>('dashboard');
-  const [activeEvent, setActiveEvent] = useState<ExpressEvent | null>(null);
 
   // ─── DuoMascot reactive mood state ───
-  const [duoMood, setDuoMood] = useState<DuoMood>('neutral');
-  const [duoSparkles, setDuoSparkles] = useState(false);
 
   // Inactivity timer: 2 minutes → sleepy
   useEffect(() => {
@@ -192,18 +245,6 @@ export default function App() {
   };
   
   // Real-time Venezuelan Exchange rates state (ve.dolarapi.com)
-  const [exchangeRates, setExchangeRates] = useState<{ oficial: number; paralelo: number }>(() => {
-    try {
-      const saved = localStorage.getItem('duo_pos_exchange_rates');
-      return saved ? JSON.parse(saved) : { oficial: 53.05, paralelo: 57.10 };
-    } catch {
-      return { oficial: 53.05, paralelo: 57.10 };
-    }
-  });
-  
-  const [activeRateType, setActiveRateType] = useState<'oficial' | 'paralelo'>(() => {
-    return (localStorage.getItem('duo_pos_active_rate_type') as 'oficial' | 'paralelo') || 'oficial';
-  });
 
   const [isRefreshingRates, setIsRefreshingRates] = useState(false);
 
@@ -249,14 +290,6 @@ export default function App() {
   };
   
   // Hardware status state
-  const [hardwareSettings, setHardwareSettings] = useState<HardwareDeviceSettings>(() => {
-    try {
-      const saved = localStorage.getItem('duo_pos_hardware_settings');
-      return saved ? JSON.parse(saved) : DEFAULT_HARDWARE_SETTINGS;
-    } catch {
-      return DEFAULT_HARDWARE_SETTINGS;
-    }
-  });
   const [isHardwareHubOpen, setIsHardwareHubOpen] = useState(false);
 
   const handleSaveHardwareSettings = (settings: HardwareDeviceSettings) => {
@@ -265,79 +298,50 @@ export default function App() {
   };
   
   // Multi-Sucursal, Multi-Caja & Almacén Central (CEDIS) State Managers
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [activeBranchId, setActiveBranchId] = useState<string>(() => {
-    return localStorage.getItem('duo_pos_active_branch_id') || 'branch-centro';
-  });
-  const [registers, setRegisters] = useState<CashRegister[]>([]);
-  const [activeRegisterId, setActiveRegisterId] = useState<string>(() => {
-    return localStorage.getItem('duo_pos_active_register_id') || 'reg-centro-1';
-  });
-  const [stockTransfers, setStockTransfers] = useState<StockTransfer[]>([]);
-  const [billingSettings, setBillingSettings] = useState<LegalBillingSettings>({
-    taxName: 'IVA',
-    generalTaxRate: 16,
-    categoryOverrides: [],
-    taxIncludedInPrice: true,
-    companyName: '',
-    companyTaxId: '',
-    companyRegime: '',
-    companyPostalCode: '',
-    companyAddress: '',
-    invoicePrefix: 'FAC-',
-    nextInvoiceNumber: 1,
-    automaticMockInvoicing: false,
-    certifyingAuthority: 'SAT Mock'
-  });
   
   // Real-time Sound Muted settings state
   const [isMuted, setIsMuted] = useState(() => localStorage.getItem('duo_pos_muted') === 'true');
 
   // Licensing & Subscription state managers
-  const [licenseDetails, setLicenseDetails] = useState<LicenseDetails>(() => {
+  useEffect(() => {
     try {
       const saved = localStorage.getItem('duo_pos_licensing_details');
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Migración automática de tiers antiguos a nuevos
         if (parsed.tier === 'trial') { parsed.tier = 'free'; parsed.clientLimit = PLANS.free.clientLimit; parsed.salesLimit = PLANS.free.salesLimit; }
         if (parsed.tier === 'unlimited_racha' || parsed.tier === 'enterprise_buhoflota') { parsed.tier = 'pro'; parsed.clientLimit = PLANS.pro.clientLimit; parsed.salesLimit = PLANS.pro.salesLimit; }
         localStorage.setItem('duo_pos_licensing_details', JSON.stringify(parsed));
-        return parsed;
+        setLicenseDetails(parsed);
+      } else {
+        let customSeed = localStorage.getItem('duo_pos_offline_seed');
+        if (!customSeed) {
+          customSeed = generateHardwareFingerprint();
+          localStorage.setItem('duo_pos_offline_seed', customSeed);
+        }
+        setLicenseDetails({
+          tier: 'free',
+          activated: false,
+          activationKey: '',
+          expiresAt: 'Nunca',
+          clientLimit: PLANS.free.clientLimit,
+          salesLimit: PLANS.free.salesLimit,
+          currentSalesCount: 0,
+          offlineActivationSeed: customSeed,
+          companyName: ''
+        });
       }
     } catch (e) {
       console.error('Error loading license details:', e);
     }
-    
-    // Generate fresh seed if none existed
-    let customSeed = localStorage.getItem('duo_pos_offline_seed');
-    if (!customSeed) {
-      customSeed = generateHardwareFingerprint();
-      localStorage.setItem('duo_pos_offline_seed', customSeed);
-    }
-    
-    return {
-      tier: 'free',
-      activated: false,
-      activationKey: '',
-      expiresAt: 'Nunca',
-      clientLimit: PLANS.free.clientLimit,
-      salesLimit: PLANS.free.salesLimit,
-      currentSalesCount: 0,
-      offlineActivationSeed: customSeed,
-      companyName: ''
-    };
-  });
+  }, []);
 
   // Track sales count matching local storage transactions
   useEffect(() => {
-    setLicenseDetails(prev => {
-      const updated = { ...prev, currentSalesCount: transactions.length };
-      try {
-        localStorage.setItem('duo_pos_licensing_details', JSON.stringify(updated));
-      } catch (err) {}
-      return updated;
-    });
+    const updated = { ...licenseDetails, currentSalesCount: transactions.length };
+    try {
+      localStorage.setItem('duo_pos_licensing_details', JSON.stringify(updated));
+    } catch (err) {}
+    setLicenseDetails(updated);
   }, [transactions.length]);
 
   useEffect(() => {
@@ -444,8 +448,6 @@ export default function App() {
   };
 
   // Drawer / Shift Control states
-  const [activeShift, setActiveShift] = useState<CashShift | null>(null);
-  const [shiftHistory, setShiftHistory] = useState<CashShift[]>([]);
 
   const toggleMute = () => {
     const nextMute = !isMuted;
@@ -602,15 +604,8 @@ export default function App() {
     };
   }, []);
 
-  // Level Up celebrate modal state
-  const [levelUpAchieved, setLevelUpAchieved] = useState<{ oldLevel: number; newLevel: number; title: string } | null>(null);
-
-  // RBAC Access lock warning modal state
-  const [roleLockWarning, setRoleLockWarning] = useState<{ requiredRole: string; activeRole: string; tabName: string } | null>(null);
-
   // Sync state for multi-device synchronization
   const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
 
   // Función para sincronizar todos los datos desde Supabase
   const syncStateFromSupabase = async (showToasts = true) => {
