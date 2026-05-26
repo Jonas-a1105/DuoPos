@@ -30,6 +30,12 @@ import { LicenseDetails, validateLicenseKeyOnline, generateHardwareFingerprint, 
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
+  const isDev = user && (
+    user.username.toLowerCase() === 'jonas' || 
+    user.username.toLowerCase() === 'jonas_mendoza' || 
+    (user.email && user.email.toLowerCase().includes('jonas')) || 
+    user.username.toLowerCase() === 'admin'
+  );
   const [showLanding, setShowLanding] = useState<boolean>(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -84,10 +90,15 @@ export default function App() {
   }, []);
 
   const handleToggleRateType = (type: 'oficial' | 'paralelo') => {
+    if (licenseDetails.tier === 'free' && type === 'paralelo') {
+      playSound('error');
+      toast.error('El soporte para tasas de dólar paralelo (Monitor) requiere el Plan Standard o Pro. Actualiza tu plan en Ajustes > Planes.', { title: 'Plan Standard o Pro Requerido 🔒' });
+      return;
+    }
     setActiveRateType(type);
     localStorage.setItem('duo_pos_active_rate_type', type);
     playSound('click');
-    toast.info(`Precios convertidos usando tazas de tipo: ${type === 'oficial' ? 'BCV Oficial' : 'Paralelo (Monitor)'}`, { title: 'Tasa Alternada 🔄' });
+    toast.info(`Precios convertidos usando tasas de tipo: ${type === 'oficial' ? 'BCV Oficial' : 'Paralelo (Monitor)'}`, { title: 'Tasa Alternada 🔄' });
   };
   
   // Hardware status state
@@ -181,6 +192,13 @@ export default function App() {
       return updated;
     });
   }, [transactions.length]);
+
+  useEffect(() => {
+    if (licenseDetails.tier === 'free' && activeRateType === 'paralelo') {
+      setActiveRateType('oficial');
+      localStorage.setItem('duo_pos_active_rate_type', 'oficial');
+    }
+  }, [licenseDetails.tier, activeRateType]);
 
   const handleActivateLicenseKey = async (key: string, companyName?: string) => {
     const seed = licenseDetails.offlineActivationSeed;
@@ -1954,7 +1972,7 @@ export default function App() {
                     }}
                     className="w-full text-xs font-black text-gray-750 bg-gray-50 border-2 border-gray-200 p-1 px-1.5 py-1.5 rounded-xl outline-none focus:border-[#1cb0f6] transition-all cursor-pointer select-none"
                   >
-                    <option value="admin">👑 Admin</option>
+                    {isDev && <option value="admin">👑 Admin</option>}
                     <option value="supervisor">⚡ Supervisor</option>
                     <option value="cashier">💵 Cajero</option>
                   </select>
@@ -2091,6 +2109,7 @@ export default function App() {
               transactions={transactions}
               products={products}
               customers={customers}
+              licenseDetails={licenseDetails}
             />
           )}
 
@@ -2126,6 +2145,7 @@ export default function App() {
               stockTransfers={stockTransfers}
               setStockTransfers={setStockTransfers}
               currentUser={user}
+              licenseDetails={licenseDetails}
             />
           )}
 
@@ -2254,38 +2274,51 @@ export default function App() {
               Tu rol actual es: <span className="uppercase text-slate-600 underline font-black">{roleLockWarning.activeRole === 'cashier' ? 'Cajero 💵' : roleLockWarning.activeRole === 'supervisor' ? 'Supervisor ⚡' : 'Administrador 👑'}</span>
             </p>
             
-            <div className="bg-blue-50 border border-blue-100 p-3 rounded-2xl text-left space-y-2 mt-4">
-              <span className="text-[11px] font-black text-blue-600 uppercase tracking-widest block">🔧 Modo Demostración (Simulador de Permisos)</span>
-              <p className="text-xs text-blue-700 leading-relaxed font-semibold">
-                ¿Deseas verificar esta vista? Haz clic abajo para autodesignarte un nivel de acceso superior temporal en este navegador.
-              </p>
-            </div>
+            {isDev ? (
+              <>
+                <div className="bg-blue-50 border border-blue-100 p-3 rounded-2xl text-left space-y-2 mt-4">
+                  <span className="text-[11px] font-black text-blue-600 uppercase tracking-widest block">🔧 Modo Demostración (Simulador de Permisos)</span>
+                  <p className="text-xs text-blue-700 leading-relaxed font-semibold">
+                    ¿Deseas verificar esta vista? Haz clic abajo para autodesignarte un nivel de acceso superior temporal en este navegador.
+                  </p>
+                </div>
 
-            <div className="grid grid-cols-2 gap-2 pt-2">
-              <button
-                onClick={() => {
-                  const updatedUser = { ...user, role: 'admin' };
-                  setUser(updatedUser);
-                  localStorage.setItem('duo_pos_active_user', JSON.stringify(updatedUser));
-                  setActiveTab(
-                    roleLockWarning.tabName === 'Configuración' ? 'settings' :
-                    roleLockWarning.tabName === 'Catálogos' ? 'inventory' :
-                    roleLockWarning.tabName === 'Logística' ? 'logistics' : 'dashboard'
-                  );
-                  setRoleLockWarning(null);
-                  playSound('levelup');
-                }}
-                className="bg-[#58cc02] text-white border-b-4 border-[#3e9301] hover:bg-[#61e002] active:border-b-0 active:translate-y-[4px] font-black text-xs py-2.5 rounded-2xl cursor-pointer uppercase"
-              >
-                Simular Admin 👑
-              </button>
-              <button
-                onClick={() => setRoleLockWarning(null)}
-                className="bg-white text-gray-500 border-2 border-gray-200 border-b-4 hover:bg-gray-50 active:translate-y-[2px] active:border-b-2 font-black text-xs py-2.5 rounded-2xl cursor-pointer uppercase"
-              >
-                Cerrar
-              </button>
-            </div>
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <button
+                    onClick={() => {
+                      const updatedUser = { ...user, role: 'admin' };
+                      setUser(updatedUser);
+                      localStorage.setItem('duo_pos_active_user', JSON.stringify(updatedUser));
+                      setActiveTab(
+                        roleLockWarning.tabName === 'Configuración' ? 'settings' :
+                        roleLockWarning.tabName === 'Catálogos' ? 'inventory' :
+                        roleLockWarning.tabName === 'Logística' ? 'logistics' : 'dashboard'
+                      );
+                      setRoleLockWarning(null);
+                      playSound('levelup');
+                    }}
+                    className="bg-[#58cc02] text-white border-b-4 border-[#3e9301] hover:bg-[#61e002] active:border-b-0 active:translate-y-[4px] font-black text-xs py-2.5 rounded-2xl cursor-pointer uppercase"
+                  >
+                    Simular Admin 👑
+                  </button>
+                  <button
+                    onClick={() => setRoleLockWarning(null)}
+                    className="bg-white text-gray-500 border-2 border-gray-200 border-b-4 hover:bg-gray-50 active:translate-y-[2px] active:border-b-2 font-black text-xs py-2.5 rounded-2xl cursor-pointer uppercase"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="pt-4 flex justify-end">
+                <button
+                  onClick={() => setRoleLockWarning(null)}
+                  className="w-full py-2.5 bg-white text-gray-500 border-2 border-gray-200 border-b-4 hover:bg-gray-50 active:translate-y-[2px] active:border-b-2 font-black text-xs rounded-2xl cursor-pointer uppercase"
+                >
+                  Cerrar
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

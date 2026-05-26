@@ -12,6 +12,7 @@ import {
   AlertCircle, ShieldCheck, ChevronRight, CheckCircle2, TrendingUp, Store
 } from 'lucide-react';
 import { syncInsert, syncSaveStockTransfer, generateUUID, ensureValidUuid } from '../utils/supabaseSync';
+import { LicenseDetails, PLANS } from '../utils/licensing';
 
 interface LogisticsScreenProps {
   products: Product[];
@@ -31,6 +32,7 @@ interface LogisticsScreenProps {
   stockTransfers: StockTransfer[];
   setStockTransfers: React.Dispatch<React.SetStateAction<StockTransfer[]>>;
   currentUser: User;
+  licenseDetails: LicenseDetails;
 }
 
 export default function LogisticsScreen({
@@ -50,7 +52,8 @@ export default function LogisticsScreen({
   setActiveRegisterId,
   stockTransfers,
   setStockTransfers,
-  currentUser
+  currentUser,
+  licenseDetails
 }: LogisticsScreenProps) {
   
   const [activeSubTab, setActiveSubTab] = useState<'branches' | 'registers' | 'transfers' | 'central'>('branches');
@@ -108,6 +111,14 @@ export default function LogisticsScreen({
     e.preventDefault();
     if (!newBranchName.trim() || !newBranchAddress.trim()) {
       alert('Por favor, especifica el nombre y domicilio legal.');
+      return;
+    }
+
+    const currentTier = licenseDetails?.tier || 'free';
+    const limit = PLANS[currentTier]?.allowedBranches || 1;
+    if (branches.length >= limit) {
+      playSound('error');
+      alert(`Límite de sucursales alcanzado: Tu plan [${PLANS[currentTier]?.name}] solo permite hasta ${limit} sucursal(es). Por favor actualiza tu licencia a Pro para habilitar hasta 5 sucursales.`);
       return;
     }
 

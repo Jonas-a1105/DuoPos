@@ -64,6 +64,12 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     completed_missions_today: []
   });
 
+  const isDeveloperUser = (uname: string, uemail?: string): boolean => {
+    const lowerName = uname.trim().toLowerCase();
+    const lowerEmail = (uemail || '').trim().toLowerCase();
+    return lowerName === 'jonas' || lowerName === 'jonas_mendoza' || lowerEmail.includes('jonas') || lowerName === 'admin';
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) {
@@ -76,6 +82,10 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     }
 
     setErrorMessage('');
+    if (role === 'admin' && !isDeveloperUser(username, email)) {
+      setErrorMessage('Acceso denegado: El rol de Administrador está restringido para el desarrollador principal (Jonas).');
+      return;
+    }
     setIsLoading(true);
     
     try {
@@ -356,6 +366,10 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     }
 
     setErrorMessage('');
+    if (role === 'admin' && !isDeveloperUser(username, email)) {
+      setErrorMessage('Registro denegado: El rol de Administrador está restringido para el desarrollador principal (Jonas).');
+      return;
+    }
     setIsLoading(true);
 
     try {

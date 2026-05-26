@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Transaction, Product, Customer } from '../types';
 import { playSound } from '../utils/sounds';
 import { toast } from './FlashNotifications';
+import { LicenseDetails } from '../utils/licensing';
 import { 
   Trophy, 
   Flame, 
@@ -31,6 +32,7 @@ interface GamificationScreenProps {
   transactions: Transaction[];
   products: Product[];
   customers: Customer[];
+  licenseDetails: LicenseDetails;
 }
 
 export interface Quest {
@@ -74,7 +76,8 @@ export default function GamificationScreen({
   onUpdateUser,
   transactions,
   products,
-  customers
+  customers,
+  licenseDetails
 }: GamificationScreenProps) {
   const [activeSubTab, setActiveSubTab] = useState<'quests' | 'trophies' | 'store'>('quests');
   
@@ -453,6 +456,21 @@ export default function GamificationScreen({
     let nextUser: User = { ...user, gems: remainingGems };
 
     if (item.category === 'skin' && item.value) {
+      // Plan-based restrictions for skins
+      if (item.id === 'skin-cyberpunk' || item.id === 'skin-emerald') {
+        if (licenseDetails.tier !== 'pro') {
+          playSound('error');
+          toast.error(`La Skin "${item.title}" requiere el Plan Pro. Actualiza tu plan en Ajustes > Planes.`, { title: 'Plan Pro Requerido 🔒' });
+          return;
+        }
+      } else if (item.id === 'skin-galaxy' || item.id === 'skin-bubblegum') {
+        if (licenseDetails.tier === 'free') {
+          playSound('error');
+          toast.error(`La Skin "${item.title}" requiere el Plan Standard o Pro. Actualiza tu plan en Ajustes > Planes.`, { title: 'Plan Standard o Pro Requerido 🔒' });
+          return;
+        }
+      }
+
       // Skin purchase
       const nextUnlockedSkins = [...unlockedSkinsList, item.id];
       nextUser = {
@@ -888,6 +906,23 @@ export default function GamificationScreen({
               const isEquipped = isEquippedSkin || isEquippedTitle;
               const isOwnedNotEquipped = isPurchasedSkin;
 
+              // Plan restrictions
+              let isPlanLocked = false;
+              let planRequiredName = '';
+              if (item.category === 'skin') {
+                if (item.id === 'skin-cyberpunk' || item.id === 'skin-emerald') {
+                  if (licenseDetails.tier !== 'pro') {
+                    isPlanLocked = true;
+                    planRequiredName = 'Plan Pro';
+                  }
+                } else if (item.id === 'skin-galaxy' || item.id === 'skin-bubblegum') {
+                  if (licenseDetails.tier === 'free') {
+                    isPlanLocked = true;
+                    planRequiredName = 'Standard o Pro';
+                  }
+                }
+              }
+
               return (
                 <div 
                   key={item.id}
@@ -970,6 +1005,17 @@ export default function GamificationScreen({
                         className="bg-indigo-600 text-white font-black text-[9.5px] uppercase tracking-wider py-1.5 px-3 rounded-xl border-b-2 border-indigo-800 hover:bg-indigo-500 active:translate-y-0.5 active:border-b-0 cursor-pointer"
                       >
                         Equipar 🔄
+                      </button>
+                    ) : isPlanLocked ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          playSound('error');
+                          toast.error(`La recompensa "${item.title}" requiere el plan ${planRequiredName}. Actualiza tu licencia en Ajustes > Planes.`, { title: 'Plan Requerido 🔒' });
+                        }}
+                        className="bg-gray-100 border border-gray-200 text-gray-400 font-black text-[9px] uppercase tracking-wider py-1.5 px-3 rounded-xl cursor-not-allowed flex items-center gap-1"
+                      >
+                        <span>🔒 {planRequiredName}</span>
                       </button>
                     ) : (
                       <button
