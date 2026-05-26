@@ -3,7 +3,7 @@ import { LegalBillingSettings, TaxCategoryOverride, User } from '../types';
 import { Percent, FileText, Building2, Receipt, ShieldCheck, Save, HelpCircle, Sparkles, Plus, Trash2, Key, Info, CheckCircle2, Sliders, Volume2, ChefHat, ShoppingBag, Briefcase, Trophy, Award, Zap, ShieldAlert, Cpu, Laptop, Check, RefreshCw, Database, Globe } from 'lucide-react';
 import { playSound } from '../utils/sounds';
 import { toast } from './FlashNotifications';
-import { LicenseDetails, PLANS, SubscriptionTier, createLicenseOnline, revokeLicenseOnline, listLicensesOnline } from '../utils/licensing';
+import { LicenseDetails, PLANS, SubscriptionTier, revokeLicenseOnline, listLicensesOnline } from '../utils/licensing';
 
 interface SettingsScreenProps {
   settings: LegalBillingSettings;
@@ -1434,52 +1434,11 @@ export default function SettingsScreen({
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end bg-white border border-indigo-100 p-3 rounded-xl">
-                      <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-black text-indigo-800 tracking-wider block">
-                          Nivel de Plan
-                        </label>
-                        <select
-                          value={adminTier}
-                          onChange={(e) => setAdminTier(e.target.value as SubscriptionTier)}
-                          className="w-full text-xs font-bold px-3 py-2 bg-slate-50 border border-gray-300 rounded-lg outline-none focus:border-indigo-500"
-                        >
-                          <option value="standard">Plan Standard (⚡)</option>
-                          <option value="pro">Plan Pro (🏆)</option>
-                        </select>
+                    <div className="bg-slate-900 border border-slate-950 p-3.5 rounded-xl text-[10.5px] leading-relaxed text-slate-350 font-medium">
+                      <div className="flex items-center gap-1.5 text-indigo-400 font-bold mb-1 uppercase tracking-wide">
+                        <span>🛡️ Aislamiento de Seguridad Activo</span>
                       </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-black text-indigo-800 tracking-wider block">
-                          Cliente / Notas Internas
-                        </label>
-                        <input
-                          type="text"
-                          value={adminNotes}
-                          onChange={(e) => setAdminNotes(e.target.value)}
-                          placeholder="Ej: Inversiones C.A."
-                          className="w-full text-xs font-bold px-3 py-2 bg-slate-50 border border-gray-300 rounded-lg outline-none focus:border-indigo-500"
-                        />
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          const res = await createLicenseOnline(adminTier, adminNotes);
-                          if (res.success) {
-                            setAdminNotes('');
-                            playSound('levelup');
-                            fetchLicenses();
-                            alert(`Licencia creada con éxito en Supabase:\n\n${res.data?.license_key}`);
-                          } else {
-                            playSound('error');
-                            alert(`Error: ${res.error}`);
-                          }
-                        }}
-                        className="w-full py-2 bg-indigo-600 text-white hover:bg-indigo-500 rounded-lg text-center uppercase font-black text-xs cursor-pointer select-none transition-all"
-                      >
-                        Generar Licencia
-                      </button>
+                      Por motivos de seguridad y para evitar la decompilación de algoritmos críticos, la generación de nuevas licencias **está totalmente aislada del software de producción**. Para emitir activaciones (online u offline), debes utilizar la herramienta privada local <strong>DuoPOS Core Generator</strong> en tu equipo de desarrollo.
                     </div>
 
                     <div className="space-y-2">

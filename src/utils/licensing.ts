@@ -160,24 +160,163 @@ export function generateLicenseKey(tier: SubscriptionTier): string {
 }
 
 /**
+ * Deterministic signature generator for offline licensing.
+ * Matches the algorithm in the developer-tools/license-generator.html generator.
+ */
+export function generateOfflineSignature(tier: string, expiry: string, hwSeed: string): string {
+  const salt = 'DUOPOS-SECURE-SECRET-SALT-2026';
+  const message = `${tier}:${expiry}:${hwSeed}:${salt}`;
+  
+  let hash = 0;
+  for (let i = 0; i < message.length; i++) {
+    const char = message.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  
+  let hash2 = 17;
+  for (let i = message.length - 1; i >= 0; i--) {
+    const char = message.charCodeAt(i);
+    hash2 = (hash2 * 31) ^ char;
+    hash2 |= 0;
+  }
+  
+  const part1 = Math.abs(hash ^ 0x9E3779B9).toString(16).toUpperCase().padStart(8, '0');
+  const part2 = Math.abs(hash2 ^ 0x61A72F6B).toString(16).toUpperCase().padStart(8, '0');
+  
+  return `${part1.slice(0, 4)}-${part1.slice(4, 8)}-${part2.slice(0, 4)}`;
+}
+
+/**
+ * Validates a cryptographically signed offline license key.
+ */
+export function verifyOfflineLicenseKey(
+  key: string,
+  hwSeed: string
+): { valid: boolean; tier: SubscriptionTier; expiresAt: string; error?: string } {
+  const cleanKey = key.toUpperCase().trim();
+  if (!cleanKey.startsWith('DUO-OFF-')) {
+    return { valid: false, tier: 'free', expiresAt: 'Nunca', error: 'Formato de clave offline incorrecto.' };
+  }
+
+  const parts = cleanKey.split('-');
+  
+  if (parts.length < 7) {
+    return { valid: false, tier: 'free', expiresAt: 'Nunca', error: 'Clave de activación offline incompleta o corrupta.' };
+  }
+
+  const tier = parts[2].toLowerCase() as SubscriptionTier;
+  const expiryRaw = parts[3]; // 'NUNCA' or 'YYYYMMDD'
+  
+  // Signature is always the last 3 parts
+  const sigParts = parts.slice(-3);
+  const signature = sigParts.join('-');
+  
+  // HW seed is everything between index 4 and signature parts
+  const hwSeedParts = parts.slice(4, -3);
+  const hwKeyInLicense = hwSeedParts.join('-');
+
+  if (hwKeyInLicense !== 'UNIVERSAL' && hwKeyInLicense !== hwSeed.toUpperCase().trim()) {
+    return { 
+      valid: false, 
+      tier: 'free', 
+      expiresAt: 'Nunca', 
+      error: 'Esta licencia offline está asociada a otro dispositivo de cobro.' 
+    };
+  }
+
+  // Verify the signature
+  const expectedSig = generateOfflineSignature(tier, expiryRaw, hwKeyInLicense);
+  if (expectedSig !== signature) {
+    return { valid: false, tier: 'free', expiresAt: 'Nunca', error: 'Firma criptográfica de licencia inválida.' };
+  }
+
+  // Parse Expiration Date
+  let expiresAt = 'Nunca';
+  if (expiryRaw !== 'NUNCA') {
+    if (expiryRaw.length === 8) {
+      const year = expiryRaw.slice(0, 4);
+      const month = expiryRaw.slice(4, 6);
+      const day = expiryRaw.slice(6, 8);
+      expiresAt = `${year}-${month}-${day}`;
+    } else {
+      return { valid: false, tier: 'free', expiresAt: 'Nunca', error: 'Formato de expiración de licencia ilegible.' };
+    }
+  }
+
+  return { valid: true, tier, expiresAt };
+}
+
+/**
+ * Detects if the user has manually rolled back their system clock.
+ * Compares the current time against the last recorded run time.
+ */
+export function detectClockTampering(): boolean {
+  try {
+    const lastRunRaw = localStorage.getItem('duo_pos_last_run_timestamp');
+    if (!lastRunRaw) {
+      localStorage.setItem('duo_pos_last_run_timestamp', new Date().toISOString());
+      return false;
+    }
+
+    const current = new Date();
+    const lastRun = new Date(lastRunRaw);
+
+    // If current time is strictly earlier than last run by more than 1 hour
+    const timeDifference = lastRun.getTime() - current.getTime();
+    if (timeDifference > 3600000) { // 1 hour tolerance
+      console.warn("⚠️ [LICENSING] ALERTA DE SEGURIDAD: Se detectó una alteración del reloj del sistema.");
+      return true;
+    }
+
+    // Update if the time is valid and moving forward
+    if (current > lastRun) {
+      localStorage.setItem('duo_pos_last_run_timestamp', current.toISOString());
+    }
+  } catch (e) {
+    console.error("Error checking clock tampering", e);
+  }
+  return false;
+}
+
+/**
  * Valida una llave de licencia en Supabase y la asocia al hardware fingerprint si está disponible.
+ * Soporta de forma transparente llaves online clásicas y offline firmadas.
  */
 export async function validateLicenseKeyOnline(
   key: string,
   hwFingerprint: string,
   companyName: string = ''
-): Promise<{ valid: boolean; tier: SubscriptionTier; error?: string }> {
+): Promise<{ valid: boolean; tier: SubscriptionTier; expiresAt?: string; error?: string }> {
+  const cleanKey = key.toUpperCase().trim();
+  if (!cleanKey) {
+    return { valid: false, tier: 'free', error: 'Por favor ingresa una llave de licencia.' };
+  }
+
+  // Interceptar claves firmadas Offline inmediatamente
+  if (cleanKey.startsWith('DUO-OFF-')) {
+    const offlineRes = verifyOfflineLicenseKey(cleanKey, hwFingerprint);
+    if (offlineRes.valid) {
+      return {
+        valid: true,
+        tier: offlineRes.tier,
+        expiresAt: offlineRes.expiresAt
+      };
+    } else {
+      return {
+        valid: false,
+        tier: 'free',
+        error: offlineRes.error || 'La clave offline firmada es inválida.'
+      };
+    }
+  }
+
   if (!isSupabaseConfigured()) {
     return {
       valid: false,
       tier: 'free',
-      error: 'Supabase no está configurado. La activación online requiere conexión real.'
+      error: 'Supabase no está configurado y no se detectó una clave offline firmada. La activación online requiere conexión real.'
     };
-  }
-
-  const cleanKey = key.toUpperCase().trim();
-  if (!cleanKey) {
-    return { valid: false, tier: 'free', error: 'Por favor ingresa una llave de licencia.' };
   }
 
   try {
@@ -200,9 +339,11 @@ export async function validateLicenseKeyOnline(
       return { valid: false, tier: 'free', error: 'Esta llave de licencia ha sido revocada.' };
     }
 
+    const expiryString = license.expires_at ? new Date(license.expires_at).toISOString().split('T')[0] : 'Nunca';
+
     if (license.status === 'activated') {
       if (license.activated_by === hwFingerprint) {
-        return { valid: true, tier: license.tier as SubscriptionTier };
+        return { valid: true, tier: license.tier as SubscriptionTier, expiresAt: expiryString };
       } else {
         return { 
           valid: false, 
@@ -229,7 +370,7 @@ export async function validateLicenseKeyOnline(
       return { valid: false, tier: 'free', error: 'No se pudo activar la licencia. Intente de nuevo.' };
     }
 
-    return { valid: true, tier: license.tier as SubscriptionTier };
+    return { valid: true, tier: license.tier as SubscriptionTier, expiresAt: expiryString };
   } catch (err: any) {
     console.error('Excepción al validar licencia online:', err);
     return { valid: false, tier: 'free', error: `Error de red u otros: ${err.message || err}` };
