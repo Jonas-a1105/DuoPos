@@ -9,6 +9,39 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { db } from './indexedDb';
+
+// ─── IndexedDB Async Storage Adapters (Dexie.js) ─────────────────────────────
+export async function getLocalData(key: string): Promise<any> {
+  try {
+    const row = await db.generic_store.get(key);
+    if (row) return row.value;
+  } catch (e) {
+    console.warn(`⚠️ Error leyendo "${key}" desde IndexedDB:`, e);
+  }
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function setLocalData(key: string, data: any): Promise<void> {
+  try {
+    await db.generic_store.put({ key, value: data });
+  } catch (e) {
+    console.warn(`⚠️ Error guardando "${key}" en IndexedDB:`, e);
+  }
+  try {
+    const serialized = JSON.stringify(data);
+    if (serialized.length < 4000000) {
+      localStorage.setItem(key, serialized);
+    }
+  } catch (e) {
+    console.warn(`⚠️ localStorage excedido al guardar "${key}".`);
+  }
+}
 
 // Concurrency lock to prevent duplicate sync executions
 let isFlushing = false;
@@ -348,6 +381,15 @@ export async function syncLoad<T>(
 ): Promise<T[]> {
   const prefix = table === 'products' ? 'prod' : table === 'customers' ? 'cust' : table === 'cash_shifts' ? 'shift' : 'txn';
 
+  // Pre-load all sub-collections asynchronously in parallel to avoid multiple IndexedDB reads
+  const [allCredits, allTxnItems, allMoves, allStItems, allPoItems] = await Promise.all([
+    getLocalData('duo_pos_customer_credits'),
+    getLocalData('duo_pos_transaction_items'),
+    getLocalData('duo_pos_shift_movements'),
+    getLocalData('duo_pos_stock_transfer_items'),
+    getLocalData('duo_pos_purchase_order_items')
+  ]).then(results => results.map(res => res || []));
+
   const sanitizeAndMap = (rawItem: any): T => {
     // Si la tabla no requiere UUIDs estrictos en Postgres (ej. text IDs para branches/registers/suppliers/purchase_orders), no usar ensureValidUuid
     let cleanId = rawItem.id;
@@ -364,25 +406,17 @@ export async function syncLoad<T>(
     if (table === 'customers') {
       const mapped = 'purchases_count' in item || 'total_spent' in item ? mapCustomerFromDb(item) : item;
       if (mapped.id) {
-        try {
-          const allCreditsRaw = localStorage.getItem('duo_pos_customer_credits');
-          if (allCreditsRaw) {
-            const allCredits = JSON.parse(allCreditsRaw);
-            const filteredCredits = allCredits.filter((h: any) => h.customer_id === mapped.id || h.customerId === mapped.id);
-            mapped.creditHistory = filteredCredits.map((h: any) => ({
-              id: ensureValidUuid(h.id, 'chhist'),
-              amount: Number(h.amount),
-              type: h.type,
-              date: h.date || h.timestamp || new Date().toISOString(),
-              notes: h.notes || '',
-              transactionId: h.transaction_id || h.transactionId || null
-            }));
-          } else {
-            mapped.creditHistory = mapped.creditHistory || [];
-          }
-        } catch {
-          mapped.creditHistory = mapped.creditHistory || [];
-        }
+        const filteredCredits = allCredits.filter((h: any) => h.customer_id === mapped.id || h.customerId === mapped.id);
+        mapped.creditHistory = filteredCredits.map((h: any) => ({
+          id: ensureValidUuid(h.id, 'chhist'),
+          amount: Number(h.amount),
+          type: h.type,
+          date: h.date || h.timestamp || new Date().toISOString(),
+          notes: h.notes || '',
+          transactionId: h.transaction_id || h.transactionId || null
+        }));
+      } else {
+        mapped.creditHistory = mapped.creditHistory || [];
       }
       return mapped as unknown as T;
     }
@@ -416,25 +450,17 @@ export async function syncLoad<T>(
       };
       
       if (mapped.id) {
-        try {
-          const allItemsRaw = localStorage.getItem('duo_pos_transaction_items');
-          if (allItemsRaw) {
-            const allItems = JSON.parse(allItemsRaw);
-            const parentItems = allItems.filter((i: any) => i.transaction_id === mapped.id || i.transactionId === mapped.id);
-            mapped.items = parentItems.map((i: any) => ({
-              productId: i.product_id || i.productId || '',
-              name: i.name,
-              price: Number(i.price),
-              emoji: i.emoji || '📦',
-              quantity: Number(i.quantity),
-              taxRateApplied: Number(i.tax_rate_applied || i.taxRateApplied || 16.0),
-              notes: i.notes || undefined,
-              addons: i.addons || undefined
-            }));
-          }
-        } catch {
-          mapped.items = [];
-        }
+        const parentItems = allTxnItems.filter((i: any) => i.transaction_id === mapped.id || i.transactionId === mapped.id);
+        mapped.items = parentItems.map((i: any) => ({
+          productId: i.product_id || i.productId || '',
+          name: i.name,
+          price: Number(i.price),
+          emoji: i.emoji || '📦',
+          quantity: Number(i.quantity),
+          taxRateApplied: Number(i.tax_rate_applied || i.taxRateApplied || 16.0),
+          notes: i.notes || undefined,
+          addons: i.addons || undefined
+        }));
       }
       return mapped as unknown as T;
     }
@@ -443,18 +469,10 @@ export async function syncLoad<T>(
       const mapped = 'initial_cash' in item ? mapShiftFromDb(item) : item;
       
       if (mapped.id) {
-        try {
-          const allMovesRaw = localStorage.getItem('duo_pos_shift_movements');
-          if (allMovesRaw) {
-            const allMoves = JSON.parse(allMovesRaw);
-            const parentMoves = allMoves.filter((m: any) => m.shift_id === mapped.id || m.shiftId === mapped.id);
-            mapped.movements = parentMoves.map(mapMovementFromDb);
-          } else {
-            mapped.movements = mapped.movements || [];
-          }
-        } catch {
-          mapped.movements = mapped.movements || [];
-        }
+        const parentMoves = allMoves.filter((m: any) => m.shift_id === mapped.id || m.shiftId === mapped.id);
+        mapped.movements = parentMoves.map(mapMovementFromDb);
+      } else {
+        mapped.movements = mapped.movements || [];
       }
       return mapped as unknown as T;
     }
@@ -481,21 +499,13 @@ export async function syncLoad<T>(
       };
 
       if (mapped.id) {
-        try {
-          const allItemsRaw = localStorage.getItem('duo_pos_stock_transfer_items');
-          if (allItemsRaw) {
-            const allItems = JSON.parse(allItemsRaw);
-            const parentItems = allItems.filter((i: any) => i.transfer_id === mapped.id || i.transferId === mapped.id);
-            mapped.items = parentItems.map((i: any) => ({
-              productId: i.product_id || i.productId || '',
-              name: i.name,
-              emoji: i.emoji || '📦',
-              quantity: Number(i.quantity)
-            }));
-          }
-        } catch {
-          mapped.items = [];
-        }
+        const parentItems = allStItems.filter((i: any) => i.transfer_id === mapped.id || i.transferId === mapped.id);
+        mapped.items = parentItems.map((i: any) => ({
+          productId: i.product_id || i.productId || '',
+          name: i.name,
+          emoji: i.emoji || '📦',
+          quantity: Number(i.quantity)
+        }));
       }
       return mapped as unknown as T;
     }
@@ -509,22 +519,14 @@ export async function syncLoad<T>(
       const mapped = 'payment_method' in item || 'supplier_name' in item ? mapPurchaseOrderFromDb(item) : item;
       
       if (mapped.id) {
-        try {
-          const allItemsRaw = localStorage.getItem('duo_pos_purchase_order_items');
-          if (allItemsRaw) {
-            const allItems = JSON.parse(allItemsRaw);
-            const parentItems = allItems.filter((i: any) => i.purchase_order_id === mapped.id || i.purchaseOrderId === mapped.id);
-            mapped.items = parentItems.map((i: any) => ({
-              productId: i.product_id || i.productId || '',
-              name: i.name,
-              emoji: i.emoji || '📦',
-              cost: Number(i.cost),
-              quantity: Number(i.quantity)
-            }));
-          }
-        } catch {
-          mapped.items = [];
-        }
+        const parentItems = allPoItems.filter((i: any) => i.purchase_order_id === mapped.id || i.purchaseOrderId === mapped.id);
+        mapped.items = parentItems.map((i: any) => ({
+          productId: i.product_id || i.productId || '',
+          name: i.name,
+          emoji: i.emoji || '📦',
+          cost: Number(i.cost),
+          quantity: Number(i.quantity)
+        }));
       }
       return mapped as unknown as T;
     }
@@ -574,7 +576,7 @@ export async function syncLoad<T>(
               .select('*');
             
             if (!creditsError && creditsData) {
-              localStorage.setItem('duo_pos_customer_credits', JSON.stringify(creditsData));
+              await setLocalData('duo_pos_customer_credits', creditsData);
               mappedData.forEach((cust: any) => {
                 const customerCredits = creditsData.filter((c: any) => c.customer_id === cust.id);
                 cust.creditHistory = customerCredits.map((h: any) => ({
@@ -600,7 +602,7 @@ export async function syncLoad<T>(
               .select('*');
             
             if (!itemsError && itemsData) {
-              localStorage.setItem('duo_pos_transaction_items', JSON.stringify(itemsData));
+              await setLocalData('duo_pos_transaction_items', itemsData);
               mappedData.forEach((txn: any) => {
                 const parentItems = itemsData.filter((i: any) => i.transaction_id === txn.id);
                 txn.items = parentItems.map((i: any) => ({
@@ -628,7 +630,7 @@ export async function syncLoad<T>(
               .select('*');
             
             if (!movesError && movesData) {
-              localStorage.setItem('duo_pos_shift_movements', JSON.stringify(movesData));
+              await setLocalData('duo_pos_shift_movements', movesData);
               mappedData.forEach((shift: any) => {
                 const parentMoves = movesData.filter((m: any) => m.shift_id === shift.id);
                 shift.movements = parentMoves.map(mapMovementFromDb);
@@ -647,7 +649,7 @@ export async function syncLoad<T>(
               .select('*');
             
             if (!stItemsError && stItemsData) {
-              localStorage.setItem('duo_pos_stock_transfer_items', JSON.stringify(stItemsData));
+              await setLocalData('duo_pos_stock_transfer_items', stItemsData);
               mappedData.forEach((tr: any) => {
                 const parentItems = stItemsData.filter((i: any) => i.transfer_id === tr.id);
                 tr.items = parentItems.map((i: any) => ({
@@ -671,7 +673,7 @@ export async function syncLoad<T>(
               .select('*');
             
             if (!poItemsError && poItemsData) {
-              localStorage.setItem('duo_pos_purchase_order_items', JSON.stringify(poItemsData));
+              await setLocalData('duo_pos_purchase_order_items', poItemsData);
               mappedData.forEach((po: any) => {
                 const parentItems = poItemsData.filter((i: any) => i.purchase_order_id === po.id);
                 po.items = parentItems.map((i: any) => ({
@@ -689,7 +691,7 @@ export async function syncLoad<T>(
         }
 
         // Guardar copia local como cache
-        localStorage.setItem(localStorageKey, JSON.stringify(mappedData));
+        await setLocalData(localStorageKey, mappedData);
         return mappedData;
       }
 
@@ -701,23 +703,22 @@ export async function syncLoad<T>(
     }
   }
 
-  // 2. Fallback: cargar de localStorage
+  // 2. Fallback: cargar de IndexedDB / localStorage
   try {
-    const raw = localStorage.getItem(localStorageKey);
+    const raw = await getLocalData(localStorageKey);
     if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        return parsed.map(sanitizeAndMap);
+      if (Array.isArray(raw)) {
+        return raw.map(sanitizeAndMap);
       }
     }
   } catch {
-    console.warn(`⚠️ syncLoad(${table}): localStorage corrupto, usando datos por defecto.`);
+    console.warn(`⚠️ syncLoad(${table}): Local data corrupto, usando datos por defecto.`);
   }
 
   // 3. Último recurso: datos por defecto
   const sanitizedDefault = defaultData.map(sanitizeAndMap);
   if (sanitizedDefault.length > 0) {
-    localStorage.setItem(localStorageKey, JSON.stringify(sanitizedDefault));
+    await setLocalData(localStorageKey, sanitizedDefault);
   }
   return sanitizedDefault;
 }
@@ -752,8 +753,7 @@ async function syncCreditHistory(customer: any, isParentSynced: boolean): Promis
 
   // Actualizar caché de créditos localmente
   try {
-    const allCreditsRaw = localStorage.getItem('duo_pos_customer_credits');
-    let allCredits = allCreditsRaw ? JSON.parse(allCreditsRaw) : [];
+    let allCredits = await getLocalData('duo_pos_customer_credits') || [];
     
     const newIds = customer.creditHistory.map((h: any) => ensureValidUuid(h.id, 'chhist'));
     allCredits = allCredits.filter((h: any) => !newIds.includes(ensureValidUuid(h.id, 'chhist')));
@@ -769,7 +769,7 @@ async function syncCreditHistory(customer: any, isParentSynced: boolean): Promis
     }));
 
     allCredits.push(...mappedCredits);
-    localStorage.setItem('duo_pos_customer_credits', JSON.stringify(allCredits));
+    await setLocalData('duo_pos_customer_credits', allCredits);
   } catch (e) {
     console.error('Error guardando créditos locales', e);
   }
@@ -788,7 +788,7 @@ export async function syncSave<T extends Record<string, any>>(
 ): Promise<{ success: boolean; error?: string }> {
   const idField = options?.idField || 'id';
 
-  localStorage.setItem(localStorageKey, JSON.stringify(allItems));
+  await setLocalData(localStorageKey, allItems);
 
   let dbRecord: any = null;
   let isParentSynced = false;
@@ -840,7 +840,7 @@ export async function syncInsert<T extends Record<string, any>>(
     mapToDb?: (item: T) => Record<string, any>;
   }
 ): Promise<{ success: boolean; error?: string }> {
-  localStorage.setItem(localStorageKey, JSON.stringify(allItems));
+  await setLocalData(localStorageKey, allItems);
 
   let dbRecord: any = null;
   let isParentSynced = false;
@@ -893,7 +893,7 @@ export async function syncDelete(
 ): Promise<{ success: boolean; error?: string }> {
   const idField = options?.idField || 'id';
 
-  localStorage.setItem(localStorageKey, JSON.stringify(allItems));
+  await setLocalData(localStorageKey, allItems);
 
   if (isOnline()) {
     try {
@@ -926,11 +926,10 @@ export async function syncInsertTransaction(
   txn: any,
   allTransactions: any[]
 ): Promise<{ success: boolean; error?: string }> {
-  localStorage.setItem('duo_pos_transactions', JSON.stringify(allTransactions));
+  await setLocalData('duo_pos_transactions', allTransactions);
 
   try {
-    const allItemsRaw = localStorage.getItem('duo_pos_transaction_items');
-    let allItems = allItemsRaw ? JSON.parse(allItemsRaw) : [];
+    const allItems = await getLocalData('duo_pos_transaction_items') || [];
     
     const dbTxnId = ensureValidUuid(txn.id, 'txn');
     const mappedItems = txn.items.map((item: any) => ({
@@ -947,7 +946,7 @@ export async function syncInsertTransaction(
     }));
 
     allItems.push(...mappedItems);
-    localStorage.setItem('duo_pos_transaction_items', JSON.stringify(allItems));
+    await setLocalData('duo_pos_transaction_items', allItems);
 
     const dbTxn = {
       id: dbTxnId,
@@ -1014,24 +1013,28 @@ export async function syncSaveShift(
   allHistory: any[] = []
 ): Promise<{ success: boolean; error?: string }> {
   if (isActive) {
-    localStorage.setItem('duo_pos_active_shift', JSON.stringify(shift));
+    await setLocalData('duo_pos_active_shift', shift);
   } else {
-    localStorage.removeItem('duo_pos_active_shift');
-    localStorage.setItem('duo_pos_shift_history', JSON.stringify(allHistory));
+    try {
+      await db.generic_store.delete('duo_pos_active_shift');
+    } catch {}
+    try {
+      localStorage.removeItem('duo_pos_active_shift');
+    } catch {}
+    await setLocalData('duo_pos_shift_history', allHistory);
   }
 
   const dbShiftId = ensureValidUuid(shift.id, 'shift');
 
   try {
-    const allMovesRaw = localStorage.getItem('duo_pos_shift_movements');
-    let allMoves = allMovesRaw ? JSON.parse(allMovesRaw) : [];
+    let allMoves = await getLocalData('duo_pos_shift_movements') || [];
     
     const mappedMoves = (shift.movements || []).map((m: any) => mapMovementToDb(m, dbShiftId));
 
     const newMoveIds = mappedMoves.map((m: any) => m.id);
     allMoves = allMoves.filter((m: any) => m.shift_id !== dbShiftId && !newMoveIds.includes(m.id));
     allMoves.push(...mappedMoves);
-    localStorage.setItem('duo_pos_shift_movements', JSON.stringify(allMoves));
+    await setLocalData('duo_pos_shift_movements', allMoves);
 
     const dbShift = mapShiftToDb(shift);
 
@@ -1071,13 +1074,12 @@ export async function syncSaveStockTransfer(
   transfer: any,
   allTransfers: any[]
 ): Promise<{ success: boolean; error?: string }> {
-  localStorage.setItem('duo_pos_stock_transfers', JSON.stringify(allTransfers));
+  await setLocalData('duo_pos_stock_transfers', allTransfers);
 
   const dbTransferId = ensureValidUuid(transfer.id, 'txn');
 
   try {
-    const allItemsRaw = localStorage.getItem('duo_pos_stock_transfer_items');
-    let allItems = allItemsRaw ? JSON.parse(allItemsRaw) : [];
+    let allItems = await getLocalData('duo_pos_stock_transfer_items') || [];
 
     const mappedItems = (transfer.items || []).map((item: any) => ({
       id: generateUUID(),
@@ -1090,7 +1092,7 @@ export async function syncSaveStockTransfer(
 
     allItems = allItems.filter((i: any) => i.transfer_id !== dbTransferId);
     allItems.push(...mappedItems);
-    localStorage.setItem('duo_pos_stock_transfer_items', JSON.stringify(allItems));
+    await setLocalData('duo_pos_stock_transfer_items', allItems);
 
     const dbTransfer = {
       id: dbTransferId,
@@ -1140,13 +1142,12 @@ export async function syncSavePurchaseOrder(
   po: any,
   allPurchaseOrders: any[]
 ): Promise<{ success: boolean; error?: string }> {
-  localStorage.setItem('duo_pos_purchase_orders', JSON.stringify(allPurchaseOrders));
+  await setLocalData('duo_pos_purchase_orders', allPurchaseOrders);
 
   const dbPoId = po.id; // po-1001 o UUID
 
   try {
-    const allItemsRaw = localStorage.getItem('duo_pos_purchase_order_items');
-    let allItems = allItemsRaw ? JSON.parse(allItemsRaw) : [];
+    let allItems = await getLocalData('duo_pos_purchase_order_items') || [];
 
     const mappedItems = (po.items || []).map((item: any) => ({
       id: generateUUID(),
@@ -1160,7 +1161,7 @@ export async function syncSavePurchaseOrder(
 
     allItems = allItems.filter((i: any) => i.purchase_order_id !== dbPoId);
     allItems.push(...mappedItems);
-    localStorage.setItem('duo_pos_purchase_order_items', JSON.stringify(allItems));
+    await setLocalData('duo_pos_purchase_order_items', allItems);
 
     const dbPo = mapPurchaseOrderToDb(po);
 

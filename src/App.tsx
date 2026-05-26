@@ -10,7 +10,7 @@ import LoginScreen from './components/LoginScreen';
 import LandingPage from './components/LandingPage';
 import { supabase, isSupabaseConfigured, setSupabaseToken } from './utils/supabaseClient';
 import { useAuth, useUser } from '@clerk/clerk-react';
-import { syncLoad, syncSave, syncInsert, syncDelete, flushPendingQueue, generateUUID, syncInsertTransaction, syncSaveShift, syncSaveStockTransfer, syncSavePurchaseOrder } from './utils/supabaseSync';
+import { syncLoad, syncSave, syncInsert, syncDelete, flushPendingQueue, generateUUID, syncInsertTransaction, syncSaveShift, syncSaveStockTransfer, syncSavePurchaseOrder, getLocalData, setLocalData } from './utils/supabaseSync';
 
 import DashboardScreen from './components/DashboardScreen';
 import SalesScreen from './components/SalesScreen';
@@ -626,7 +626,7 @@ export default function App() {
       await flushPendingQueue();
 
       const results = await Promise.allSettled([
-        syncLoad<Product>('products', 'duo_pos_products', []).then(loaded => {
+        syncLoad<Product>('products', 'duo_pos_products', []).then(async loaded => {
           const augmented = loaded.map(p => {
             if (!p.branchesStock) {
               return { ...p, branchesStock: { 'branch-centro': p.stock, 'branch-central': p.stock * 3 + 40, 'branch-norte': Math.round(p.stock * 0.7) + 5 } };
@@ -634,7 +634,7 @@ export default function App() {
             return p;
           });
           setProducts(augmented);
-          localStorage.setItem('duo_pos_products', JSON.stringify(augmented));
+          await setLocalData('duo_pos_products', augmented);
         }),
         syncLoad<Transaction>('transactions', 'duo_pos_transactions', [], { orderBy: 'date', ascending: false }).then(setTransactions),
         syncLoad<Customer>('customers', 'duo_pos_customers', []).then(setCustomers),
@@ -835,12 +835,12 @@ export default function App() {
           return p;
         });
         setProducts(augmented);
-        localStorage.setItem('duo_pos_products', JSON.stringify(augmented));
+        await setLocalData('duo_pos_products', augmented);
       } catch {
         // Fallback seguro
-        const savedProductsRaw = localStorage.getItem('duo_pos_products');
-        if (savedProductsRaw) {
-          setProducts(JSON.parse(savedProductsRaw));
+        const savedProducts = await getLocalData('duo_pos_products');
+        if (savedProducts) {
+          setProducts(savedProducts);
         } else {
           setProducts(DEFAULT_PRODUCTS);
         }
@@ -877,12 +877,12 @@ export default function App() {
         const loaded = await syncLoad<Customer>('customers', 'duo_pos_customers', DEFAULT_CUSTOMERS);
         setCustomers(loaded);
       } catch {
-        const savedCustomersRaw = localStorage.getItem('duo_pos_customers');
-        if (savedCustomersRaw) {
-          setCustomers(JSON.parse(savedCustomersRaw));
+        const savedCustomers = await getLocalData('duo_pos_customers');
+        if (savedCustomers) {
+          setCustomers(savedCustomers);
         } else {
           setCustomers(DEFAULT_CUSTOMERS);
-          localStorage.setItem('duo_pos_customers', JSON.stringify(DEFAULT_CUSTOMERS));
+          await setLocalData('duo_pos_customers', DEFAULT_CUSTOMERS);
         }
       }
     };

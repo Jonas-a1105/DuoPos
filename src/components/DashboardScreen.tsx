@@ -9,6 +9,7 @@ import { DUO_CHARACTERS, DEFAULT_PRODUCTS } from '../initialData';
 import { playSound } from '../utils/sounds';
 import DuoMascot from './DuoMascot';
 import { Award, Flame, ShoppingBag, TrendingUp, DollarSign, Package, Check, Sparkles, MessageSquare, Download, Upload, Bot, Brain, Send, HelpCircle } from 'lucide-react';
+import { setLocalData } from '../utils/supabaseSync';
 
 interface DashboardScreenProps {
   user: User;
@@ -144,7 +145,7 @@ export default function DashboardScreen({ user, transactions, products, onSetNew
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const parsed = JSON.parse(e.target?.result as string);
         if (parsed && typeof parsed === 'object') {
@@ -154,8 +155,8 @@ export default function DashboardScreen({ user, transactions, products, onSetNew
           }
 
           localStorage.setItem('duo_pos_active_user', JSON.stringify(parsed.user));
-          localStorage.setItem('duo_pos_products', JSON.stringify(parsed.products));
-          localStorage.setItem('duo_pos_transactions', JSON.stringify(parsed.transactions));
+          await setLocalData('duo_pos_products', parsed.products);
+          await setLocalData('duo_pos_transactions', parsed.transactions);
           
           alert('✅ ¡Base de datos de DuoPOS restaurada éxitosamente! Reiniciando vista...');
           window.location.reload();
