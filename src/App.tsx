@@ -342,7 +342,8 @@ export default function App() {
         if (activeUserRaw) {
           try {
             const parsed = JSON.parse(activeUserRaw);
-            if (parsed.id !== 'user-admin') {
+            // Conservar usuarios locales (prefix local-) y admin, solo limpiar usuarios de Supabase real
+            if (!parsed.id.startsWith('local-') && parsed.id !== 'user-admin') {
               setUser(null);
               setShowLanding(true);
               localStorage.removeItem('duo_pos_active_user');

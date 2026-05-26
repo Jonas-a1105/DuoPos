@@ -130,9 +130,10 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         } catch (err: any) {
           if (err.message === 'TIMEOUT_LIMIT') {
             console.warn("⚠️ [LOGIN DEBUG] Timeout buscando email. Activando modo offline.");
-            // Si Supabase no responde, caer en modo local
+            // Cancelar sesiones pendientes de Supabase
+            supabase.auth.signOut().catch(() => {});
             const localUser: User = {
-              id: `usr-${username.trim().toLowerCase()}`,
+              id: `local-${username.trim().toLowerCase()}`,
               username: username.trim(),
               email: `${username.trim()}@local.pos`,
               avatar: selectedCharacter || 'duo',
@@ -203,30 +204,34 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         if (err.message === 'TIMEOUT_LIMIT') {
           console.warn("⚠️ [LOGIN DEBUG] La conexión con Supabase tardó demasiado (Timeout). Activando modo de inicio local alternativo (offline)...");
           
-           const localUser: User = {
-            id: `usr-${username.trim().toLowerCase()}`,
-            username: username.trim(),
-            email: emailToAuth,
-            avatar: selectedCharacter || 'duo',
-            streak: 2,
-            lastSaleDate: null,
-            xp: 120,
-            level: 1,
-            dailyGoal: 150,
-            levelTitle: 'Cajero Novato 🦉',
-            role: role,
-            gems: 10,
-            gemsEarnedTotal: 10,
-            unlockedSkins: ['standard'],
-            activeSkin: 'standard',
-            unlockedBadges: [],
-            completedMissionsToday: []
-          };
-          localStorage.setItem('duo_pos_active_user', JSON.stringify(localUser));
-          setSuccessAnimation(true);
-          setTimeout(() => onLoginSuccess(localUser), 1200);
-          return;
-        }
+          // Cancelar cualquier sesión pendiente de Supabase para evitar que
+          // el Promise.race no cancelado dispare eventos SIGNED_IN/SIGNED_OUT después
+          supabase.auth.signOut().catch(() => {});
+
+          const localUser: User = {
+             id: `local-${username.trim().toLowerCase()}`,
+             username: username.trim(),
+             email: emailToAuth,
+             avatar: selectedCharacter || 'duo',
+             streak: 2,
+             lastSaleDate: null,
+             xp: 120,
+             level: 1,
+             dailyGoal: 150,
+             levelTitle: 'Cajero Novato 🦉',
+             role: role,
+             gems: 10,
+             gemsEarnedTotal: 10,
+             unlockedSkins: ['standard'],
+             activeSkin: 'standard',
+             unlockedBadges: [],
+             completedMissionsToday: []
+           };
+           localStorage.setItem('duo_pos_active_user', JSON.stringify(localUser));
+           setSuccessAnimation(true);
+           setTimeout(() => onLoginSuccess(localUser), 1200);
+           return;
+         }
         console.error("❌ [LOGIN DEBUG] Error no manejado en Promise.race:", err);
         setErrorMessage('Error de red al intentar conectar: ' + err.message);
         setIsLoading(false);
