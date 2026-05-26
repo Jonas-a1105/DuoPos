@@ -17,6 +17,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const [selectedCharacter, setSelectedCharacter] = useState<string>('duo');
   const [role, setRole] = useState<'admin' | 'supervisor' | 'cashier'>('admin');
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [successAnimation, setSuccessAnimation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [diagnosticLog, setDiagnosticLog] = useState<string[]>([]);
@@ -456,7 +457,8 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             options: {
               data: {
                 username: username.trim(),
-                role: role
+                role: role,
+                avatar: selectedCharacter
               }
             }
           }),
@@ -474,8 +476,8 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
       if (signUpErr) {
         addLog(`❌ Error de Supabase Auth: ${signUpErr.message}`);
-        if (signUpErr.message?.includes('429') || signUpErr.message?.includes('Too Many')) {
-          setErrorMessage('⏳ Demasiados intentos. Espera 1 minuto antes de intentar de nuevo.');
+        if (signUpErr.message?.includes('429') || signUpErr.message?.includes('Too Many') || signUpErr.message?.includes('rate limit')) {
+          setErrorMessage('⏳ Demasiados intentos. Por favor espera unos minutos o revisa si ya recibiste el correo de confirmación.');
         } else {
           setErrorMessage('Error al registrar: ' + signUpErr.message);
         }
@@ -484,9 +486,18 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       }
 
       const authUser = signUpData.user;
+      const authSession = signUpData.session;
+
+      if (authUser && !authSession) {
+        addLog("📧 Confirmación de correo requerida en Supabase. Esperando confirmación por email...");
+        setSuccessMessage('¡Registro casi listo! 📧 Se ha enviado un enlace de confirmación a tu correo. Por favor, confírmalo para poder iniciar sesión.');
+        setIsLoading(false);
+        return;
+      }
+
       if (!authUser) {
-        addLog("📧 Confirmación de correo habilitada en Supabase. Esperando confirmación por email...");
-        setErrorMessage('Registro exitoso. Revisa tu correo de confirmación si está habilitado.');
+        addLog("❌ Error: No se pudo obtener el usuario creado.");
+        setErrorMessage('Error al registrar: No se pudo crear el usuario.');
         setIsLoading(false);
         return;
       }
@@ -677,12 +688,10 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             <div className="flex justify-around border-b-2 border-[#e5e5e5] pb-4 mb-6">
               <button
                 type="button"
-                className={`pb-2 font-black text-lg transition-colors duration-150 relative ${
-                  !isRegistering ? 'text-[#58cc02]' : 'text-[#afafaf] hover:text-gray-500'
-                }`}
-                onClick={() => {
+                                onClick={() => {
                   setIsRegistering(false);
                   setErrorMessage('');
+                  setSuccessMessage('');
                 }}
               >
                 Inicia Sesión
@@ -698,6 +707,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 onClick={() => {
                   setIsRegistering(true);
                   setErrorMessage('');
+                  setSuccessMessage('');
                 }}
               >
                 Crea una Cuenta
@@ -711,6 +721,14 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             {errorMessage && (
               <div className="bg-[#ffedf0] border-2 border-[#ff7b7b] rounded-2xl p-3 text-[#ff4b4b] font-bold text-sm text-center mb-5 animate-shake">
                 ⚠️ {errorMessage}
+              </div>
+            )}
+
+            {/* SUCCESS MESSAGE BAR */}
+            {successMessage && (
+              <div className="bg-[#f2ffd9] border-2 border-[#58cc02] rounded-2xl p-4 text-[#58cc02] font-black text-sm text-center mb-5 flex flex-col items-center gap-2">
+                <span className="text-2xl">📧</span>
+                <span>{successMessage}</span>
               </div>
             )}
 
