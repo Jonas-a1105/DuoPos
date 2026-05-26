@@ -8,7 +8,8 @@ const isKeysValid =
   supabaseUrl &&
   supabaseUrl.startsWith('http') &&
   supabaseAnonKey &&
-  supabaseAnonKey.length > 10;
+  supabaseAnonKey.length > 20 &&
+  supabaseAnonKey.split('.').length === 3;
 
 // ─── Real Supabase Client ──────────────────────────────────────────────────────
 let supabase: SupabaseClient;
