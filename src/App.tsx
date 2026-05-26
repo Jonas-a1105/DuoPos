@@ -29,6 +29,9 @@ import InstallModal from './components/InstallModal';
 import GamificationScreen from './components/GamificationScreen';
 import DuoMascot from './components/DuoMascot';
 import type { DuoMood } from './components/DuoMascot';
+import LicenseBlockScreen from './components/modals/LicenseBlockScreen';
+import LevelUpCelebrateModal from './components/modals/LevelUpCelebrateModal';
+import RoleLockWarningModal from './components/modals/RoleLockWarningModal';
 import { Home, ShoppingBag, Package, History, LogOut, Download, Flame, Award, Smartphone, Laptop, Sparkles, Volume2, VolumeX, Users, Settings, Wallet, Globe, Cpu, Trophy, RefreshCw, Cloud } from 'lucide-react';
 import { playSound } from './utils/sounds';
 import { HardwareDeviceSettings, DEFAULT_HARDWARE_SETTINGS } from './utils/hardware';
@@ -201,10 +204,6 @@ export default function App() {
     (user.email && user.email.toLowerCase().includes('jonas')) || 
     user.username.toLowerCase() === 'admin'
   );
-  const [blockKey, setBlockKey] = useState<string>('');
-  const [blockCompany, setBlockCompany] = useState<string>('');
-  const [blockError, setBlockError] = useState<string>('');
-  const [blockLoading, setBlockLoading] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'sales' | 'shifts' | 'inventory' | 'history' | 'customers' | 'settings' | 'logistics' | 'gamification'>('dashboard');
 
   // ─── DuoMascot reactive mood state ───
@@ -1984,180 +1983,7 @@ export default function App() {
   }
 
   if (isClockTampered || isLicenseExpired) {
-    const handleBlockActivate = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!blockKey.trim()) {
-        setBlockError('¡Ingresa la clave de activación!');
-        return;
-      }
-      setBlockError('');
-      setBlockLoading(true);
-      try {
-        const seed = licenseDetails.offlineActivationSeed;
-        const res = await validateLicenseKeyOnline(blockKey.trim(), seed, blockCompany.trim());
-        if (res.valid) {
-          const plan = PLANS[res.tier];
-          const updated: LicenseDetails = {
-            ...licenseDetails,
-            tier: res.tier,
-            activated: true,
-            activationKey: blockKey.toUpperCase().trim(),
-            expiresAt: res.expiresAt || 'Nunca',
-            clientLimit: plan.clientLimit,
-            salesLimit: plan.salesLimit,
-            activatedAt: new Date().toISOString(),
-            companyName: blockCompany.trim() || ''
-          };
-          setLicenseDetails(updated);
-          localStorage.setItem('duo_pos_licensing_details', JSON.stringify(updated));
-          
-          setIsLicenseExpired(false);
-          setIsClockTampered(false);
-          setBlockKey('');
-          setBlockCompany('');
-          playSound('levelup');
-          toast.success("¡Licencia activada con éxito! DuoPOS desbloqueado.");
-        } else {
-          setBlockError(res.error || 'La clave ingresada es inválida o expirada.');
-          playSound('error');
-        }
-      } catch (err: any) {
-        setBlockError('Error de red: ' + err.message);
-        playSound('error');
-      } finally {
-        setBlockLoading(false);
-      }
-    };
-
-    return (
-      <div className="min-h-screen bg-[#0a0e17] text-[#f7f9fb] flex flex-col items-center justify-center p-4 relative overflow-y-auto font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#1f1a3a] via-[#0a0e17] to-[#0a0e17]">
-        {/* Floating background decorative grids */}
-        <div className="absolute top-10 left-10 text-6xl opacity-10 animate-pulse pointer-events-none">🦉</div>
-        <div className="absolute bottom-10 right-10 text-6xl opacity-10 animate-bounce pointer-events-none">🔒</div>
-
-        <div className="max-w-md w-full flex flex-col items-center space-y-6 relative z-10">
-          
-          {/* Logo Header */}
-          <div className="flex items-center gap-3 transform hover:scale-102 transition-transform duration-200 cursor-pointer">
-            <div className="bg-[#58cc02] p-4 rounded-3xl border-b-6 border-[#46a302] shadow-md flex items-center justify-center">
-              <span className="text-4xl">🦉</span>
-            </div>
-            <div>
-              <h1 className="text-3xl font-black text-[#58cc02] tracking-wider flex items-center gap-1">
-                Duo<span className="text-white">POS</span>
-              </h1>
-              <p className="text-[10px] font-black tracking-widest text-[#afafaf] uppercase">Bloqueo de Seguridad</p>
-            </div>
-          </div>
-
-          {/* Warning Card */}
-          <div className="bg-[#121a2f]/80 border-2 border-slate-800 rounded-3xl p-6 md:p-8 w-full shadow-2xl backdrop-blur-md">
-            
-            {isClockTampered ? (
-              // CLOCK TAMPERING CARD
-              <div className="space-y-6 text-center">
-                <div className="text-6xl animate-bounce">⚠️</div>
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-black text-rose-500 tracking-tight uppercase">¡Reloj Alterado!</h2>
-                  <span className="bg-rose-500/10 border border-rose-500/30 text-rose-400 text-[10px] font-black uppercase px-3 py-1 rounded-xl inline-block tracking-widest">
-                    ALERTA DE SEGURIDAD
-                  </span>
-                </div>
-                
-                <p className="text-slate-300 text-sm leading-relaxed font-semibold">
-                  DuoPOS ha detectado que la fecha de tu equipo es anterior al último registro del sistema. Por seguridad, el sistema se ha bloqueado preventivamente para evitar fraudes en la vigencia de tu licencia.
-                </p>
-
-                <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 text-xs font-bold text-slate-400 text-left space-y-2 leading-relaxed">
-                  <p className="text-white font-black uppercase">¿Cómo solucionar esto?</p>
-                  <p>1. Ajusta la fecha y hora de tu sistema operativo a la hora oficial de hoy.</p>
-                  <p>2. Asegúrate de activar la sincronización automática de hora por Internet.</p>
-                  <p>3. Recarga o reinicia la aplicación DuoPOS.</p>
-                </div>
-                
-                <button
-                  onClick={() => window.location.reload()}
-                  className="w-full bg-slate-800 hover:bg-slate-700 text-white font-black text-xs py-3 rounded-2xl border-b-4 border-slate-950 transition-all uppercase tracking-wider cursor-pointer"
-                >
-                  Recargar Aplicación 🔄
-                </button>
-              </div>
-            ) : (
-              // EXPIRED LICENSE CARD
-              <div className="space-y-5">
-                <div className="text-center space-y-3">
-                  <div className="text-6xl filter drop-shadow-md select-none transform hover:rotate-12 duration-150">🦉🔒</div>
-                  <div className="space-y-1">
-                    <h2 className="text-2xl font-black text-amber-500 uppercase tracking-tight leading-none">¡Licencia Vencida!</h2>
-                    <span className="bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[9px] font-black uppercase px-2.5 py-0.5 rounded-lg inline-block tracking-wider">
-                      Racha Comercial Pausada
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-350 font-bold leading-relaxed max-w-xs mx-auto">
-                    Tu licencia expiró el día <strong className="text-white">{licenseDetails.expiresAt}</strong>. Para continuar usándolo y salvar tus registros de venta, activa una nueva clave.
-                  </p>
-                </div>
-
-                {blockError && (
-                  <div className="bg-rose-500/10 border-2 border-rose-500/30 rounded-2xl p-3 text-rose-400 font-bold text-xs text-center animate-shake">
-                    ⚠️ {blockError}
-                  </div>
-                )}
-
-                <form onSubmit={handleBlockActivate} className="space-y-4 pt-2 border-t border-slate-800/80">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black tracking-wide text-slate-400 uppercase">
-                      Nombre de la Empresa / Cliente
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Ej. Abastos La Racha C.A."
-                      value={blockCompany}
-                      onChange={(e) => setBlockCompany(e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-900/60 border-2 border-slate-800 rounded-2xl font-bold text-white outline-none focus:border-amber-500 transition-all text-xs"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black tracking-wide text-slate-400 uppercase">
-                      Clave de Licencia Comercial
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="DUO-OFF-... o DUO-STD-..."
-                      value={blockKey}
-                      onChange={(e) => setBlockKey(e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-900/60 border-2 border-slate-800 rounded-2xl font-mono font-bold text-amber-400 outline-none focus:border-amber-500 transition-all text-xs text-center tracking-wider text-upper"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={blockLoading}
-                    className="w-full bg-[#58cc02] text-white border-b-[6px] border-[#46a302] hover:bg-[#61e002] active:border-b-0 active:translate-y-[6px] font-black text-sm py-3.5 rounded-2xl transition-all duration-100 uppercase tracking-wider cursor-pointer shadow-md mt-4 flex items-center justify-center gap-1.5"
-                  >
-                    {blockLoading ? 'Validando Licencia...' : 'Reactivar DuoPOS 🔑'}
-                  </button>
-                </form>
-
-                <div className="bg-slate-900/40 border border-slate-800 p-3 rounded-2xl text-[10px] text-slate-400 font-bold leading-normal space-y-1">
-                  <p className="text-slate-300 font-black uppercase text-[9px] tracking-wider leading-none mb-1">Información de Soporte</p>
-                  <div>Seed de hardware para activación offline:</div>
-                  <div className="font-mono text-white text-[11px] select-all bg-slate-950/80 px-2 py-1 rounded border border-slate-800 text-center tracking-wider mt-1">
-                    {licenseDetails.offlineActivationSeed}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <p className="text-center text-[10px] text-slate-500 font-semibold leading-normal">
-            DuoPOS y las licencias están protegidos por firmas criptográficas. Pide soporte a tu desarrollador principal si no tienes tu código.
-          </p>
-        </div>
-      </div>
-    );
+    return <LicenseBlockScreen />;
   }
 
   if (!user) {
@@ -2820,102 +2646,10 @@ export default function App() {
       )}
 
       {/* 6. SPECTACULAR GENERAL LEVEL UP CELEBRATE MODAL */}
-      {levelUpAchieved && (
-        <div className="fixed inset-0 z-50 bg-[#1cb0f6] flex flex-col items-center justify-center p-4 text-white text-center font-sans animate-scaleUp">
-          <div className="max-w-md w-full space-y-6">
-            <span className="text-9xl block select-none drop-shadow-lg transform animate-bounce duration-500">
-              💎
-            </span>
-            <div className="space-y-2">
-              <span className="text-xl font-black tracking-widest text-[#d2f09d] uppercase">
-                ¡NUEVO LOGRO DESBLOQUEADO!
-              </span>
-              <h1 className="text-4xl md:text-5xl font-black leading-tight tracking-tight">
-                ¡Subiste al Nivel {levelUpAchieved.newLevel}!
-              </h1>
-              <p className="text-sky-100 font-extrabold text-sm max-w-xs mx-auto pt-1 leading-normal uppercase">
-                Has sido promovido al cargo oficial de:<br />
-                <span className="bg-yellow-400 text-amber-950 font-black px-3.5 py-1 rounded-xl text-base inline-block border-2 border-white max-w-full truncate shadow-sm mt-3 animate-pulse">
-                  {levelUpAchieved.title}
-                </span>
-              </p>
-            </div>
-
-            <div className="bg-white/10 border border-white/20 rounded-2xl p-4 text-xs font-bold leading-relaxed max-w-sm mx-auto text-white">
-              🎉 ¡Felicidades! Has expandido tu vocabulario comercial de DuoPOS. El búho Duo está inmensamente complacido por tu desempeño en racha.
-            </div>
-
-            <button
-              onClick={() => setLevelUpAchieved(null)}
-              className="w-full bg-white text-[#1cb0f6] border-b-[6px] border-[#dddddd] hover:bg-gray-50 active:border-b-0 active:translate-y-[6px] py-4 rounded-3xl font-black text-lg uppercase tracking-wider transition-all cursor-pointer"
-            >
-              ¡Continuar Trabajando!
-            </button>
-          </div>
-        </div>
-      )}
+      <LevelUpCelebrateModal />
 
       {/* RBAC Role Restriction Warnings Modal */}
-      {roleLockWarning && (
-        <div className="fixed inset-0 z-50 bg-[#141414]/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white border-2 border-[#e5e5e5] border-b-[8px] rounded-3xl p-6 text-center space-y-4 animate-scaleUp">
-            <div className="text-6xl text-amber-500 select-none">🔒</div>
-            <h3 className="text-2xl font-black text-gray-800 tracking-tight">Acceso Restringido</h3>
-            <p className="text-sm font-bold text-gray-500">
-              Para entrar a la pestaña de <strong className="text-gray-800 font-extrabold">"{roleLockWarning.tabName}"</strong> necesitas rol de <span className="bg-amber-100 text-amber-700 px-2.5 py-1 rounded-lg border border-amber-200 uppercase text-xs font-black">{roleLockWarning.requiredRole}</span>.
-            </p>
-            <p className="text-xs text-gray-400 font-bold">
-              Tu rol actual es: <span className="uppercase text-slate-600 underline font-black">{roleLockWarning.activeRole === 'cashier' ? 'Cajero 💵' : roleLockWarning.activeRole === 'supervisor' ? 'Supervisor ⚡' : 'Administrador 👑'}</span>
-            </p>
-            
-            {isDev ? (
-              <>
-                <div className="bg-blue-50 border border-blue-100 p-3 rounded-2xl text-left space-y-2 mt-4">
-                  <span className="text-[11px] font-black text-blue-600 uppercase tracking-widest block">🔧 Modo Demostración (Simulador de Permisos)</span>
-                  <p className="text-xs text-blue-700 leading-relaxed font-semibold">
-                    ¿Deseas verificar esta vista? Haz clic abajo para autodesignarte un nivel de acceso superior temporal en este navegador.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 pt-2">
-                  <button
-                    onClick={() => {
-                      const updatedUser = { ...user, role: 'admin' };
-                      setUser(updatedUser);
-                      localStorage.setItem('duo_pos_active_user', JSON.stringify(updatedUser));
-                      setActiveTab(
-                        roleLockWarning.tabName === 'Configuración' ? 'settings' :
-                        roleLockWarning.tabName === 'Catálogos' ? 'inventory' :
-                        roleLockWarning.tabName === 'Logística' ? 'logistics' : 'dashboard'
-                      );
-                      setRoleLockWarning(null);
-                      playSound('levelup');
-                    }}
-                    className="bg-[#58cc02] text-white border-b-4 border-[#3e9301] hover:bg-[#61e002] active:border-b-0 active:translate-y-[4px] font-black text-xs py-2.5 rounded-2xl cursor-pointer uppercase"
-                  >
-                    Simular Admin 👑
-                  </button>
-                  <button
-                    onClick={() => setRoleLockWarning(null)}
-                    className="bg-white text-gray-500 border-2 border-gray-200 border-b-4 hover:bg-gray-50 active:translate-y-[2px] active:border-b-2 font-black text-xs py-2.5 rounded-2xl cursor-pointer uppercase"
-                  >
-                    Cerrar
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="pt-4 flex justify-end">
-                <button
-                  onClick={() => setRoleLockWarning(null)}
-                  className="w-full py-2.5 bg-white text-gray-500 border-2 border-gray-200 border-b-4 hover:bg-gray-50 active:translate-y-[2px] active:border-b-2 font-black text-xs rounded-2xl cursor-pointer uppercase"
-                >
-                  Cerrar
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <RoleLockWarningModal setActiveTab={setActiveTab} />
 
       {isHardwareHubOpen && (
         <HardwareHubModal
