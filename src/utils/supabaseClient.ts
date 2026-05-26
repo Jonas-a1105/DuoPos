@@ -9,7 +9,7 @@ const isKeysValid =
   supabaseUrl.startsWith('http') &&
   supabaseAnonKey &&
   supabaseAnonKey.length > 20 &&
-  supabaseAnonKey.split('.').length === 3;
+  (supabaseAnonKey.startsWith('sb_publishable_') || supabaseAnonKey.split('.').length === 3);
 
 // ─── Real Supabase Client ──────────────────────────────────────────────────────
 let supabase: SupabaseClient;
