@@ -106,10 +106,12 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         return;
       }
 
+      console.log("🔍 [LOGIN DEBUG] Iniciando flujo de Supabase Auth...");
       let emailToAuth = username.trim();
       
       // Si el input no es un correo, buscar el correo asociado en profiles
       if (!emailToAuth.includes('@')) {
+        console.log("🔍 [LOGIN DEBUG] Buscando email asociado al username:", username.trim());
         const { data: profileData, error: profileErr } = await supabase
           .from('profiles')
           .select('email')
@@ -117,27 +119,32 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           .maybeSingle();
           
         if (profileErr) {
+          console.error("❌ [LOGIN DEBUG] Error al buscar perfil:", profileErr);
           setErrorMessage('Error al buscar usuario: ' + profileErr.message);
           setIsLoading(false);
           return;
         }
         
         if (!profileData) {
+          console.warn("⚠️ [LOGIN DEBUG] No se encontró perfil para username:", username.trim());
           setErrorMessage('No se encontró ningún usuario con ese nombre.');
           setIsLoading(false);
           return;
         }
         
         emailToAuth = profileData.email;
+        console.log("🔍 [LOGIN DEBUG] Email encontrado:", emailToAuth);
       }
 
       // Autenticación con Supabase
+      console.log("🔍 [LOGIN DEBUG] Intentando signInWithPassword para email:", emailToAuth);
       const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
         email: emailToAuth,
         password: password
       });
 
       if (authErr) {
+        console.error("❌ [LOGIN DEBUG] Error en signInWithPassword:", authErr);
         // Manejar error 429 (Too Many Requests) de forma amigable
         if (authErr.message?.includes('429') || authErr.message?.includes('Too Many') || authErr.message?.includes('rate')) {
           setErrorMessage('⏳ Demasiados intentos. Espera 1 minuto antes de intentar de nuevo.');
@@ -151,12 +158,16 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       }
 
       if (!authData.user) {
+        console.warn("⚠️ [LOGIN DEBUG] signInWithPassword no retornó ningún usuario.");
         setErrorMessage('No se pudo obtener la información del usuario.');
         setIsLoading(false);
         return;
       }
 
+      console.log("🔍 [LOGIN DEBUG] Autenticado con éxito. ID de usuario:", authData.user.id);
+
       // Obtener perfil de la base de datos
+      console.log("🔍 [LOGIN DEBUG] Obteniendo perfil de la tabla profiles...");
       let { data: userProfile, error: profileFetchErr } = await supabase
         .from('profiles')
         .select('*')
@@ -164,6 +175,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         .maybeSingle();
 
       if (profileFetchErr) {
+        console.error("❌ [LOGIN DEBUG] Error al obtener perfil:", profileFetchErr);
         setErrorMessage('Error al obtener perfil: ' + profileFetchErr.message);
         setIsLoading(false);
         return;
@@ -171,6 +183,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
       // Self-healing: crear perfil si no existe
       if (!userProfile) {
+        console.log("🔍 [LOGIN DEBUG] Perfil no encontrado. Iniciando creación automática...");
         const defaultProfile = createDefaultProfile(
           authData.user.id,
           authData.user.email || emailToAuth,
@@ -184,11 +197,15 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           .maybeSingle();
 
         if (insertErr || !newProfile) {
+          console.error("❌ [LOGIN DEBUG] Error al crear perfil:", insertErr);
           setErrorMessage('Error al crear perfil: ' + (insertErr?.message || 'Error desconocido'));
           setIsLoading(false);
           return;
         }
         userProfile = newProfile;
+        console.log("🔍 [LOGIN DEBUG] Perfil creado exitosamente:", userProfile);
+      } else {
+        console.log("🔍 [LOGIN DEBUG] Perfil encontrado exitosamente:", userProfile);
       }
 
       const user = mapProfileToUser(userProfile);
