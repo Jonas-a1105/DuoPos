@@ -86,4 +86,19 @@ if (isKeysValid) {
 // ─── Helper: Detectar si estamos online con Supabase real ──────────────────────
 export const isSupabaseConfigured = (): boolean => isKeysValid;
 
+// ─── Helper: Inyectar token JWT de Clerk en Supabase ──────────────────────────
+export const setSupabaseToken = (token: string | null) => {
+  if (!isKeysValid) return;
+  if (token) {
+    supabase.auth.setSession({
+      access_token: token,
+      refresh_token: '',
+    });
+    console.log('🔑 Token de Clerk inyectado en Supabase Client.');
+  } else {
+    supabase.auth.signOut().catch(() => {});
+    console.log('🔌 Token de Clerk removido de Supabase Client.');
+  }
+};
+
 export { supabase };

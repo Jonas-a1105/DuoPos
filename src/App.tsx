@@ -8,7 +8,8 @@ import { User, Product, Transaction, CashShift, CashMovement, Customer, LegalBil
 import { DEFAULT_PRODUCTS, DUO_CHARACTERS, DEFAULT_CUSTOMERS, DEFAULT_BILLING_SETTINGS } from './initialData';
 import LoginScreen from './components/LoginScreen';
 import LandingPage from './components/LandingPage';
-import { supabase, isSupabaseConfigured } from './utils/supabaseClient';
+import { supabase, isSupabaseConfigured, setSupabaseToken } from './utils/supabaseClient';
+import { useAuth, useUser } from '@clerk/clerk-react';
 import { syncLoad, syncSave, syncInsert, syncDelete, flushPendingQueue, generateUUID, syncInsertTransaction, syncSaveShift, syncSaveStockTransfer, syncSavePurchaseOrder } from './utils/supabaseSync';
 
 import DashboardScreen from './components/DashboardScreen';
@@ -29,6 +30,104 @@ import { HardwareDeviceSettings, DEFAULT_HARDWARE_SETTINGS } from './utils/hardw
 import HardwareHubModal from './components/HardwareHubModal';
 import { FlashNotifications, toast } from './components/FlashNotifications';
 import { LicenseDetails, validateLicenseKeyOnline, generateHardwareFingerprint, PLANS, detectClockTampering } from './utils/licensing';
+
+// ─── Componente de Sincronización de Sesiones Clerk + Supabase ────────────────
+function ClerkSessionSync({ onSyncUser }: { onSyncUser: (user: User | null) => void }) {
+  const { userId, getToken } = useAuth();
+  const { user: clerkUser } = useUser();
+
+  useEffect(() => {
+    const syncToken = async () => {
+      if (userId) {
+        try {
+          const token = await getToken({ template: 'supabase' });
+          setSupabaseToken(token);
+        } catch (err) {
+          console.error('Error getting Supabase token from Clerk:', err);
+        }
+      } else {
+        setSupabaseToken(null);
+      }
+    };
+    syncToken();
+  }, [userId, getToken]);
+
+  useEffect(() => {
+    const loadClerkUserProfile = async () => {
+      if (clerkUser) {
+        try {
+          const { data: userProfile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', clerkUser.id)
+            .maybeSingle();
+
+          let finalProfile = userProfile;
+
+          if (!finalProfile) {
+            console.log('Self-healing Clerk: Creando perfil comercial en Supabase...');
+            const defaultProfile = {
+              id: clerkUser.id,
+              username: clerkUser.username || clerkUser.firstName || 'Cajero',
+              email: clerkUser.primaryEmailAddress?.emailAddress || '',
+              avatar: 'duo',
+              streak: 1,
+              xp: 120,
+              level: 1,
+              daily_goal: 150,
+              level_title: 'Cajero Novato 🦉',
+              role: 'admin',
+              gems: 40,
+              gems_earned_total: 40,
+              unlocked_skins: ['standard'],
+              active_skin: 'standard',
+              unlocked_badges: [],
+              completed_missions_today: []
+            };
+
+            const { data: newProfile, error: insertErr } = await supabase
+              .from('profiles')
+              .insert(defaultProfile)
+              .select()
+              .maybeSingle();
+
+            finalProfile = newProfile || defaultProfile;
+          }
+
+          if (finalProfile) {
+            const mappedUser: User = {
+              id: finalProfile.id,
+              username: finalProfile.username,
+              email: finalProfile.email,
+              avatar: finalProfile.avatar,
+              streak: finalProfile.streak,
+              lastSaleDate: finalProfile.last_sale_date,
+              xp: finalProfile.xp,
+              level: finalProfile.level,
+              dailyGoal: Number(finalProfile.daily_goal),
+              levelTitle: finalProfile.level_title,
+              role: finalProfile.role,
+              gems: finalProfile.gems,
+              gemsEarnedTotal: finalProfile.gems_earned_total,
+              unlockedSkins: finalProfile.unlocked_skins,
+              activeSkin: finalProfile.active_skin,
+              unlockedBadges: finalProfile.unlocked_badges,
+              completedMissionsToday: finalProfile.completed_missions_today
+            };
+            onSyncUser(mappedUser);
+          }
+        } catch (err) {
+          console.error('Error loading Clerk profile in sync:', err);
+        }
+      } else {
+        onSyncUser(null);
+      }
+    };
+    loadClerkUserProfile();
+  }, [clerkUser]);
+
+  return null;
+}
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -379,6 +478,9 @@ export default function App() {
 
   // Supabase Auth State Change Listener
   useEffect(() => {
+    if (!!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
+      return; // Clerk gestiona la sesión mediante ClerkSessionSync
+    }
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         try {
@@ -2148,6 +2250,11 @@ export default function App() {
 
   return (
     <div className={`min-h-screen font-sans flex flex-col relative antialiased transition-all duration-300 theme-${user?.activeSkin || 'standard'} ${themeClasses.outer}`}>
+
+      {/* Clerk Session Syncer (Condicional) */}
+      {!!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY && (
+        <ClerkSessionSync onSyncUser={setUser} />
+      )}
 
       {/* 1. TOP DISMISSIBLE PWA MARKETING BANNER */}
       {showInstallBanner && !isSimInstalled && (
