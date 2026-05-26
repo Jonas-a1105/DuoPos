@@ -486,14 +486,28 @@ export default function App() {
     };
     loadCustomers();
 
-    // 7. Load billing settings
-    const savedBillingRaw = localStorage.getItem('duo_pos_billing_settings');
-    if (savedBillingRaw) {
-      setBillingSettings(JSON.parse(savedBillingRaw));
-    } else {
-      setBillingSettings(DEFAULT_BILLING_SETTINGS);
-      localStorage.setItem('duo_pos_billing_settings', JSON.stringify(DEFAULT_BILLING_SETTINGS));
-    }
+    // 7. Load billing settings (Local-First)
+    const loadBillingSettings = async () => {
+      try {
+        const loaded = await syncLoad<{ id: string; data: any }>('settings', 'duo_pos_settings', [
+          { id: 'billing', data: DEFAULT_BILLING_SETTINGS }
+        ]);
+        const billingRow = loaded.find(s => s.id === 'billing');
+        if (billingRow && billingRow.data) {
+          setBillingSettings(billingRow.data);
+        } else {
+          setBillingSettings(DEFAULT_BILLING_SETTINGS);
+        }
+      } catch {
+        const savedBillingRaw = localStorage.getItem('duo_pos_billing_settings');
+        if (savedBillingRaw) {
+          setBillingSettings(JSON.parse(savedBillingRaw));
+        } else {
+          setBillingSettings(DEFAULT_BILLING_SETTINGS);
+        }
+      }
+    };
+    loadBillingSettings();
 
     // 8. Load branches (Local-First)
     const DEFAULT_BRANCHES = [
@@ -873,7 +887,7 @@ export default function App() {
   };
 
 
-  const handleSaveBillingSettings = (updated: LegalBillingSettings) => {
+  const handleSaveBillingSettings = async (updated: LegalBillingSettings) => {
     setBillingSettings(updated);
     localStorage.setItem('duo_pos_billing_settings', JSON.stringify(updated));
     if (updated.enableSounds !== undefined) {
@@ -881,6 +895,19 @@ export default function App() {
       setIsMuted(isMutedNow);
       localStorage.setItem('duo_pos_muted', String(isMutedNow));
     }
+
+    // Save to Supabase (Local-First Sync)
+    const loadedSettingsRaw = localStorage.getItem('duo_pos_settings');
+    let allSettings: { id: string; data: any }[] = [];
+    try {
+      allSettings = loadedSettingsRaw ? JSON.parse(loadedSettingsRaw) : [];
+    } catch {}
+    
+    allSettings = allSettings.filter(s => s.id !== 'billing');
+    const newRow = { id: 'billing', data: updated };
+    allSettings.push(newRow);
+
+    await syncSave<{ id: string; data: any }>('settings', 'duo_pos_settings', allSettings, newRow);
   };
 
   // Transactions logic handlers
@@ -912,6 +939,19 @@ export default function App() {
       };
       setBillingSettings(updatedBilling);
       localStorage.setItem('duo_pos_billing_settings', JSON.stringify(updatedBilling));
+
+      // Save to Supabase (Local-First Sync)
+      const loadedSettingsRaw = localStorage.getItem('duo_pos_settings');
+      let allSettings: { id: string; data: any }[] = [];
+      try {
+        allSettings = loadedSettingsRaw ? JSON.parse(loadedSettingsRaw) : [];
+      } catch {}
+      
+      allSettings = allSettings.filter(s => s.id !== 'billing');
+      const newRow = { id: 'billing', data: updatedBilling };
+      allSettings.push(newRow);
+
+      await syncSave<{ id: string; data: any }>('settings', 'duo_pos_settings', allSettings, newRow);
 
       // Increment invoicesEmitted daily quests metric
       try {

@@ -280,7 +280,7 @@ export async function syncLoad<T>(
   const sanitizeAndMap = (rawItem: any): T => {
     // Si la tabla no requiere UUIDs estrictos en Postgres (ej. text IDs para branches/registers), no usar ensureValidUuid
     let cleanId = rawItem.id;
-    if (table !== 'branches' && table !== 'cash_registers') {
+    if (table !== 'branches' && table !== 'cash_registers' && table !== 'settings') {
       cleanId = ensureValidUuid(rawItem.id, prefix as any);
     }
     let item = { ...rawItem, id: cleanId };
