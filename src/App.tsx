@@ -9,7 +9,7 @@ import { DEFAULT_PRODUCTS, DUO_CHARACTERS, DEFAULT_CUSTOMERS, DEFAULT_BILLING_SE
 import LoginScreen from './components/LoginScreen';
 import LandingPage from './components/LandingPage';
 import { supabase, isSupabaseConfigured } from './utils/supabaseClient';
-import { syncLoad, syncSave, syncInsert, syncDelete, flushPendingQueue, generateUUID, syncInsertTransaction, syncSaveShift } from './utils/supabaseSync';
+import { syncLoad, syncSave, syncInsert, syncDelete, flushPendingQueue, generateUUID, syncInsertTransaction, syncSaveShift, syncSaveStockTransfer } from './utils/supabaseSync';
 
 import DashboardScreen from './components/DashboardScreen';
 import SalesScreen from './components/SalesScreen';
@@ -495,51 +495,72 @@ export default function App() {
       localStorage.setItem('duo_pos_billing_settings', JSON.stringify(DEFAULT_BILLING_SETTINGS));
     }
 
-    // 8. Load branches
-    const savedBranchesRaw = localStorage.getItem('duo_pos_branches');
-    let loadedBranches: Branch[] = [];
-    if (savedBranchesRaw) {
-      loadedBranches = JSON.parse(savedBranchesRaw);
-    } else {
-      loadedBranches = [
-        { id: 'branch-central', name: 'Almacén Central (CEDIS) 🏢', type: 'central', emoji: '🏢', city: 'CDMX', address: 'Camino Real de Toluca #400, Coyoacán' },
-        { id: 'branch-centro', name: 'Sucursal Duo Centro 🦉', type: 'branch', emoji: '🦉', city: 'CDMX', address: 'Av. Paseo de la Reforma #150, Cuauhtémoc' },
-        { id: 'branch-norte', name: 'Sucursal Portal Norte 🦁', type: 'branch', emoji: '🦁', city: 'Monterrey', address: 'Av. Lázaro Cárdenas #2400, San Pedro Garza García' }
-      ];
-      localStorage.setItem('duo_pos_branches', JSON.stringify(loadedBranches));
-    }
-    setBranches(loadedBranches);
+    // 8. Load branches (Local-First)
+    const DEFAULT_BRANCHES = [
+      { id: 'branch-central', name: 'Almacén Central (CEDIS) 🏢', type: 'central' as const, emoji: '🏢', city: 'CDMX', address: 'Camino Real de Toluca #400, Coyoacán' },
+      { id: 'branch-centro', name: 'Sucursal Duo Centro 🦉', type: 'branch' as const, emoji: '🦉', city: 'CDMX', address: 'Av. Paseo de la Reforma #150, Cuauhtémoc' },
+      { id: 'branch-norte', name: 'Sucursal Portal Norte 🦁', type: 'branch' as const, emoji: '🦁', city: 'Monterrey', address: 'Av. Lázaro Cárdenas #2400, San Pedro Garza García' }
+    ];
+
+    const loadBranches = async () => {
+      try {
+        const loaded = await syncLoad<Branch>('branches', 'duo_pos_branches', DEFAULT_BRANCHES);
+        setBranches(loaded);
+      } catch {
+        const savedBranchesRaw = localStorage.getItem('duo_pos_branches');
+        if (savedBranchesRaw) {
+          setBranches(JSON.parse(savedBranchesRaw));
+        } else {
+          setBranches(DEFAULT_BRANCHES);
+        }
+      }
+    };
+    loadBranches();
 
     const savedActiveBranchId = localStorage.getItem('duo_pos_active_branch_id');
     setActiveBranchId(savedActiveBranchId || 'branch-centro');
 
-    // 9. Load registers
-    const savedRegistersRaw = localStorage.getItem('duo_pos_registers');
-    let loadedRegisters: CashRegister[] = [];
-    if (savedRegistersRaw) {
-      loadedRegisters = JSON.parse(savedRegistersRaw);
-    } else {
-      loadedRegisters = [
-        { id: 'reg-centro-1', branchId: 'branch-centro', name: 'Caja Principal 💵', emoji: '💵', status: 'active' },
-        { id: 'reg-centro-2', branchId: 'branch-centro', name: 'Caja Rápida ⚡', emoji: '⚡', status: 'active' },
-        { id: 'reg-norte-1', branchId: 'branch-norte', name: 'Caja Principal Duo 🦁', emoji: '🦁', status: 'active' },
-        { id: 'reg-norte-2', branchId: 'branch-norte', name: 'Kiosco Auto 🤖', emoji: '🤖', status: 'active' },
-        { id: 'reg-central-1', branchId: 'branch-central', name: 'Mesa de Despachos 📦', emoji: '📦', status: 'active' }
-      ];
-      localStorage.setItem('duo_pos_registers', JSON.stringify(loadedRegisters));
-    }
-    setRegisters(loadedRegisters);
+    // 9. Load registers (Local-First)
+    const DEFAULT_REGISTERS = [
+      { id: 'reg-centro-1', branchId: 'branch-centro', name: 'Caja Principal 💵', emoji: '💵', status: 'active' as const },
+      { id: 'reg-centro-2', branchId: 'branch-centro', name: 'Caja Rápida ⚡', emoji: '⚡', status: 'active' as const },
+      { id: 'reg-norte-1', branchId: 'branch-norte', name: 'Caja Principal Duo 🦁', emoji: '🦁', status: 'active' as const },
+      { id: 'reg-norte-2', branchId: 'branch-norte', name: 'Kiosco Auto 🤖', emoji: '🤖', status: 'active' as const },
+      { id: 'reg-central-1', branchId: 'branch-central', name: 'Mesa de Despachos 📦', emoji: '📦', status: 'active' as const }
+    ];
+
+    const loadRegisters = async () => {
+      try {
+        const loaded = await syncLoad<CashRegister>('cash_registers', 'duo_pos_registers', DEFAULT_REGISTERS);
+        setRegisters(loaded);
+      } catch {
+        const savedRegistersRaw = localStorage.getItem('duo_pos_registers');
+        if (savedRegistersRaw) {
+          setRegisters(JSON.parse(savedRegistersRaw));
+        } else {
+          setRegisters(DEFAULT_REGISTERS);
+        }
+      }
+    };
+    loadRegisters();
 
     const savedActiveRegisterId = localStorage.getItem('duo_pos_active_register_id');
     setActiveRegisterId(savedActiveRegisterId || 'reg-centro-1');
 
-    // 10. Load stock transfers
-    const savedTransfersRaw = localStorage.getItem('duo_pos_stock_transfers');
-    if (savedTransfersRaw) {
-      setStockTransfers(JSON.parse(savedTransfersRaw));
-    } else {
-      setStockTransfers([]);
-    }
+    // 10. Load stock transfers (Local-First)
+    const loadTransfers = async () => {
+      try {
+        const loaded = await syncLoad<StockTransfer>('stock_transfers', 'duo_pos_stock_transfers', [], { orderBy: 'created_at', ascending: false });
+        setStockTransfers(loaded);
+      } catch {
+        const savedTransfersRaw = localStorage.getItem('duo_pos_stock_transfers');
+        if (savedTransfersRaw) {
+          setStockTransfers(JSON.parse(savedTransfersRaw));
+        }
+      }
+    };
+    loadTransfers();
+
 
     // 11. Sincronizar operaciones pendientes offline
     flushPendingQueue();

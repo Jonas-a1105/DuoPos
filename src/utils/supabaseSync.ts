@@ -185,9 +185,43 @@ export function mapMovementFromDb(db: any): any {
   };
 }
 
+// ─── MAPPER FUNCTIONS FOR BRANCHES & REGISTERS ────────────────────────────────
+export function mapBranchToDb(b: any): any {
+  return {
+    id: b.id,
+    name: b.name,
+    type: b.type || 'branch',
+    emoji: b.emoji || '🏪',
+    address: b.address || '',
+    city: b.city || ''
+  };
+}
+
+export function mapRegisterToDb(r: any): any {
+  return {
+    id: r.id,
+    branch_id: r.branchId,
+    name: r.name,
+    emoji: r.emoji || '📟',
+    status: r.status || 'active'
+  };
+}
+
+export function mapRegisterFromDb(db: any): any {
+  return {
+    id: db.id,
+    branchId: db.branch_id,
+    name: db.name,
+    emoji: db.emoji || '📟',
+    status: db.status || 'active'
+  };
+}
+
 export function mapToDbRecord(table: string, item: any): any {
   if (table === 'products') return mapProductToDb(item);
   if (table === 'customers') return mapCustomerToDb(item);
+  if (table === 'branches') return mapBranchToDb(item);
+  if (table === 'cash_registers') return mapRegisterToDb(item);
   return item;
 }
 
@@ -244,7 +278,11 @@ export async function syncLoad<T>(
   const prefix = table === 'products' ? 'prod' : table === 'customers' ? 'cust' : table === 'cash_shifts' ? 'shift' : 'txn';
 
   const sanitizeAndMap = (rawItem: any): T => {
-    const cleanId = ensureValidUuid(rawItem.id, prefix as any);
+    // Si la tabla no requiere UUIDs estrictos en Postgres (ej. text IDs para branches/registers), no usar ensureValidUuid
+    let cleanId = rawItem.id;
+    if (table !== 'branches' && table !== 'cash_registers') {
+      cleanId = ensureValidUuid(rawItem.id, prefix as any);
+    }
     let item = { ...rawItem, id: cleanId };
 
     if (table === 'products') {
@@ -254,8 +292,6 @@ export async function syncLoad<T>(
 
     if (table === 'customers') {
       const mapped = 'purchases_count' in item || 'total_spent' in item ? mapCustomerFromDb(item) : item;
-      
-      // Cargar historial de crédito offline si aplica
       if (mapped.id) {
         try {
           const allCreditsRaw = localStorage.getItem('duo_pos_customer_credits');
@@ -308,7 +344,6 @@ export async function syncLoad<T>(
         items: []
       };
       
-      // Cargar items offline si aplica
       if (mapped.id) {
         try {
           const allItemsRaw = localStorage.getItem('duo_pos_transaction_items');
@@ -336,7 +371,6 @@ export async function syncLoad<T>(
     if (table === 'cash_shifts') {
       const mapped = 'initial_cash' in item ? mapShiftFromDb(item) : item;
       
-      // Cargar movimientos offline si aplica
       if (mapped.id) {
         try {
           const allMovesRaw = localStorage.getItem('duo_pos_shift_movements');
@@ -349,6 +383,47 @@ export async function syncLoad<T>(
           }
         } catch {
           mapped.movements = mapped.movements || [];
+        }
+      }
+      return mapped as unknown as T;
+    }
+
+    if (table === 'cash_registers') {
+      const mapped = 'branch_id' in item ? mapRegisterFromDb(item) : item;
+      return mapped as unknown as T;
+    }
+
+    if (table === 'stock_transfers') {
+      const mapped = {
+        id: item.id,
+        fromBranchId: item.from_branch_id,
+        fromBranchName: '',
+        toBranchId: item.to_branch_id,
+        toBranchName: '',
+        status: item.status,
+        createdAt: item.created_at || item.createdAt,
+        shippedAt: item.shipped_at || undefined,
+        receivedAt: item.received_at || undefined,
+        notes: item.notes || '',
+        carrier: item.carrier || '',
+        items: []
+      };
+
+      if (mapped.id) {
+        try {
+          const allItemsRaw = localStorage.getItem('duo_pos_stock_transfer_items');
+          if (allItemsRaw) {
+            const allItems = JSON.parse(allItemsRaw);
+            const parentItems = allItems.filter((i: any) => i.transfer_id === mapped.id || i.transferId === mapped.id);
+            mapped.items = parentItems.map((i: any) => ({
+              productId: i.product_id || i.productId || '',
+              name: i.name,
+              emoji: i.emoji || '📦',
+              quantity: Number(i.quantity)
+            }));
+          }
+        } catch {
+          mapped.items = [];
         }
       }
       return mapped as unknown as T;
@@ -442,6 +517,30 @@ export async function syncLoad<T>(
             }
           } catch (e) {
             console.warn('⚠️ Error al cargar movimientos de caja de Supabase.', e);
+          }
+        }
+
+        // Si estamos cargando traspasos de stock, precargar items de Supabase
+        if (table === 'stock_transfers') {
+          try {
+            const { data: stItemsData, error: stItemsError } = await supabase
+              .from('stock_transfer_items')
+              .select('*');
+            
+            if (!stItemsError && stItemsData) {
+              localStorage.setItem('duo_pos_stock_transfer_items', JSON.stringify(stItemsData));
+              mappedData.forEach((tr: any) => {
+                const parentItems = stItemsData.filter((i: any) => i.transfer_id === tr.id);
+                tr.items = parentItems.map((i: any) => ({
+                  productId: i.product_id || '',
+                  name: i.name,
+                  emoji: i.emoji || '📦',
+                  quantity: Number(i.quantity)
+                }));
+              });
+            }
+          } catch (e) {
+            console.warn('⚠️ Error al cargar items de traspasos de Supabase.', e);
           }
         }
 
@@ -545,15 +644,12 @@ export async function syncSave<T extends Record<string, any>>(
 ): Promise<{ success: boolean; error?: string }> {
   const idField = options?.idField || 'id';
 
-  // 1. SIEMPRE guardar en localStorage primero (instantáneo)
   localStorage.setItem(localStorageKey, JSON.stringify(allItems));
 
-  // Sincronizar historial de créditos si es cliente
   if (table === 'customers') {
     await syncCreditHistory(changedItem);
   }
 
-  // 2. Intentar sincronizar con Supabase
   if (isOnline()) {
     try {
       const dbRecord = options?.mapToDb ? options.mapToDb(changedItem) : mapToDbRecord(table, changedItem);
@@ -592,15 +688,12 @@ export async function syncInsert<T extends Record<string, any>>(
     mapToDb?: (item: T) => Record<string, any>;
   }
 ): Promise<{ success: boolean; error?: string }> {
-  // 1. Guardar en localStorage
   localStorage.setItem(localStorageKey, JSON.stringify(allItems));
 
-  // Sincronizar historial de créditos si es cliente
   if (table === 'customers') {
     await syncCreditHistory(newItem);
   }
 
-  // 2. Intentar subir a Supabase
   if (isOnline()) {
     try {
       const dbRecord = options?.mapToDb ? options.mapToDb(newItem) : mapToDbRecord(table, newItem);
@@ -640,10 +733,8 @@ export async function syncDelete(
 ): Promise<{ success: boolean; error?: string }> {
   const idField = options?.idField || 'id';
 
-  // 1. Guardar lista actualizada en localStorage
   localStorage.setItem(localStorageKey, JSON.stringify(allItems));
 
-  // 2. Intentar eliminar en Supabase
   if (isOnline()) {
     try {
       const dbDeleteId = table === 'products' ? ensureValidUuid(deleteId, 'prod') : table === 'customers' ? ensureValidUuid(deleteId, 'cust') : deleteId;
@@ -762,7 +853,6 @@ export async function syncSaveShift(
   isActive: boolean,
   allHistory: any[] = []
 ): Promise<{ success: boolean; error?: string }> {
-  // 1. Guardar primero localmente en cache
   if (isActive) {
     localStorage.setItem('duo_pos_active_shift', JSON.stringify(shift));
   } else {
@@ -776,19 +866,15 @@ export async function syncSaveShift(
     const allMovesRaw = localStorage.getItem('duo_pos_shift_movements');
     let allMoves = allMovesRaw ? JSON.parse(allMovesRaw) : [];
     
-    // Mapear movimientos
     const mappedMoves = (shift.movements || []).map((m: any) => mapMovementToDb(m, dbShiftId));
 
-    // Filtrar antiguos
     const newMoveIds = mappedMoves.map((m: any) => m.id);
     allMoves = allMoves.filter((m: any) => m.shift_id !== dbShiftId && !newMoveIds.includes(m.id));
     allMoves.push(...mappedMoves);
     localStorage.setItem('duo_pos_shift_movements', JSON.stringify(allMoves));
 
-    // 2. Mapear turno para base de datos
     const dbShift = mapShiftToDb(shift);
 
-    // 3. Subir a Supabase
     if (isOnline()) {
       try {
         const { error: shiftError } = await supabase.from('cash_shifts').upsert(dbShift);
@@ -816,6 +902,75 @@ export async function syncSaveShift(
     }
   } catch (e: any) {
     console.error('Error procesando turno de caja', e);
+    return { success: false, error: e.message };
+  }
+}
+
+// ─── REGISTRAR TRASPASO DE MERCANCÍA COMPLETO (Cabecera + Items) ───────────────
+export async function syncSaveStockTransfer(
+  transfer: any,
+  allTransfers: any[]
+): Promise<{ success: boolean; error?: string }> {
+  localStorage.setItem('duo_pos_stock_transfers', JSON.stringify(allTransfers));
+
+  const dbTransferId = ensureValidUuid(transfer.id, 'txn');
+
+  try {
+    const allItemsRaw = localStorage.getItem('duo_pos_stock_transfer_items');
+    let allItems = allItemsRaw ? JSON.parse(allItemsRaw) : [];
+
+    const mappedItems = (transfer.items || []).map((item: any) => ({
+      id: generateUUID(),
+      transfer_id: dbTransferId,
+      product_id: item.productId ? ensureValidUuid(item.productId, 'prod') : null,
+      name: item.name,
+      emoji: item.emoji || '📦',
+      quantity: Number(item.quantity)
+    }));
+
+    allItems = allItems.filter((i: any) => i.transfer_id !== dbTransferId);
+    allItems.push(...mappedItems);
+    localStorage.setItem('duo_pos_stock_transfer_items', JSON.stringify(allItems));
+
+    const dbTransfer = {
+      id: dbTransferId,
+      from_branch_id: transfer.fromBranchId,
+      to_branch_id: transfer.toBranchId,
+      status: transfer.status,
+      created_at: transfer.createdAt || new Date().toISOString(),
+      shipped_at: transfer.shippedAt || null,
+      received_at: transfer.receivedAt || null,
+      notes: transfer.notes || '',
+      carrier: transfer.carrier || ''
+    };
+
+    if (isOnline()) {
+      try {
+        const { error: trError } = await supabase.from('stock_transfers').upsert(dbTransfer);
+        if (trError) throw trError;
+
+        if (mappedItems.length > 0) {
+          const { error: itemsError } = await supabase.from('stock_transfer_items').upsert(mappedItems);
+          if (itemsError) throw itemsError;
+        }
+        return { success: true };
+      } catch (err: any) {
+        console.warn('⚠️ syncSaveStockTransfer: Supabase falló, encolando.', err.message);
+        addToPendingQueue({ table: 'stock_transfers', action: 'upsert', data: dbTransfer });
+        mappedItems.forEach((i: any) => {
+          addToPendingQueue({ table: 'stock_transfer_items', action: 'upsert', data: i });
+        });
+        return { success: true, error: 'Guardado localmente. Pendiente de sincronización.' };
+      }
+    } else {
+      addToPendingQueue({ table: 'stock_transfers', action: 'upsert', data: dbTransfer });
+      mappedItems.forEach((i: any) => {
+        addToPendingQueue({ table: 'stock_transfer_items', action: 'upsert', data: i });
+      });
+      return { success: true, error: 'Sin conexión. Guardado localmente.' };
+    }
+  } catch (e: any) {
+    console.error('Error procesando traspaso', e);
     return { success: false, error: e.message };
   }
 }

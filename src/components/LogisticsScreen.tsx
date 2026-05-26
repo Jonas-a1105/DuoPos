@@ -11,6 +11,7 @@ import {
   MapPin, ClipboardList, RefreshCw, Sparkles, Send, Download, 
   AlertCircle, ShieldCheck, ChevronRight, CheckCircle2, TrendingUp, Store
 } from 'lucide-react';
+import { syncInsert, syncSaveStockTransfer, generateUUID, ensureValidUuid } from '../utils/supabaseSync';
 
 interface LogisticsScreenProps {
   products: Product[];
@@ -103,7 +104,7 @@ export default function LogisticsScreen({
   }, [branches, transactions]);
 
   // Handlers for Branch Creation
-  const handleCreateBranch = (e: React.FormEvent) => {
+  const handleCreateBranch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newBranchName.trim() || !newBranchAddress.trim()) {
       alert('Por favor, especifica el nombre y domicilio legal.');
@@ -122,7 +123,7 @@ export default function LogisticsScreen({
 
     const updatedBranches = [...branches, newB];
     setBranches(updatedBranches);
-    localStorage.setItem('duo_pos_branches', JSON.stringify(updatedBranches));
+    await syncInsert<Branch>('branches', 'duo_pos_branches', updatedBranches, newB);
 
     // Also auto-provision a general Cash Register for this branch
     const regId = `reg-${Date.now()}`;
@@ -135,7 +136,7 @@ export default function LogisticsScreen({
     };
     const updatedRegs = [...registers, newReg];
     setRegisters(updatedRegs);
-    localStorage.setItem('duo_pos_registers', JSON.stringify(updatedRegs));
+    await syncInsert<CashRegister>('cash_registers', 'duo_pos_registers', updatedRegs, newReg);
 
     // Init stock multiplication for products in this branch if they have branchesStock
     products.forEach(p => {
@@ -153,7 +154,7 @@ export default function LogisticsScreen({
   };
 
   // Handlers for Cash Register Creation
-  const handleCreateRegister = (e: React.FormEvent) => {
+  const handleCreateRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newRegName.trim()) {
       alert('Especifica el código/nombre identificador de la caja.');
@@ -171,7 +172,7 @@ export default function LogisticsScreen({
 
     const updated = [...registers, newReg];
     setRegisters(updated);
-    localStorage.setItem('duo_pos_registers', JSON.stringify(updated));
+    await syncInsert<CashRegister>('cash_registers', 'duo_pos_registers', updated, newReg);
 
     setShowRegisterForm(false);
     setNewRegName('');
@@ -227,7 +228,7 @@ export default function LogisticsScreen({
     playSound('swoosh');
   };
 
-  const handleSubmitTransfer = (e: React.FormEvent) => {
+  const handleSubmitTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!transferFrom || !transferTo) {
       setTransferError('Por favor selecciona la sucursal de origen y destino.');
@@ -272,7 +273,7 @@ export default function LogisticsScreen({
     });
 
     const newTransfer: StockTransfer = {
-      id: `TR-${100 + stockTransfers.length + 1}`,
+      id: generateUUID(),
       fromBranchId: transferFrom,
       fromBranchName: fromB.name,
       toBranchId: transferTo,
@@ -286,7 +287,7 @@ export default function LogisticsScreen({
 
     const updated = [newTransfer, ...stockTransfers];
     setStockTransfers(updated);
-    localStorage.setItem('duo_pos_stock_transfers', JSON.stringify(updated));
+    await syncSaveStockTransfer(newTransfer, updated);
 
     // Reset items form
     setTransferItems([]);
@@ -294,11 +295,13 @@ export default function LogisticsScreen({
     
     onGrantXp(30);
     playSound('success');
-    alert(`💡 Orden de Traspaso ${newTransfer.id} generada en borrador "Pendiente".`);
+    
+    const displayId = `TR-${newTransfer.id.slice(0, 8).toUpperCase()}`;
+    alert(`💡 Orden de Traspaso ${displayId} generada en borrador "Pendiente".`);
   };
 
   // Commit / Ship Stock Transfer
-  const handleShipTransfer = (id: string) => {
+  const handleShipTransfer = async (id: string) => {
     const tr = stockTransfers.find(t => t.id === id);
     if (!tr) return;
 
@@ -315,14 +318,17 @@ export default function LogisticsScreen({
 
     const updated = stockTransfers.map(t => t.id === id ? { ...t, status: 'shipped' as const, shippedAt: new Date().toISOString() } : t);
     setStockTransfers(updated);
-    localStorage.setItem('duo_pos_stock_transfers', JSON.stringify(updated));
+    const updatedTransfer = updated.find(t => t.id === id);
+    if (updatedTransfer) {
+      await syncSaveStockTransfer(updatedTransfer, updated);
+    }
 
     onGrantXp(40);
     playSound('swoosh');
   };
 
   // Receive stock transfer at destination
-  const handleReceiveTransfer = (id: string) => {
+  const handleReceiveTransfer = async (id: string) => {
     const tr = stockTransfers.find(t => t.id === id);
     if (!tr) return;
 
@@ -345,18 +351,25 @@ export default function LogisticsScreen({
 
     const updated = stockTransfers.map(t => t.id === id ? { ...t, status: 'received' as const, receivedAt: new Date().toISOString() } : t);
     setStockTransfers(updated);
-    localStorage.setItem('duo_pos_stock_transfers', JSON.stringify(updated));
+    const updatedTransfer = updated.find(t => t.id === id);
+    if (updatedTransfer) {
+      await syncSaveStockTransfer(updatedTransfer, updated);
+    }
 
     onGrantXp(50);
     playSound('levelup');
-    alert(`🎉 ¡Lote de Traspaso ${tr.id} ingresado a bodega! Stock de destino cargado éxitosamente para ${tr.items.length} insumos.`);
+    const displayId = tr.id.startsWith('TR-') ? tr.id : `TR-${tr.id.slice(0, 8).toUpperCase()}`;
+    alert(`🎉 ¡Lote de Traspaso ${displayId} ingresado a bodega! Stock de destino cargado éxitosamente para ${tr.items.length} insumos.`);
   };
 
-  const handleCancelTransfer = (id: string) => {
+  const handleCancelTransfer = async (id: string) => {
     if (confirm('¿Deseas cancelar y anular este traspaso de inventario?')) {
       const updated = stockTransfers.map(t => t.id === id ? { ...t, status: 'cancelled' as const } : t);
       setStockTransfers(updated);
-      localStorage.setItem('duo_pos_stock_transfers', JSON.stringify(updated));
+      const updatedTransfer = updated.find(t => t.id === id);
+      if (updatedTransfer) {
+        await syncSaveStockTransfer(updatedTransfer, updated);
+      }
       playSound('error');
     }
   };
@@ -393,7 +406,7 @@ export default function LogisticsScreen({
   }, [branches, products]);
 
   // Bulk dispatch of suggestions from CEDIS
-  const handleBulkDispatchSuggested = () => {
+  const handleBulkDispatchSuggested = async () => {
     if (suggestedRestocksList.length === 0) return;
 
     // Group suggested by branch destination to compile clean stock transfers
@@ -407,6 +420,7 @@ export default function LogisticsScreen({
 
     let countTransfers = 0;
     const newTransfersList: StockTransfer[] = [...stockTransfers];
+    const newlyCreatedTransfers: StockTransfer[] = [];
 
     Object.entries(groupedDestinations).forEach(([destId, list]) => {
       const destB = branches.find(b => b.id === destId)!;
@@ -428,7 +442,7 @@ export default function LogisticsScreen({
       });
 
       const newT: StockTransfer = {
-        id: `TR-${100 + newTransfersList.length + 1}`,
+        id: generateUUID(),
         fromBranchId: 'branch-central',
         fromBranchName: 'Almacén Central (CEDIS) 🏢',
         toBranchId: destId,
@@ -442,11 +456,16 @@ export default function LogisticsScreen({
       };
 
       newTransfersList.unshift(newT);
+      newlyCreatedTransfers.push(newT);
       countTransfers++;
     });
 
     setStockTransfers(newTransfersList);
-    localStorage.setItem('duo_pos_stock_transfers', JSON.stringify(newTransfersList));
+    
+    // Save all of them to Supabase (synchronously in local state, asynchronously to Supabase)
+    for (const newT of newlyCreatedTransfers) {
+      await syncSaveStockTransfer(newT, newTransfersList);
+    }
 
     onGrantXp(80);
     playSound('success');
@@ -1096,7 +1115,9 @@ export default function LogisticsScreen({
                     <div key={tr.id} className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 first:pt-0">
                       <div className="space-y-1 flex-1">
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="font-mono text-xs font-black text-indigo-600 font-bold">{tr.id}</span>
+                          <span className="font-mono text-xs font-black text-indigo-600 font-bold">
+                            {tr.id.startsWith('TR-') ? tr.id : `TR-${tr.id.slice(0, 8).toUpperCase()}`}
+                          </span>
                           <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${
                             isReceived ? 'bg-green-50 text-green-700 border-green-200' :
                             isShipped ? 'bg-amber-50 text-amber-700 border-amber-200 animate-pulse' :
