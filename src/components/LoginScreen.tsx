@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User } from '../types';
 import { DUO_CHARACTERS, Character } from '../initialData';
 import { KeyRound, Mail, User2, ChevronRight, Award, Loader2 } from 'lucide-react';
@@ -26,6 +26,16 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     setDiagnosticLog(prev => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
     console.log(`[AUTH DIAGNOSTIC] ${msg}`);
   };
+
+  useEffect(() => {
+    const isConfigured = isSupabaseConfigured();
+    setDiagnosticLog([
+      `${new Date().toLocaleTimeString()}: 🔌 Inicializando módulo de conexión comercial...`,
+      isConfigured 
+        ? `${new Date().toLocaleTimeString()}: 🌐 Conexión disponible con el servidor principal de base de datos.`
+        : `${new Date().toLocaleTimeString()}: ⚠️ ATENCIÓN: Las credenciales de Supabase no están configuradas en Vercel. La app operará únicamente en modo local offline.`
+    ]);
+  }, []);
 
   const characterKeys = Object.keys(DUO_CHARACTERS);
   const currentCharacter: Character = DUO_CHARACTERS[selectedCharacter] || DUO_CHARACTERS.duo;
@@ -90,7 +100,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
     setErrorMessage('');
     setIsLoading(true);
-    setDiagnosticLog([]);
+    addLog("----------------------------------------");
     addLog("Iniciando flujo de sesión...");
     
     try {
@@ -371,7 +381,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
     setErrorMessage('');
     setIsLoading(true);
-    setDiagnosticLog([]);
+    addLog("----------------------------------------");
     addLog("Iniciando flujo de registro comercial...");
 
     const timeoutPromise = new Promise<never>((_, reject) =>
