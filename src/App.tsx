@@ -9,7 +9,7 @@ import { DEFAULT_PRODUCTS, DUO_CHARACTERS, DEFAULT_CUSTOMERS, DEFAULT_BILLING_SE
 import LoginScreen from './components/LoginScreen';
 import LandingPage from './components/LandingPage';
 import { supabase, isSupabaseConfigured } from './utils/supabaseClient';
-import { syncLoad, syncSave, syncInsert, syncDelete, flushPendingQueue, generateUUID, syncInsertTransaction } from './utils/supabaseSync';
+import { syncLoad, syncSave, syncInsert, syncDelete, flushPendingQueue, generateUUID, syncInsertTransaction, syncSaveShift } from './utils/supabaseSync';
 
 import DashboardScreen from './components/DashboardScreen';
 import SalesScreen from './components/SalesScreen';
@@ -441,16 +441,33 @@ export default function App() {
       setShowInstallBanner(false);
     }
 
-    // 5. Load Active shift and Shift history
-    const activeShiftRaw = localStorage.getItem('duo_pos_active_shift');
-    if (activeShiftRaw) {
-      setActiveShift(JSON.parse(activeShiftRaw));
-    }
-
-    const shiftHistoryRaw = localStorage.getItem('duo_pos_shift_history');
-    if (shiftHistoryRaw) {
-      setShiftHistory(JSON.parse(shiftHistoryRaw));
-    }
+    // 5. Load Active shift and Shift history (Local-First)
+    const loadShifts = async () => {
+      try {
+        const loaded = await syncLoad<CashShift>('cash_shifts', 'duo_pos_shift_history', [], { orderBy: 'opening_time', ascending: false });
+        const active = loaded.find(s => s.status === 'open');
+        if (active) {
+          setActiveShift(active);
+        } else {
+          const activeShiftRaw = localStorage.getItem('duo_pos_active_shift');
+          if (activeShiftRaw) {
+            setActiveShift(JSON.parse(activeShiftRaw));
+          }
+        }
+        const closed = loaded.filter(s => s.status === 'closed');
+        setShiftHistory(closed);
+      } catch {
+        const activeShiftRaw = localStorage.getItem('duo_pos_active_shift');
+        if (activeShiftRaw) {
+          setActiveShift(JSON.parse(activeShiftRaw));
+        }
+        const shiftHistoryRaw = localStorage.getItem('duo_pos_shift_history');
+        if (shiftHistoryRaw) {
+          setShiftHistory(JSON.parse(shiftHistoryRaw));
+        }
+      }
+    };
+    loadShifts();
 
     // 6. Load customers (Local-First)
     const loadCustomers = async () => {
@@ -953,8 +970,9 @@ export default function App() {
         expectedCash: isCash ? Number((activeShift.expectedCash + txn.total).toFixed(2)) : activeShift.expectedCash
       };
       setActiveShift(updatedShift);
-      localStorage.setItem('duo_pos_active_shift', JSON.stringify(updatedShift));
+      await syncSaveShift(updatedShift, true);
     }
+
 
     // Handle streak calculation logic!
     if (user) {
@@ -1040,26 +1058,34 @@ export default function App() {
     }
   };
 
-  const handleRefundTransaction = (txnId: string) => {
+  const handleRefundTransaction = async (txnId: string) => {
     const targetTxn = transactions.find(t => t.id === txnId);
     if (!targetTxn) return;
 
     // 1. Restore product inventory stocks
+    const changedProducts: Product[] = [];
     const updatedProducts = products.map(p => {
       const soldItem = targetTxn.items.find(item => item.productId === p.id);
       if (soldItem) {
-        return { ...p, stock: p.stock + soldItem.quantity };
+        const changed = { ...p, stock: p.stock + soldItem.quantity };
+        changedProducts.push(changed);
+        return changed;
       }
       return p;
     });
 
     setProducts(updatedProducts);
-    localStorage.setItem('duo_pos_products', JSON.stringify(updatedProducts));
+    
+    // Sync inventory restorations to Supabase
+    for (const cp of changedProducts) {
+      await syncSave<Product>('products', 'duo_pos_products', updatedProducts, cp);
+    }
 
     // 2. Erase transaction from audit log
     const updatedTxns = transactions.filter(t => t.id !== txnId);
     setTransactions(updatedTxns);
-    localStorage.setItem('duo_pos_transactions', JSON.stringify(updatedTxns));
+    
+    await syncDelete('transactions', 'duo_pos_transactions', updatedTxns, txnId);
 
     // 2b. Adjust active shift sales values if cash
     if (activeShift) {
@@ -1073,7 +1099,7 @@ export default function App() {
           : activeShift.expectedCash
       };
       setActiveShift(updatedShift);
-      localStorage.setItem('duo_pos_active_shift', JSON.stringify(updatedShift));
+      await syncSaveShift(updatedShift, true);
     }
 
     // 3. Subtract XP (or give warning feedback)
@@ -1087,11 +1113,12 @@ export default function App() {
     toast.warning(`Transacción #${txnId.slice(0, 8).toUpperCase()} reembolsada con éxito. Stock devuelto a inventario.`, { title: 'Reembolso de Ticket ⚠️' });
   };
 
+
   // Shift control operations
-  const handleOpenShift = (initialCash: number) => {
+  const handleOpenShift = async (initialCash: number) => {
     if (!user) return;
     const newShift: CashShift = {
-      id: `shift-${Date.now()}`,
+      id: generateUUID(),
       employeeId: user.id,
       employeeName: user.username,
       openingTime: new Date().toISOString(),
@@ -1105,12 +1132,14 @@ export default function App() {
       registerId: activeRegisterId
     };
     setActiveShift(newShift);
-    localStorage.setItem('duo_pos_active_shift', JSON.stringify(newShift));
+    
+    await syncSaveShift(newShift, true);
+    
     toast.success(`Caja abierta con un monto base de $${initialCash.toFixed(2)} USD. ¡Ganas +20 XP de inicio!`, { title: 'Apertura de Caja 📂' });
     handleGrantXp(20); // Award opening shift reward XP!
   };
 
-  const handleCloseShift = (actualCash: number, expectedCash: number, difference: number, notes: string) => {
+  const handleCloseShift = async (actualCash: number, expectedCash: number, difference: number, notes: string) => {
     if (!activeShift) return;
     const closedShift: CashShift = {
       ...activeShift,
@@ -1123,10 +1152,10 @@ export default function App() {
 
     const updatedHistory = [closedShift, ...shiftHistory];
     setShiftHistory(updatedHistory);
-    localStorage.setItem('duo_pos_shift_history', JSON.stringify(updatedHistory));
+    
+    await syncSaveShift(closedShift, false, updatedHistory);
 
     setActiveShift(null);
-    localStorage.removeItem('duo_pos_active_shift');
 
     // Grant closing shift XP (extra bonus if drawer balances perfectly!)
     let xpReward = 30;
@@ -1139,10 +1168,10 @@ export default function App() {
     handleGrantXp(xpReward);
   };
 
-  const handleAddShiftMovement = (type: 'in' | 'out', amount: number, reason: string) => {
+  const handleAddShiftMovement = async (type: 'in' | 'out', amount: number, reason: string) => {
     if (!activeShift) return;
     const movement: CashMovement = {
-      id: `move-${Date.now()}`,
+      id: generateUUID(),
       type,
       amount: Number(amount.toFixed(2)),
       reason: reason || (type === 'in' ? 'Entrada manual' : 'Salida manual'),
@@ -1156,9 +1185,12 @@ export default function App() {
       expectedCash: Number((activeShift.expectedCash + delta).toFixed(2))
     };
     setActiveShift(updatedShift);
-    localStorage.setItem('duo_pos_active_shift', JSON.stringify(updatedShift));
+    
+    await syncSaveShift(updatedShift, true);
+    
     toast.info(`Movimiento de caja registrado: ${type === 'in' ? 'Entrada (+)' : 'Salida (-)'} de $${amount.toFixed(2)} USD para "${movement.reason}"`, { title: 'Efectivo en Caja 💵' });
   };
+
 
   // Simulating Install Completion Handlers
   const handleSimulateInstallSuccess = () => {

@@ -124,6 +124,67 @@ export function mapCustomerFromDb(db: any): any {
   };
 }
 
+// ─── MAPPER FUNCTIONS FOR CASH SHIFTS & MOVEMENTS ────────────────────────────
+export function mapShiftToDb(s: any): any {
+  return {
+    id: ensureValidUuid(s.id, 'shift'),
+    employee_id: s.employeeId ? s.employeeId : null,
+    employee_name: s.employeeName,
+    opening_time: s.openingTime || new Date().toISOString(),
+    closing_time: s.closingTime || null,
+    initial_cash: Number(s.initialCash),
+    expected_cash: Number(s.expectedCash),
+    actual_cash: s.actualCash !== undefined && s.actualCash !== null ? Number(s.actualCash) : null,
+    difference: s.difference !== undefined && s.difference !== null ? Number(s.difference) : null,
+    status: s.status,
+    sales_count: Number(s.salesCount || 0),
+    sales_volume: Number(s.salesVolume || 0),
+    branch_id: s.branchId || null,
+    register_id: s.registerId || null
+  };
+}
+
+export function mapShiftFromDb(db: any): any {
+  return {
+    id: db.id,
+    employeeId: db.employee_id,
+    employeeName: db.employee_name,
+    openingTime: db.opening_time,
+    closingTime: db.closing_time || undefined,
+    initialCash: Number(db.initial_cash),
+    expectedCash: Number(db.expected_cash),
+    actualCash: db.actual_cash !== null ? Number(db.actual_cash) : undefined,
+    difference: db.difference !== null ? Number(db.difference) : undefined,
+    status: db.status,
+    salesCount: Number(db.sales_count || 0),
+    salesVolume: Number(db.sales_volume || 0),
+    branchId: db.branch_id || undefined,
+    registerId: db.register_id || undefined,
+    movements: [] // Stitch loading maps this
+  };
+}
+
+export function mapMovementToDb(m: any, shiftId: string): any {
+  return {
+    id: ensureValidUuid(m.id, 'move'),
+    shift_id: ensureValidUuid(shiftId, 'shift'),
+    type: m.type,
+    amount: Number(m.amount),
+    reason: m.reason || '',
+    timestamp: m.timestamp || new Date().toISOString()
+  };
+}
+
+export function mapMovementFromDb(db: any): any {
+  return {
+    id: db.id,
+    type: db.type,
+    amount: Number(db.amount),
+    reason: db.reason || '',
+    timestamp: db.timestamp || db.created_at || new Date().toISOString()
+  };
+}
+
 export function mapToDbRecord(table: string, item: any): any {
   if (table === 'products') return mapProductToDb(item);
   if (table === 'customers') return mapCustomerToDb(item);
@@ -180,7 +241,7 @@ export async function syncLoad<T>(
     select?: string;
   }
 ): Promise<T[]> {
-  const prefix = table === 'products' ? 'prod' : table === 'customers' ? 'cust' : 'txn';
+  const prefix = table === 'products' ? 'prod' : table === 'customers' ? 'cust' : table === 'cash_shifts' ? 'shift' : 'txn';
 
   const sanitizeAndMap = (rawItem: any): T => {
     const cleanId = ensureValidUuid(rawItem.id, prefix as any);
@@ -244,7 +305,7 @@ export async function syncLoad<T>(
         registerId: item.register_id || undefined,
         cardPaymentDetails: item.card_payment_details || undefined,
         invoiceData: item.invoice_data || undefined,
-        items: [] // Se llena al sincronizar online/offline
+        items: []
       };
       
       // Cargar items offline si aplica
@@ -267,6 +328,27 @@ export async function syncLoad<T>(
           }
         } catch {
           mapped.items = [];
+        }
+      }
+      return mapped as unknown as T;
+    }
+
+    if (table === 'cash_shifts') {
+      const mapped = 'initial_cash' in item ? mapShiftFromDb(item) : item;
+      
+      // Cargar movimientos offline si aplica
+      if (mapped.id) {
+        try {
+          const allMovesRaw = localStorage.getItem('duo_pos_shift_movements');
+          if (allMovesRaw) {
+            const allMoves = JSON.parse(allMovesRaw);
+            const parentMoves = allMoves.filter((m: any) => m.shift_id === mapped.id || m.shiftId === mapped.id);
+            mapped.movements = parentMoves.map(mapMovementFromDb);
+          } else {
+            mapped.movements = mapped.movements || [];
+          }
+        } catch {
+          mapped.movements = mapped.movements || [];
         }
       }
       return mapped as unknown as T;
@@ -341,6 +423,25 @@ export async function syncLoad<T>(
             }
           } catch (e) {
             console.warn('⚠️ Error al cargar items de transacciones de Supabase.', e);
+          }
+        }
+
+        // Si estamos cargando turnos, intentar también precargar movimientos de Supabase
+        if (table === 'cash_shifts') {
+          try {
+            const { data: movesData, error: movesError } = await supabase
+              .from('cash_movements')
+              .select('*');
+            
+            if (!movesError && movesData) {
+              localStorage.setItem('duo_pos_shift_movements', JSON.stringify(movesData));
+              mappedData.forEach((shift: any) => {
+                const parentMoves = movesData.filter((m: any) => m.shift_id === shift.id);
+                shift.movements = parentMoves.map(mapMovementFromDb);
+              });
+            }
+          } catch (e) {
+            console.warn('⚠️ Error al cargar movimientos de caja de Supabase.', e);
           }
         }
 
@@ -574,10 +675,8 @@ export async function syncInsertTransaction(
   txn: any,
   allTransactions: any[]
 ): Promise<{ success: boolean; error?: string }> {
-  // 1. Guardar primero localmente en cache
   localStorage.setItem('duo_pos_transactions', JSON.stringify(allTransactions));
 
-  // Actualizar también caché local de items
   try {
     const allItemsRaw = localStorage.getItem('duo_pos_transaction_items');
     let allItems = allItemsRaw ? JSON.parse(allItemsRaw) : [];
@@ -599,7 +698,6 @@ export async function syncInsertTransaction(
     allItems.push(...mappedItems);
     localStorage.setItem('duo_pos_transaction_items', JSON.stringify(allItems));
 
-    // 2. Mapear transacción para base de datos
     const dbTxn = {
       id: dbTxnId,
       date: txn.date || new Date().toISOString(),
@@ -627,7 +725,6 @@ export async function syncInsertTransaction(
       invoice_data: txn.invoiceData || null
     };
 
-    // 3. Subir a Supabase
     if (isOnline()) {
       try {
         const { error: txnError } = await supabase.from('transactions').insert(dbTxn);
@@ -655,6 +752,70 @@ export async function syncInsertTransaction(
     }
   } catch (e: any) {
     console.error('Error procesando transacción', e);
+    return { success: false, error: e.message };
+  }
+}
+
+// ─── REGISTRAR TURNO DE CAJA COMPLETO (Cabecera + Movimientos) ─────────────────
+export async function syncSaveShift(
+  shift: any,
+  isActive: boolean,
+  allHistory: any[] = []
+): Promise<{ success: boolean; error?: string }> {
+  // 1. Guardar primero localmente en cache
+  if (isActive) {
+    localStorage.setItem('duo_pos_active_shift', JSON.stringify(shift));
+  } else {
+    localStorage.removeItem('duo_pos_active_shift');
+    localStorage.setItem('duo_pos_shift_history', JSON.stringify(allHistory));
+  }
+
+  const dbShiftId = ensureValidUuid(shift.id, 'shift');
+
+  try {
+    const allMovesRaw = localStorage.getItem('duo_pos_shift_movements');
+    let allMoves = allMovesRaw ? JSON.parse(allMovesRaw) : [];
+    
+    // Mapear movimientos
+    const mappedMoves = (shift.movements || []).map((m: any) => mapMovementToDb(m, dbShiftId));
+
+    // Filtrar antiguos
+    const newMoveIds = mappedMoves.map((m: any) => m.id);
+    allMoves = allMoves.filter((m: any) => m.shift_id !== dbShiftId && !newMoveIds.includes(m.id));
+    allMoves.push(...mappedMoves);
+    localStorage.setItem('duo_pos_shift_movements', JSON.stringify(allMoves));
+
+    // 2. Mapear turno para base de datos
+    const dbShift = mapShiftToDb(shift);
+
+    // 3. Subir a Supabase
+    if (isOnline()) {
+      try {
+        const { error: shiftError } = await supabase.from('cash_shifts').upsert(dbShift);
+        if (shiftError) throw shiftError;
+
+        if (mappedMoves.length > 0) {
+          const { error: movesError } = await supabase.from('cash_movements').upsert(mappedMoves);
+          if (movesError) throw movesError;
+        }
+        return { success: true };
+      } catch (err: any) {
+        console.warn('⚠️ syncSaveShift: Supabase falló, encolando.', err.message);
+        addToPendingQueue({ table: 'cash_shifts', action: 'upsert', data: dbShift });
+        mappedMoves.forEach((m: any) => {
+          addToPendingQueue({ table: 'cash_movements', action: 'upsert', data: m });
+        });
+        return { success: true, error: 'Guardado localmente. Pendiente de sincronización.' };
+      }
+    } else {
+      addToPendingQueue({ table: 'cash_shifts', action: 'upsert', data: dbShift });
+      mappedMoves.forEach((m: any) => {
+        addToPendingQueue({ table: 'cash_movements', action: 'upsert', data: m });
+      });
+      return { success: true, error: 'Sin conexión. Guardado localmente.' };
+    }
+  } catch (e: any) {
+    console.error('Error procesando turno de caja', e);
     return { success: false, error: e.message };
   }
 }
