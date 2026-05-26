@@ -862,9 +862,12 @@ export default function App() {
     const updated = products.map(p => {
       if (p.id === prod.id) {
         const bStock = prod.branchesStock ? { ...prod.branchesStock } : (p.branchesStock ? { ...p.branchesStock } : {});
-        bStock[activeBranchId] = prod.stock;
+        // Only override if branchesStock was not explicitly supplied (standard catalog/POS update)
+        if (!prod.branchesStock) {
+          bStock[activeBranchId] = prod.stock;
+        }
         
-        const mainStock = activeBranchId === 'branch-centro' ? prod.stock : (bStock['branch-centro'] ?? p.stock);
+        const mainStock = activeBranchId === 'branch-centro' ? (bStock['branch-centro'] ?? prod.stock) : (bStock['branch-centro'] ?? p.stock);
         changedItem = {
           ...prod,
           branchesStock: bStock,
@@ -1140,11 +1143,18 @@ export default function App() {
     // Update active cash shift diagnostics if active
     if (activeShift) {
       const isCash = txn.paymentMethod === 'cash';
+      let cashAddition = 0;
+      if (txn.isMixedPayment) {
+        cashAddition = txn.mixedCashAmount || 0;
+      } else if (isCash) {
+        cashAddition = txn.total;
+      }
+
       const updatedShift: CashShift = {
         ...activeShift,
         salesCount: activeShift.salesCount + 1,
         salesVolume: Number((activeShift.salesVolume + txn.total).toFixed(2)),
-        expectedCash: isCash ? Number((activeShift.expectedCash + txn.total).toFixed(2)) : activeShift.expectedCash
+        expectedCash: Number((activeShift.expectedCash + cashAddition).toFixed(2))
       };
       setActiveShift(updatedShift);
       await syncSaveShift(updatedShift, true);

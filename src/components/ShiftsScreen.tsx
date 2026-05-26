@@ -100,7 +100,11 @@ export default function ShiftsScreen({
   // Filter Transactions for Active Shift to produce precise real-time statistics
   const currentShiftSales = useMemo(() => {
     if (!activeShift) return [];
-    return transactions.filter(t => t.date >= activeShift.openingTime);
+    return transactions.filter(t => 
+      t.date >= activeShift.openingTime &&
+      t.branchId === activeShift.branchId &&
+      t.registerId === activeShift.registerId
+    );
   }, [transactions, activeShift]);
 
   // Derived shift analytics
@@ -112,9 +116,14 @@ export default function ShiftsScreen({
     let pointsSales = 0;
 
     currentShiftSales.forEach(t => {
-      if (t.paymentMethod === 'cash') cashSales += t.total;
-      else if (t.paymentMethod === 'card') cardSales += t.total;
-      else if (t.paymentMethod === 'points') pointsSales += t.total;
+      if (t.isMixedPayment) {
+        cashSales += (t.mixedCashAmount || 0);
+        cardSales += (t.mixedCardAmount || 0);
+      } else {
+        if (t.paymentMethod === 'cash') cashSales += t.total;
+        else if (t.paymentMethod === 'card') cardSales += t.total;
+        else if (t.paymentMethod === 'points') pointsSales += t.total;
+      }
     });
 
     return {
@@ -711,17 +720,20 @@ export default function ShiftsScreen({
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-xs font-black text-gray-800 uppercase block">FL: {txn.id.substring(txn.id.indexOf('-') + 1)}</span>
                               <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md border text-white ${
-                                txn.paymentMethod === 'cash' 
-                                  ? 'bg-[#58cc02] border-[#3c9e01]' 
-                                  : txn.paymentMethod === 'card'
-                                    ? 'bg-[#1cb0f6] border-[#1899d6]'
-                                    : 'bg-yellow-500 border-yellow-600'
+                                txn.isMixedPayment
+                                  ? 'bg-purple-500 border-purple-600'
+                                  : txn.paymentMethod === 'cash' 
+                                    ? 'bg-[#58cc02] border-[#3c9e01]' 
+                                    : txn.paymentMethod === 'card'
+                                      ? 'bg-[#1cb0f6] border-[#1899d6]'
+                                      : 'bg-yellow-500 border-yellow-600'
                               }`}>
-                                {txn.paymentMethod === 'cash' ? 'Efectivo 💵' : txn.paymentMethod === 'card' ? 'Electrónico' : 'Puntos 💎'}
+                                {txn.isMixedPayment ? 'Mixto 💰💳' : txn.paymentMethod === 'cash' ? 'Efectivo 💵' : txn.paymentMethod === 'card' ? 'Electrónico' : 'Puntos 💎'}
                               </span>
                             </div>
                             <p className="text-[9px] text-gray-450 font-bold mt-1.5">
                               {new Date(txn.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} • {txn.items.length} artículos cobrados
+                              {txn.isMixedPayment && ` (Efe: $${(txn.mixedCashAmount || 0).toFixed(2)} | Tar: $${(txn.mixedCardAmount || 0).toFixed(2)})`}
                             </p>
                           </div>
 

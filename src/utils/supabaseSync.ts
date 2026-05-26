@@ -10,6 +10,9 @@
 
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 
+// Concurrency lock to prevent duplicate sync executions
+let isFlushing = false;
+
 // ─── UUID Generators & Validators for database compatibility ──────────────────
 export function generateUUID(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -598,7 +601,7 @@ export async function syncLoad<T>(
 }
 
 // Helper para sincronizar historial de créditos de un cliente
-async function syncCreditHistory(customer: any): Promise<void> {
+async function syncCreditHistory(customer: any, isParentSynced: boolean): Promise<void> {
   if (!customer || !Array.isArray(customer.creditHistory)) return;
 
   const customerId = ensureValidUuid(customer.id, 'cust');
@@ -614,7 +617,7 @@ async function syncCreditHistory(customer: any): Promise<void> {
       transaction_id: historyItem.transactionId ? ensureValidUuid(historyItem.transactionId, 'txn') : null
     };
 
-    if (isOnline()) {
+    if (isOnline() && isParentSynced) {
       try {
         await supabase.from('customer_credit_history').upsert(dbHistory);
       } catch {
@@ -665,13 +668,13 @@ export async function syncSave<T extends Record<string, any>>(
 
   localStorage.setItem(localStorageKey, JSON.stringify(allItems));
 
-  if (table === 'customers') {
-    await syncCreditHistory(changedItem);
-  }
+  let dbRecord: any = null;
+  let isParentSynced = false;
+  let syncError: string | undefined = undefined;
 
   if (isOnline()) {
     try {
-      const dbRecord = options?.mapToDb ? options.mapToDb(changedItem) : mapToDbRecord(table, changedItem);
+      dbRecord = options?.mapToDb ? options.mapToDb(changedItem) : mapToDbRecord(table, changedItem);
 
       const { error } = await supabase
         .from(table)
@@ -682,19 +685,27 @@ export async function syncSave<T extends Record<string, any>>(
       if (error) {
         console.warn(`⚠️ syncSave(${table}): Supabase falló, encolando para después.`, error.message);
         addToPendingQueue({ table, action: 'upsert', data: dbRecord });
-        return { success: true, error: `Guardado localmente. Se sincronizará cuando vuelva la conexión.` };
+        syncError = `Guardado localmente. Se sincronizará cuando vuelva la conexión.`;
+      } else {
+        isParentSynced = true;
       }
-
-      return { success: true };
     } catch (err) {
       console.warn(`⚠️ syncSave(${table}): Sin conexión, encolando.`);
-      const dbRecord = options?.mapToDb ? options.mapToDb(changedItem) : mapToDbRecord(table, changedItem);
+      dbRecord = options?.mapToDb ? options.mapToDb(changedItem) : mapToDbRecord(table, changedItem);
       addToPendingQueue({ table, action: 'upsert', data: dbRecord });
-      return { success: true, error: `Guardado localmente. Se sincronizará cuando vuelva la conexión.` };
+      syncError = `Guardado localmente. Se sincronizará cuando vuelva la conexión.`;
     }
+  } else {
+    dbRecord = options?.mapToDb ? options.mapToDb(changedItem) : mapToDbRecord(table, changedItem);
+    addToPendingQueue({ table, action: 'upsert', data: dbRecord });
   }
 
-  return { success: true };
+  // Sincronizar historial de créditos DESPUÉS de haber guardado al cliente para evitar violación de FK
+  if (table === 'customers') {
+    await syncCreditHistory(changedItem, isParentSynced);
+  }
+
+  return { success: true, error: syncError };
 }
 
 // ─── INSERTAR un nuevo registro ─────────────────────────────────────────────────
@@ -709,13 +720,13 @@ export async function syncInsert<T extends Record<string, any>>(
 ): Promise<{ success: boolean; error?: string }> {
   localStorage.setItem(localStorageKey, JSON.stringify(allItems));
 
-  if (table === 'customers') {
-    await syncCreditHistory(newItem);
-  }
+  let dbRecord: any = null;
+  let isParentSynced = false;
+  let syncError: string | undefined = undefined;
 
   if (isOnline()) {
     try {
-      const dbRecord = options?.mapToDb ? options.mapToDb(newItem) : mapToDbRecord(table, newItem);
+      dbRecord = options?.mapToDb ? options.mapToDb(newItem) : mapToDbRecord(table, newItem);
 
       const { error } = await supabase
         .from(table)
@@ -726,18 +737,26 @@ export async function syncInsert<T extends Record<string, any>>(
       if (error) {
         console.warn(`⚠️ syncInsert(${table}): Supabase falló, encolando.`, error.message);
         addToPendingQueue({ table, action: 'insert', data: dbRecord });
-        return { success: true, error: 'Guardado localmente. Pendiente de sincronización.' };
+        syncError = 'Guardado localmente. Pendiente de sincronización.';
+      } else {
+        isParentSynced = true;
       }
-
-      return { success: true };
     } catch {
-      const dbRecord = options?.mapToDb ? options.mapToDb(newItem) : mapToDbRecord(table, newItem);
+      dbRecord = options?.mapToDb ? options.mapToDb(newItem) : mapToDbRecord(table, newItem);
       addToPendingQueue({ table, action: 'insert', data: dbRecord });
-      return { success: true, error: 'Sin conexión. Guardado localmente.' };
+      syncError = 'Sin conexión. Guardado localmente.';
     }
+  } else {
+    dbRecord = options?.mapToDb ? options.mapToDb(newItem) : mapToDbRecord(table, newItem);
+    addToPendingQueue({ table, action: 'insert', data: dbRecord });
   }
 
-  return { success: true };
+  // Sincronizar historial de créditos DESPUÉS de haber insertado al cliente para evitar violación de FK
+  if (table === 'customers') {
+    await syncCreditHistory(newItem, isParentSynced);
+  }
+
+  return { success: true, error: syncError };
 }
 
 // ─── ELIMINAR un registro ───────────────────────────────────────────────────────
@@ -996,48 +1015,57 @@ export async function syncSaveStockTransfer(
 
 // ─── SINCRONIZAR cola de pendientes (ejecutar cuando vuelva internet) ───────────
 export async function flushPendingQueue(): Promise<{ synced: number; failed: number }> {
+  if (isFlushing) {
+    console.log('🔄 Sincronización de cola ya en progreso. Ignorando llamada duplicada.');
+    return { synced: 0, failed: 0 };
+  }
   if (!isOnline()) return { synced: 0, failed: 0 };
 
   const queue = getPendingQueue();
   if (queue.length === 0) return { synced: 0, failed: 0 };
 
   console.log(`🔄 Sincronizando ${queue.length} operaciones pendientes...`);
+  isFlushing = true;
 
   let synced = 0;
   let failed = 0;
   const remainingQueue: PendingOperation[] = [];
 
-  for (const op of queue) {
-    try {
-      let error: any = null;
+  try {
+    for (const op of queue) {
+      try {
+        let error: any = null;
 
-      if (op.action === 'upsert') {
-        const res = await supabase.from(op.table).upsert(op.data);
-        error = res.error;
-      } else if (op.action === 'insert') {
-        const res = await supabase.from(op.table).insert(op.data);
-        error = res.error;
-      } else if (op.action === 'delete') {
-        const idField = Object.keys(op.data)[0];
-        const res = await supabase.from(op.table).delete().eq(idField, op.data[idField]);
-        error = res.error;
-      }
+        if (op.action === 'upsert') {
+          const res = await supabase.from(op.table).upsert(op.data);
+          error = res.error;
+        } else if (op.action === 'insert') {
+          const res = await supabase.from(op.table).insert(op.data);
+          error = res.error;
+        } else if (op.action === 'delete') {
+          const idField = Object.keys(op.data)[0];
+          const res = await supabase.from(op.table).delete().eq(idField, op.data[idField]);
+          error = res.error;
+        }
 
-      if (error) {
-        console.warn(`⚠️ flush: Falló operación en ${op.table}:`, error.message);
+        if (error) {
+          console.warn(`⚠️ flush: Falló operación en ${op.table}:`, error.message);
+          remainingQueue.push(op);
+          failed++;
+        } else {
+          synced++;
+        }
+      } catch {
         remainingQueue.push(op);
         failed++;
-      } else {
-        synced++;
       }
-    } catch {
-      remainingQueue.push(op);
-      failed++;
     }
-  }
 
-  savePendingQueue(remainingQueue);
-  console.log(`✅ Sincronización completada: ${synced} exitosas, ${failed} pendientes.`);
+    savePendingQueue(remainingQueue);
+    console.log(`✅ Sincronización completada: ${synced} exitosas, ${failed} pendientes.`);
+  } finally {
+    isFlushing = false;
+  }
 
   return { synced, failed };
 }
