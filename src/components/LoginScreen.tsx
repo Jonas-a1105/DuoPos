@@ -112,11 +112,54 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       // Si el input no es un correo, buscar el correo asociado en profiles
       if (!emailToAuth.includes('@')) {
         console.log("🔍 [LOGIN DEBUG] Buscando email asociado al username:", username.trim());
-        const { data: profileData, error: profileErr } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('username', username.trim())
-          .maybeSingle();
+        
+        const profileTimeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('TIMEOUT_LIMIT')), 5000)
+        );
+        
+        let profileData: any = null;
+        let profileErr: any = null;
+        
+        try {
+          const result: any = await Promise.race([
+            supabase.from('profiles').select('email').eq('username', username.trim()).maybeSingle(),
+            profileTimeoutPromise
+          ]);
+          profileData = result.data;
+          profileErr = result.error;
+        } catch (err: any) {
+          if (err.message === 'TIMEOUT_LIMIT') {
+            console.warn("⚠️ [LOGIN DEBUG] Timeout buscando email. Activando modo offline.");
+            // Si Supabase no responde, caer en modo local
+            const localUser: User = {
+              id: `usr-${username.trim().toLowerCase()}`,
+              username: username.trim(),
+              email: `${username.trim()}@local.pos`,
+              avatar: selectedCharacter || 'duo',
+              streak: 2,
+              lastSaleDate: null,
+              xp: 120,
+              level: 1,
+              dailyGoal: 150,
+              levelTitle: 'Cajero Novato 🦉',
+              role: role,
+              gems: 10,
+              gemsEarnedTotal: 10,
+              unlockedSkins: ['standard'],
+              activeSkin: 'standard',
+              unlockedBadges: [],
+              completedMissionsToday: []
+            };
+            localStorage.setItem('duo_pos_active_user', JSON.stringify(localUser));
+            setSuccessAnimation(true);
+            setTimeout(() => onLoginSuccess(localUser), 1200);
+            return;
+          }
+          console.error("❌ [LOGIN DEBUG] Error no manejado en profile lookup:", err);
+          setErrorMessage('Error de red al buscar usuario: ' + err.message);
+          setIsLoading(false);
+          return;
+        }
           
         if (profileErr) {
           console.error("❌ [LOGIN DEBUG] Error al buscar perfil:", profileErr);

@@ -21,7 +21,7 @@ import ShiftsScreen from './components/ShiftsScreen';
 import LogisticsScreen from './components/LogisticsScreen';
 import InstallModal from './components/InstallModal';
 import GamificationScreen from './components/GamificationScreen';
-import { Home, ShoppingBag, Package, History, LogOut, Download, Flame, Award, Smartphone, Laptop, Sparkles, Volume2, VolumeX, Users, Settings, Wallet, Globe, Cpu, Trophy } from 'lucide-react';
+import { Home, ShoppingBag, Package, History, LogOut, Download, Flame, Award, Smartphone, Laptop, Sparkles, Volume2, VolumeX, Users, Settings, Wallet, Globe, Cpu, Trophy, RefreshCw, Cloud } from 'lucide-react';
 import { playSound } from './utils/sounds';
 import { HardwareDeviceSettings, DEFAULT_HARDWARE_SETTINGS } from './utils/hardware';
 import HardwareHubModal from './components/HardwareHubModal';
@@ -353,6 +353,15 @@ export default function App() {
             localStorage.removeItem('duo_pos_active_user');
           }
         }
+        // Limpiar tokens de sesión Supabase caducados para evitar bucles de evento
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('sb-')) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
       }
     });
 
@@ -366,6 +375,73 @@ export default function App() {
 
   // RBAC Access lock warning modal state
   const [roleLockWarning, setRoleLockWarning] = useState<{ requiredRole: string; activeRole: string; tabName: string } | null>(null);
+
+  // Sync state for multi-device synchronization
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+
+  // Función para sincronizar todos los datos desde Supabase
+  const syncStateFromSupabase = async (showToasts = true) => {
+    if (!user || !isSupabaseConfigured() || !navigator.onLine) {
+      if (showToasts) {
+        toast.info('No hay conexión a Internet o Supabase no está configurado.', { title: 'Sincronización no disponible' });
+      }
+      return;
+    }
+    setIsSyncing(true);
+    try {
+      // Primero enviar cambios pendientes locales a la nube
+      await flushPendingQueue();
+
+      const results = await Promise.allSettled([
+        syncLoad<Product>('products', 'duo_pos_products', []).then(loaded => {
+          const augmented = loaded.map(p => {
+            if (!p.branchesStock) {
+              return { ...p, branchesStock: { 'branch-centro': p.stock, 'branch-central': p.stock * 3 + 40, 'branch-norte': Math.round(p.stock * 0.7) + 5 } };
+            }
+            return p;
+          });
+          setProducts(augmented);
+          localStorage.setItem('duo_pos_products', JSON.stringify(augmented));
+        }),
+        syncLoad<Transaction>('transactions', 'duo_pos_transactions', [], { orderBy: 'date', ascending: false }).then(setTransactions),
+        syncLoad<Customer>('customers', 'duo_pos_customers', []).then(setCustomers),
+        syncLoad<CashShift>('cash_shifts', 'duo_pos_shift_history', [], { orderBy: 'opening_time', ascending: false }).then(loaded => {
+          const active = loaded.find(s => s.status === 'open');
+          if (active) setActiveShift(active);
+          setShiftHistory(loaded.filter(s => s.status === 'closed'));
+        }),
+        syncLoad<Branch>('branches', 'duo_pos_branches', []).then(setBranches),
+        syncLoad<CashRegister>('cash_registers', 'duo_pos_registers', []).then(setRegisters),
+        syncLoad<StockTransfer>('stock_transfers', 'duo_pos_stock_transfers', [], { orderBy: 'created_at', ascending: false }).then(setStockTransfers),
+      ]);
+
+      const synced = results.filter(r => r.status === 'fulfilled').length;
+      const now = new Date().toLocaleTimeString();
+      setLastSyncTime(now);
+      if (showToasts) {
+        toast.success(`Datos sincronizados (${synced} tablas).`, { title: `Sincronizado ✅ ${now}` });
+      }
+    } catch (err) {
+      console.error('Error en syncStateFromSupabase:', err);
+      if (showToasts) {
+        toast.error('Error al sincronizar. Revisa tu conexión.', { title: 'Error de sincronización' });
+      }
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // Sincronización automática cada 30 segundos si hay usuario logueado y Supabase configurado
+  useEffect(() => {
+    if (!user || !isSupabaseConfigured()) return;
+    const interval = setInterval(() => {
+      if (navigator.onLine) {
+        syncStateFromSupabase(false);
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   // Local storage initialization
   useEffect(() => {
@@ -1471,6 +1547,21 @@ export default function App() {
               </button>
             )}
 
+            {isSupabaseConfigured() && (
+              <button
+                onClick={() => { playSound('click'); syncStateFromSupabase(); }}
+                disabled={isSyncing}
+                className={`w-full text-white border-b-4 font-black text-xs py-2.5 rounded-2xl tracking-wide flex items-center justify-center gap-1.5 cursor-pointer uppercase ${
+                  isSyncing
+                    ? 'bg-[#1cb0f6]/70 border-[#1cb0f6]/50 cursor-wait'
+                    : 'bg-[#1cb0f6] border-[#1890d4] hover:bg-[#42c4ff] active:border-b-0 active:translate-y-[4px]'
+                }`}
+                title={lastSyncTime ? `Última sincronización: ${lastSyncTime}` : 'Sincronizar datos con la nube'}
+              >
+                <Cloud size={14} /> {isSyncing ? 'Sincronizando...' : 'Sincronizar Datos'}
+              </button>
+            )}
+
             <button
               onClick={() => { playSound('click'); setShowLanding(true); }}
               className="w-full bg-white text-[#58cc02] border-2 border-green-200 border-b-4 hover:bg-green-50 active:translate-y-[2px] active:border-b-2 font-black text-xs py-2.5 rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer uppercase flex-shrink-0"
@@ -1546,6 +1637,17 @@ export default function App() {
                 >
                   🔄
                 </button>
+                {isSupabaseConfigured() && (
+                  <button
+                    type="button"
+                    onClick={() => { playSound('click'); syncStateFromSupabase(); }}
+                    disabled={isSyncing}
+                    className={`p-1 rounded transition-all ${isSyncing ? 'animate-spin text-[#1cb0f6]' : 'text-gray-400 hover:text-[#1cb0f6]'}`}
+                    title={`Sincronizar datos con la nube${lastSyncTime ? ` (última: ${lastSyncTime})` : ''}`}
+                  >
+                    <Cloud size={14} />
+                  </button>
+                )}
               </div>
 
               {/* Simulated Live UTC Clock */}
