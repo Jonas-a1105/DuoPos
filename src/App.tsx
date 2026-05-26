@@ -140,7 +140,12 @@ export default function App() {
     try {
       const saved = localStorage.getItem('duo_pos_licensing_details');
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Migración automática de tiers antiguos a nuevos
+        if (parsed.tier === 'trial') { parsed.tier = 'free'; parsed.clientLimit = PLANS.free.clientLimit; parsed.salesLimit = PLANS.free.salesLimit; }
+        if (parsed.tier === 'unlimited_racha' || parsed.tier === 'enterprise_buhoflota') { parsed.tier = 'pro'; parsed.clientLimit = PLANS.pro.clientLimit; parsed.salesLimit = PLANS.pro.salesLimit; }
+        localStorage.setItem('duo_pos_licensing_details', JSON.stringify(parsed));
+        return parsed;
       }
     } catch (e) {
       console.error('Error loading license details:', e);
@@ -154,12 +159,12 @@ export default function App() {
     }
     
     return {
-      tier: 'trial',
+      tier: 'free',
       activated: false,
       activationKey: '',
       expiresAt: 'Nunca',
-      clientLimit: PLANS.trial.clientLimit,
-      salesLimit: PLANS.trial.salesLimit,
+      clientLimit: PLANS.free.clientLimit,
+      salesLimit: PLANS.free.salesLimit,
       currentSalesCount: 0,
       offlineActivationSeed: customSeed,
       companyName: ''
@@ -203,15 +208,15 @@ export default function App() {
     }
   };
 
-  const handleResetLicenseToTrial = () => {
+  const handleResetLicenseToFree = () => {
     const updated: LicenseDetails = {
       ...licenseDetails,
-      tier: 'trial',
+      tier: 'free',
       activated: false,
       activationKey: '',
       expiresAt: 'Nunca',
-      clientLimit: PLANS.trial.clientLimit,
-      salesLimit: PLANS.trial.salesLimit
+      clientLimit: PLANS.free.clientLimit,
+      salesLimit: PLANS.free.salesLimit
     };
     setLicenseDetails(updated);
     try {
@@ -1760,9 +1765,9 @@ export default function App() {
                     key={tab.id}
                     onClick={() => { 
                       if (hasAccess) {
-                        if (tab.id === 'logistics' && licenseDetails.tier === 'trial') {
+                        if (tab.id === 'logistics' && licenseDetails.tier === 'free') {
                           playSound('error');
-                          toast.error('La pestaña de "Sucursales & CEDIS Logística" requiere una suscripción activa (Plan Standard o superior). Por favor, instala una licencia demo en Ajustes > Planes y Suscripción.', { title: 'Acceso Restringido por Plan 🔒', duration: 7000 });
+                          toast.error('La sección de "Sucursales & CEDIS" requiere el Plan Standard o superior. Actualiza tu plan en Ajustes > Planes y Suscripción.', { title: 'Acceso Restringido — Plan Gratuito 🔒', duration: 7000 });
                           return;
                         }
                         setActiveTab(tab.id as any); 
@@ -1836,7 +1841,7 @@ export default function App() {
             </button>
 
             <div className="text-center font-black text-[9px] text-gray-400">
-              DuoPOS {appVersion} • {licenseDetails.tier === 'trial' ? 'Licencia de Evaluación' : PLANS[licenseDetails.tier]?.name || 'Licencia Registrada'}
+              DuoPOS {appVersion} • {licenseDetails.tier === 'free' ? 'Plan Gratuito' : PLANS[licenseDetails.tier]?.name || 'Licencia Registrada'}
             </div>
           </div>
 
@@ -2071,7 +2076,7 @@ export default function App() {
               onGrantXp={handleGrantXp}
               licenseDetails={licenseDetails}
               onActivateLicenseKey={handleActivateLicenseKey}
-              onResetLicenseToTrial={handleResetLicenseToTrial}
+              onResetLicenseToFree={handleResetLicenseToFree}
               appVersion={appVersion}
               onUpdateAppVersion={handleUpdateAppVersion}
             />
@@ -2150,9 +2155,9 @@ export default function App() {
               key={tab.id}
               onClick={() => { 
                 if (hasAccess) {
-                  if (tab.id === 'logistics' && licenseDetails.tier === 'trial') {
+                  if (tab.id === 'logistics' && licenseDetails.tier === 'free') {
                     playSound('error');
-                    toast.error('La pestaña de "Sucursales" requiere una suscripción activa (Plan Standard o superior). Actívalo en Ajustes > Planes.', { title: 'Acceso Restringido 🔒', duration: 7000 });
+                    toast.error('La sección de "Sucursales" requiere el Plan Standard o superior. Actualiza en Ajustes > Planes.', { title: 'Acceso Restringido — Plan Gratuito 🔒', duration: 7000 });
                     return;
                   }
                   setActiveTab(tab.id as any); 

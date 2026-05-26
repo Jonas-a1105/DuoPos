@@ -10,7 +10,7 @@ interface SettingsScreenProps {
   onGrantXp: (amount: number) => void;
   licenseDetails: LicenseDetails;
   onActivateLicenseKey: (key: string) => { success: boolean; message: string };
-  onResetLicenseToTrial: () => void;
+  onResetLicenseToFree: () => void;
   appVersion: string;
   onUpdateAppVersion: (newVersion: string) => void;
 }
@@ -21,7 +21,7 @@ export default function SettingsScreen({
   onGrantXp,
   licenseDetails,
   onActivateLicenseKey,
-  onResetLicenseToTrial,
+  onResetLicenseToFree,
   appVersion,
   onUpdateAppVersion
 }: SettingsScreenProps) {
@@ -1361,14 +1361,14 @@ export default function SettingsScreen({
                         <button
                           type="button"
                           onClick={() => {
-                            if (confirm('¿Estás seguro de que deseas desactivar la licencia actual y volver a la versión de prueba básica (Trial)?')) {
-                              onResetLicenseToTrial();
+                            if (confirm('¿Estás seguro de que deseas desactivar la licencia actual y volver al Plan Gratuito?')) {
+                              onResetLicenseToFree();
                               if ((document.getElementById('activation-key-input') as HTMLInputElement)) {
                                 (document.getElementById('activation-key-input') as HTMLInputElement).value = '';
                               }
                             }
                           }}
-                          title="Restablecer a Trial"
+                          title="Restablecer a Plan Gratuito"
                           className="px-3 bg-red-50 text-red-500 border-2 border-red-200 hover:bg-red-100 active:bg-red-200 rounded-xl font-black text-xs cursor-pointer"
                         >
                           ❌ Desactivar
@@ -1392,8 +1392,7 @@ export default function SettingsScreen({
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1.5">
                     {[
                       { id: 'standard', name: 'Standard ⚡', color: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' },
-                      { id: 'unlimited_racha', name: 'Premium 🏆', color: 'bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100' },
-                      { id: 'enterprise_buhoflota', name: 'Enterprise 👑', color: 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' }
+                      { id: 'pro', name: 'Pro 🏆', color: 'bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100' }
                     ].map(btn => (
                       <button
                         key={btn.id}
@@ -1426,7 +1425,7 @@ export default function SettingsScreen({
                   Tabla Comparativa de Planes de Pago (SaaS DuoPOS)
                 </span>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
                   {(Object.keys(PLANS) as SubscriptionTier[]).map((key) => {
                     const plan = PLANS[key];
                     const isCurrent = licenseDetails.tier === key;
@@ -1449,7 +1448,7 @@ export default function SettingsScreen({
                           <div className="flex items-center gap-1.5">
                             <span className="text-2xl">{plan.emoji}</span>
                             <span className="text-xs font-black uppercase text-gray-800 leading-tight block">
-                              {plan.id === 'unlimited_racha' ? 'Racha Ilimitada' : plan.id === 'enterprise_buhoflota' ? 'Búho Flota' : plan.id === 'standard' ? 'Profesional' : 'Prueba'}
+                              {plan.id === 'free' ? 'Gratuito' : plan.id === 'standard' ? 'Standard' : 'Pro'}
                             </span>
                           </div>
 
