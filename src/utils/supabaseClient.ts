@@ -22,6 +22,14 @@ if (isKeysValid) {
     },
   });
   console.log('✅ Supabase client inicializado correctamente.');
+  console.log(
+    '🔑 Credenciales loaded en cliente - URL:',
+    supabaseUrl,
+    '| Key Longitud:',
+    supabaseAnonKey ? supabaseAnonKey.length : 0,
+    '| Key Prefijo:',
+    supabaseAnonKey ? supabaseAnonKey.substring(0, 20) + '...' : 'ninguno'
+  );
 } else {
   console.warn(
     '⚠️ Supabase URL o Anon Key no configurados. La app corre en modo local (localStorage únicamente).'

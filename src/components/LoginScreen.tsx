@@ -19,6 +19,12 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const [errorMessage, setErrorMessage] = useState('');
   const [successAnimation, setSuccessAnimation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [diagnosticLog, setDiagnosticLog] = useState<string[]>([]);
+
+  const addLog = (msg: string) => {
+    setDiagnosticLog(prev => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
+    console.log(`[AUTH DIAGNOSTIC] ${msg}`);
+  };
 
   const characterKeys = Object.keys(DUO_CHARACTERS);
   const currentCharacter: Character = DUO_CHARACTERS[selectedCharacter] || DUO_CHARACTERS.duo;
@@ -83,10 +89,13 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
     setErrorMessage('');
     setIsLoading(true);
+    setDiagnosticLog([]);
+    addLog("Iniciando flujo de sesión...");
     
     try {
       // Si Supabase no está configurado, hacer login local
       if (!isSupabaseConfigured()) {
+        addLog("Supabase no configurado. Iniciando sesión local offline...");
         const localUser: User = {
           id: 'user-admin',
           username: username.trim(),
@@ -108,16 +117,17 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         };
         localStorage.setItem('duo_pos_active_user', JSON.stringify(localUser));
         setSuccessAnimation(true);
+        addLog("¡Sesión local iniciada con éxito!");
         setTimeout(() => onLoginSuccess(localUser), 1200);
         return;
       }
 
-      console.log("🔍 [LOGIN DEBUG] Iniciando flujo de Supabase Auth...");
+      addLog("Detectando tipo de credencial (nombre de usuario o correo)...");
       let emailToAuth = username.trim();
       
       // Si el input no es un correo, buscar el correo asociado en profiles
       if (!emailToAuth.includes('@')) {
-        console.log("🔍 [LOGIN DEBUG] Buscando email asociado al username:", username.trim());
+        addLog(`Buscando correo electrónico asociado al usuario "${username.trim()}"...`);
         
         const profileTimeoutPromise = new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error('TIMEOUT_LIMIT')), 15000)
@@ -135,7 +145,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           profileErr = result.error;
         } catch (err: any) {
           if (err.message === 'TIMEOUT_LIMIT') {
-            console.warn("⚠️ [LOGIN DEBUG] Timeout buscando email. Activando modo offline.");
+            addLog("⚠️ Conexión lenta al buscar usuario. Activando inicio alternativo local...");
             // Cancelar sesiones pendientes de Supabase
             supabase.auth.signOut().catch(() => {});
             const localUser: User = {
@@ -162,32 +172,32 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             setTimeout(() => onLoginSuccess(localUser), 1200);
             return;
           }
-          console.error("❌ [LOGIN DEBUG] Error no manejado en profile lookup:", err);
+          addLog(`❌ Error de red durante búsqueda de usuario: ${err.message}`);
           setErrorMessage('Error de red al buscar usuario: ' + err.message);
           setIsLoading(false);
           return;
         }
           
         if (profileErr) {
-          console.error("❌ [LOGIN DEBUG] Error al buscar perfil:", profileErr);
+          addLog(`❌ Error en tabla 'profiles': ${profileErr.message}`);
           setErrorMessage('Error al buscar usuario: ' + profileErr.message);
           setIsLoading(false);
           return;
         }
         
         if (!profileData) {
-          console.warn("⚠️ [LOGIN DEBUG] No se encontró perfil para username:", username.trim());
+          addLog(`❌ El nombre de usuario "${username.trim()}" no está registrado.`);
           setErrorMessage('No se encontró ningún usuario con ese nombre.');
           setIsLoading(false);
           return;
         }
         
         emailToAuth = profileData.email;
-        console.log("🔍 [LOGIN DEBUG] Email encontrado:", emailToAuth);
+        addLog(`Correo encontrado: ${emailToAuth}`);
       }
 
       // Autenticación con Supabase con un Límite de Tiempo (Timeout de 5s para evitar cuelgues)
-      console.log("🔍 [LOGIN DEBUG] Intentando signInWithPassword para email:", emailToAuth);
+      addLog(`Intentando iniciar sesión con Supabase Auth (${emailToAuth})...`);
       
       const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('TIMEOUT_LIMIT')), 15000)
@@ -208,10 +218,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         authErr = result.error;
       } catch (err: any) {
         if (err.message === 'TIMEOUT_LIMIT') {
-          console.warn("⚠️ [LOGIN DEBUG] La conexión con Supabase tardó demasiado (Timeout). Activando modo de inicio local alternativo (offline)...");
-          
-          // Cancelar cualquier sesión pendiente de Supabase para evitar que
-          // el Promise.race no cancelado dispare eventos SIGNED_IN/SIGNED_OUT después
+          addLog("⚠️ La conexión con Supabase tardó demasiado (Timeout). Activando inicio local alternativo...");
           supabase.auth.signOut().catch(() => {});
 
           const localUser: User = {
@@ -238,15 +245,14 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
            setTimeout(() => onLoginSuccess(localUser), 1200);
            return;
          }
-        console.error("❌ [LOGIN DEBUG] Error no manejado en Promise.race:", err);
+        addLog(`❌ Error de red en autenticación: ${err.message}`);
         setErrorMessage('Error de red al intentar conectar: ' + err.message);
         setIsLoading(false);
         return;
       }
 
       if (authErr) {
-        console.error("❌ [LOGIN DEBUG] Error en signInWithPassword:", authErr);
-        // Manejar error 429 (Too Many Requests) de forma amigable
+        addLog(`❌ Error de autenticación Supabase: ${authErr.message}`);
         if (authErr.message?.includes('429') || authErr.message?.includes('Too Many') || authErr.message?.includes('rate')) {
           setErrorMessage('⏳ Demasiados intentos. Espera 1 minuto antes de intentar de nuevo.');
         } else if (authErr.message?.includes('Email not confirmed')) {
@@ -259,16 +265,15 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       }
 
       if (!authData.user) {
-        console.warn("⚠️ [LOGIN DEBUG] signInWithPassword no retornó ningún usuario.");
+        addLog("❌ La respuesta de sesión no devolvió datos de usuario.");
         setErrorMessage('No se pudo obtener la información del usuario.');
         setIsLoading(false);
         return;
       }
 
-      console.log("🔍 [LOGIN DEBUG] Autenticado con éxito. ID de usuario:", authData.user.id);
+      addLog(`¡Sesión de Auth correcta! ID: ${authData.user.id}. Cargando perfil comercial...`);
 
       // Obtener perfil de la base de datos con Timeout
-      console.log("🔍 [LOGIN DEBUG] Obteniendo perfil de la tabla profiles...");
       let userProfile: any = null;
       let profileFetchErr: any = null;
 
@@ -281,7 +286,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         profileFetchErr = result.error;
       } catch (err: any) {
         if (err.message === 'TIMEOUT_LIMIT') {
-          console.warn("⚠️ [LOGIN DEBUG] Timeout cargando perfil de Supabase. Usando perfil offline.");
+          addLog("⚠️ Timeout cargando perfil de base de datos. Creando perfil offline.");
           userProfile = {
             id: authData.user.id,
             username: username.trim(),
@@ -289,7 +294,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             role: role
           };
         } else {
-          console.error("❌ [LOGIN DEBUG] Error de red obteniendo perfil:", err);
+          addLog(`❌ Error de red cargando perfil: ${err.message}`);
           setErrorMessage('Error al obtener perfil: ' + err.message);
           setIsLoading(false);
           return;
@@ -297,7 +302,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       }
 
       if (profileFetchErr) {
-        console.error("❌ [LOGIN DEBUG] Error al obtener perfil:", profileFetchErr);
+        addLog(`❌ Error de base de datos en tabla 'profiles': ${profileFetchErr.message}`);
         setErrorMessage('Error al obtener perfil: ' + profileFetchErr.message);
         setIsLoading(false);
         return;
@@ -305,7 +310,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
       // Self-healing: crear perfil si no existe
       if (!userProfile) {
-        console.log("🔍 [LOGIN DEBUG] Perfil no encontrado. Iniciando creación automática...");
+        addLog("⚠️ El perfil comercial no existe. Iniciando creación automática (self-healing)...");
         const defaultProfile = createDefaultProfile(
           authData.user.id,
           authData.user.email || emailToAuth,
@@ -319,25 +324,27 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           .maybeSingle();
 
         if (insertErr || !newProfile) {
-          console.error("❌ [LOGIN DEBUG] Error al crear perfil:", insertErr);
+          addLog(`❌ Falló la creación del perfil comercial: ${insertErr?.message}`);
           setErrorMessage('Error al crear perfil: ' + (insertErr?.message || 'Error desconocido'));
           setIsLoading(false);
           return;
         }
         userProfile = newProfile;
-        console.log("🔍 [LOGIN DEBUG] Perfil creado exitosamente:", userProfile);
+        addLog("¡Perfil comercial creado exitosamente!");
       } else {
-        console.log("🔍 [LOGIN DEBUG] Perfil encontrado exitosamente:", userProfile);
+        addLog("¡Perfil comercial cargado correctamente!");
       }
 
       const user = mapProfileToUser(userProfile);
       localStorage.setItem('duo_pos_active_user', JSON.stringify(user));
 
+      addLog("¡Sesión iniciada con éxito! Redirigiendo...");
       setSuccessAnimation(true);
       setTimeout(() => {
         onLoginSuccess(user);
       }, 1200);
     } catch (err: any) {
+      addLog(`❌ Error general: ${err.message}`);
       setErrorMessage('Ocurrió un error inesperado: ' + err.message);
     } finally {
       setIsLoading(false);
@@ -363,6 +370,8 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
     setErrorMessage('');
     setIsLoading(true);
+    setDiagnosticLog([]);
+    addLog("Iniciando flujo de registro comercial...");
 
     const timeoutPromise = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error('TIMEOUT_LIMIT')), 15000)
@@ -371,6 +380,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     try {
       // Si Supabase no está configurado, registrar localmente
       if (!isSupabaseConfigured()) {
+        addLog("Supabase no configurado. Registrando cajero en modo local offline...");
         const localUser: User = {
           id: 'user-admin',
           username: username.trim(),
@@ -392,12 +402,13 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         };
         localStorage.setItem('duo_pos_active_user', JSON.stringify(localUser));
         setSuccessAnimation(true);
+        addLog("¡Cajero local registrado con éxito!");
         setTimeout(() => onLoginSuccess(localUser), 1200);
         return;
       }
 
       // Validar si el nombre de usuario ya está tomado con Timeout
-      console.log("🔍 [REGISTER DEBUG] Validando si el nombre de usuario ya está tomado...");
+      addLog(`Verificando si el usuario "${username.trim()}" ya existe en la base de datos...`);
       let checkData: any = null;
       let checkErr: any = null;
 
@@ -410,26 +421,30 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         checkErr = result.error;
       } catch (err: any) {
         if (err.message === 'TIMEOUT_LIMIT') {
-          console.warn("⚠️ [REGISTER DEBUG] Timeout al validar nombre de usuario.");
+          addLog("⚠️ La consulta de base de datos tardó demasiado (Timeout).");
           throw new Error('TIMEOUT_LIMIT');
         }
         throw err;
       }
 
       if (checkErr) {
+        addLog(`❌ Error en tabla 'profiles': ${checkErr.message}`);
         setErrorMessage('Error al validar nombre de usuario: ' + checkErr.message);
         setIsLoading(false);
         return;
       }
 
       if (checkData) {
+        addLog(`❌ El nombre de usuario "${username.trim()}" ya está tomado.`);
         setErrorMessage('Ese usuario ya existe. ¡Elige otro o inicia sesión!');
         setIsLoading(false);
         return;
       }
 
+      addLog("Nombre de usuario disponible.");
+
       // Registro nativo en Supabase Auth con Timeout
-      console.log("🔍 [REGISTER DEBUG] Creando cuenta en Supabase Auth...");
+      addLog(`Creando credenciales en Supabase Auth (${email.trim()})...`);
       let signUpData: any = null;
       let signUpErr: any = null;
 
@@ -451,13 +466,14 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         signUpErr = result.error;
       } catch (err: any) {
         if (err.message === 'TIMEOUT_LIMIT') {
-          console.warn("⚠️ [REGISTER DEBUG] Timeout en supabase.auth.signUp.");
+          addLog("⚠️ El registro en Supabase Auth tardó demasiado (Timeout).");
           throw new Error('TIMEOUT_LIMIT');
         }
         throw err;
       }
 
       if (signUpErr) {
+        addLog(`❌ Error de Supabase Auth: ${signUpErr.message}`);
         if (signUpErr.message?.includes('429') || signUpErr.message?.includes('Too Many')) {
           setErrorMessage('⏳ Demasiados intentos. Espera 1 minuto antes de intentar de nuevo.');
         } else {
@@ -469,13 +485,16 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
       const authUser = signUpData.user;
       if (!authUser) {
+        addLog("📧 Confirmación de correo habilitada en Supabase. Esperando confirmación por email...");
         setErrorMessage('Registro exitoso. Revisa tu correo de confirmación si está habilitado.');
         setIsLoading(false);
         return;
       }
 
+      addLog(`¡Usuario creado! ID: ${authUser.id}. Creando perfil comercial...`);
+
       // Actualizar datos del perfil creado por el trigger con Timeout
-      console.log("🔍 [REGISTER DEBUG] Actualizando datos de perfil...");
+      addLog("Actualizando datos del perfil en tabla 'profiles'...");
       try {
         await Promise.race([
           supabase
@@ -497,12 +516,14 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             .eq('id', authUser.id),
           timeoutPromise
         ]);
+        addLog("Datos del perfil comercial guardados.");
       } catch (err: any) {
-        console.error('⚠️ [REGISTER DEBUG] Error o Timeout actualizando perfil (se intentará autoreparar):', err);
+        addLog(`⚠️ Advertencia al actualizar perfil: ${err.message || err}. Se intentará autoreparar.`);
+        console.error('⚠️ [REGISTER DEBUG] Error o Timeout actualizando perfil:', err);
       }
 
       // Obtener el perfil completo con Timeout
-      console.log("🔍 [REGISTER DEBUG] Obteniendo perfil final...");
+      addLog("Cargando perfil comercial final...");
       let userProfile: any = null;
       try {
         const result: any = await Promise.race([
@@ -515,12 +536,12 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         ]);
         userProfile = result.data;
       } catch (err: any) {
-        console.error('⚠️ [REGISTER DEBUG] Error o Timeout leyendo perfil final:', err);
+        addLog(`⚠️ Advertencia al leer perfil final: ${err.message || err}`);
       }
 
       // Self-healing: si el trigger o la lectura fallaron, lo creamos
       if (!userProfile) {
-        console.log("🔍 [REGISTER DEBUG] Perfil no encontrado (Autoreparación). Creando perfil...");
+        addLog("⚠️ Perfil no encontrado. Iniciando autoreparación de perfil comercial...");
         const defaultProfile = createDefaultProfile(authUser.id, email.trim(), username.trim());
 
         try {
@@ -534,24 +555,29 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           ]);
           userProfile = result.data;
           if (result.error) throw result.error;
+          addLog("¡Perfil comercial reparado y creado con éxito!");
         } catch (err: any) {
+          addLog(`❌ Error fatal en autoreparación: ${err.message || err}`);
           console.error("❌ [REGISTER DEBUG] Error fatal de autoreparación de perfil:", err);
           setErrorMessage('Error al crear perfil: ' + (err.message || 'Error desconocido'));
           setIsLoading(false);
           return;
         }
+      } else {
+        addLog("¡Perfil comercial cargado con éxito!");
       }
 
       const newUser = mapProfileToUser(userProfile);
       localStorage.setItem('duo_pos_active_user', JSON.stringify(newUser));
 
+      addLog("¡Registro e inicio exitosos! Redirigiendo...");
       setSuccessAnimation(true);
       setTimeout(() => {
         onLoginSuccess(newUser);
       }, 1200);
     } catch (err: any) {
       if (err.message === 'TIMEOUT_LIMIT') {
-        console.warn("⚠️ [REGISTER DEBUG] Conexión lenta o bloqueada. Entrando en modo local offline automático...");
+        addLog("⚠️ Conexión lenta o bloqueada. Entrando en modo local offline automático...");
         const localUser: User = {
           id: `local-${username.trim().toLowerCase()}`,
           username: username.trim(),
@@ -576,6 +602,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         setTimeout(() => onLoginSuccess(localUser), 1200);
         return;
       }
+      addLog(`❌ Error general en registro: ${err.message}`);
       setErrorMessage('Ocurrió un error inesperado: ' + err.message);
     } finally {
       setIsLoading(false);
@@ -850,6 +877,33 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                   </>
                 )}
               </button>
+
+              {/* Live Connection Diagnostic Console */}
+              {diagnosticLog.length > 0 && (
+                <div className="mt-5 p-4 bg-slate-900 border border-slate-800 rounded-2xl text-left shadow-inner">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
+                    <span className="text-[10px] font-black text-slate-400 tracking-wider uppercase flex items-center gap-1.5 font-mono">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block"></span>
+                      Diagnóstico de Conexión en Vivo
+                    </span>
+                    <button 
+                      type="button" 
+                      onClick={() => setDiagnosticLog([])} 
+                      className="text-[9px] text-slate-500 hover:text-slate-300 font-bold uppercase transition-colors"
+                    >
+                      Limpiar
+                    </button>
+                  </div>
+                  <div className="font-mono text-[10px] text-emerald-400 space-y-1 max-h-[140px] overflow-y-auto leading-relaxed scrollbar-thin">
+                    {diagnosticLog.map((log, index) => (
+                      <div key={index} className="flex gap-2">
+                        <span className="text-slate-600 select-none">&gt;</span>
+                        <span className="whitespace-pre-wrap">{log}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
             </form>
           </div>
