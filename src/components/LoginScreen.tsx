@@ -82,10 +82,6 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     }
 
     setErrorMessage('');
-    if (role === 'admin' && !isDeveloperUser(username, email)) {
-      setErrorMessage('Acceso denegado: El rol de Administrador está restringido para el desarrollador principal (Jonas).');
-      return;
-    }
     setIsLoading(true);
     
     try {
@@ -366,10 +362,6 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     }
 
     setErrorMessage('');
-    if (role === 'admin' && !isDeveloperUser(username, email)) {
-      setErrorMessage('Registro denegado: El rol de Administrador está restringido para el desarrollador principal (Jonas).');
-      return;
-    }
     setIsLoading(true);
 
     try {
