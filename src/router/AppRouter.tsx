@@ -386,12 +386,14 @@ export default function AppRouter() {
 
   // Track sales count matching local storage transactions
   useEffect(() => {
-    const updated = { ...licenseDetails, currentSalesCount: transactions.length };
-    try {
-      localStorage.setItem('duo_pos_licensing_details', JSON.stringify(updated));
-    } catch (err) {}
-    setLicenseDetails(updated);
-  }, [transactions.length, licenseDetails]);
+    if (licenseDetails && licenseDetails.currentSalesCount !== transactions.length) {
+      const updated = { ...licenseDetails, currentSalesCount: transactions.length };
+      try {
+        localStorage.setItem('duo_pos_licensing_details', JSON.stringify(updated));
+      } catch (err) {}
+      setLicenseDetails(updated);
+    }
+  }, [transactions.length]);
 
   useEffect(() => {
     if (licenseDetails.tier === 'free' && activeRateType === 'paralelo') {
