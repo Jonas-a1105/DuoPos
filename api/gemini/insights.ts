@@ -67,7 +67,7 @@ export default async function handler(req: any, res: any) {
     }
 
     const response = await client.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-2.5-flash",
       contents: userMessage,
       config: {
         systemInstruction: systemPrompt || "Eres Duo Copilot, un consejero de negocios premium para el sistema DuoPOS. Analiza las métricas de ventas y da recomendaciones cortas, gamificadas y perspicaces para aumentar las ganancias.",

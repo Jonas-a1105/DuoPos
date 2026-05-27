@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
+import rateLimit from "express-rate-limit";
 
 let aiClient: GoogleGenAI | null = null;
 
@@ -31,10 +32,41 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  // Rate limiting
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+  app.use(limiter);
+
   app.use(express.json({ limit: "50mb" }));
 
+  // Auth middleware for Gemini endpoint
+  const authenticateGemini = (req: any, res: any, next: any) => {
+    // For now, allow if in development or if a simple header is present
+    // In production, this should verify JWT tokens from Supabase/Clerk
+    if (process.env.NODE_ENV === 'development') {
+      return next();
+    }
+    
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    // Simple bearer token check - replace with proper JWT validation
+    const token = authHeader.split(' ')[1];
+    if (!token || token.length < 10) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    
+    next();
+  };
+
   // API endpoint for Duo Copilot AI business insights
-  app.post("/api/gemini/insights", async (req, res) => {
+  app.post("/api/gemini/insights", authenticateGemini, async (req, res) => {
     try {
       const { systemPrompt, userMessage } = req.body;
       const client = getGeminiClient();
@@ -63,7 +95,7 @@ async function startServer() {
 
       console.log("Sending request to Gemini client...");
       const response = await client.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-2.5-flash", // Official stable model name
         contents: userMessage,
         config: {
           systemInstruction: systemPrompt || "Eres Duo Copilot, un consejero de negocios premium para el sistema DuoPOS. Analiza las métricas de ventas y da recomendaciones cortas, gamificadas y perspicaces para aumentar las ganancias.",

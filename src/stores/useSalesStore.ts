@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Branch, CashRegister, CashShift, LegalBillingSettings, HardwareDeviceSettings, Transaction } from '../types';
+import { DEFAULT_HARDWARE_SETTINGS } from '../services/printService';
 
 interface SalesState {
   activeBranchId: string;
@@ -28,33 +29,30 @@ interface SalesState {
   setBillingSettings: (settings: LegalBillingSettings) => void;
 }
 
-const DEFAULT_HARDWARE_SETTINGS: HardwareDeviceSettings = {
-  printerType: 'thermal_80mm',
-  printerConnection: 'usb',
-  usbVendorId: '0x04b8',
-  usbProductId: '0x0202',
-  ipAddress: '192.168.1.200',
-  autoPrintReceipts: true,
-  openDrawerOnSale: true,
-  soundVolume: 80,
-  scannerBeep: true,
-  poleDisplayPort: 'COM1',
-  poleDisplayWelcome: 'BIENVENIDO A DUOPOS'
-};
-
 const DEFAULT_BILLING_SETTINGS: LegalBillingSettings = {
+  taxName: 'IVA',
+  generalTaxRate: 16,
+  categoryOverrides: [
+    { category: 'Alimentos', rate: 0 },
+    { category: 'Bebidas', rate: 16 },
+    { category: 'Mercancía', rate: 16 },
+    { category: 'Cafetería', rate: 16 },
+    { category: 'Accesorios', rate: 16 },
+    { category: 'Electrónicos', rate: 16 },
+    { category: 'Servicios', rate: 16 }
+  ],
+  taxIncludedInPrice: true,
   companyName: 'DuoPOS Gamified S.A.C.',
-  taxId: 'J-12345678-9',
-  address: 'Calle del Búho Sabio #55, Sector Finanzas',
+  companyTaxId: 'DAC120525D10',
+  companyRegime: '601 - Regimen General de Ley Personas Morales',
+  companyPostalCode: '06700',
+  companyAddress: 'Calle del Búho Sabio #55, Sector Finanzas',
   invoicePrefix: 'FACT-A-',
   nextInvoiceNumber: 1001,
-  taxRatePercent: 16.0,
-  allowMixedPayments: true,
-  allowCreditSales: true,
-  requireInvoiceDetails: false,
-  fiscalPrinterEnabled: false,
-  customFooterMessage: '¡Gracias por facturar con nosotros! Gana XP y racha hoy. 🦉✨'
+  automaticMockInvoicing: false,
+  certifyingAuthority: 'Servicio de Administración Ficticia SAT'
 };
+
 
 export const useSalesStore = create<SalesState>((set) => ({
   activeBranchId: (() => {

@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { User, LicenseDetails } from '../types';
-import { playSound } from '../utils/sounds';
-import { toast } from '../components/FlashNotifications';
-import { supabase } from '../utils/supabaseClient';
+import { playSound } from '../services/sounds';
+import { toast } from '../components/Modal/FlashNotifications';
+import { supabase } from '../config/supabaseClient';
+
 
 interface UserState {
   user: User | null;
@@ -38,12 +39,17 @@ interface UserState {
 
 const DEFAULT_LICENSE_DETAILS: LicenseDetails = {
   tier: 'free',
+  activated: false,
+  activationKey: 'FREE-TIER-TRIAL',
+  expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
   clientLimit: 50,
   salesLimit: 100,
-  issuedAt: new Date().toISOString(),
-  expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-  licenseKey: 'FREE-TIER-TRIAL'
+  currentSalesCount: 0,
+  offlineActivationSeed: 'FREE-SEED',
+  activatedAt: new Date().toISOString(),
+  companyName: 'DuoPOS Trial Client'
 };
+
 
 export const useUserStore = create<UserState>((set, get) => ({
   user: null,

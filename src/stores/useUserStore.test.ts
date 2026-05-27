@@ -2,21 +2,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useUserStore } from './useUserStore';
 
-// Mock side effects and dependencies
-vi.mock('../utils/sounds', () => ({
+vi.mock('../services/sounds', () => ({
   playSound: vi.fn(),
 }));
 
-vi.mock('../components/FlashNotifications', () => ({
+vi.mock('../components/Modal/FlashNotifications', () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),
     info: vi.fn(),
+    warning: vi.fn(),
     achievement: vi.fn(),
   },
+  FlashNotifications: () => null,
 }));
 
-vi.mock('../utils/supabaseClient', () => ({
+vi.mock('../config/supabaseClient', () => ({
   supabase: {
     from: vi.fn(() => ({
       update: vi.fn(() => ({
@@ -24,15 +25,21 @@ vi.mock('../utils/supabaseClient', () => ({
       })),
     })),
   },
+  isSupabaseConfigured: vi.fn(() => false),
 }));
 
-// Robust mock for localStorage using Vitest global stubbing
 const store: Record<string, string> = {};
 const localStorageMock = {
   getItem: vi.fn((key: string) => store[key] || null),
-  setItem: vi.fn((key: string, value: string) => { store[key] = value.toString(); }),
-  removeItem: vi.fn((key: string) => { delete store[key]; }),
-  clear: vi.fn(() => { for (const key in store) delete store[key]; }),
+  setItem: vi.fn((key: string, value: string) => {
+    store[key] = value.toString();
+  }),
+  removeItem: vi.fn((key: string) => {
+    delete store[key];
+  }),
+  clear: vi.fn(() => {
+    for (const key in store) delete store[key];
+  }),
   length: 0,
   key: vi.fn((index: number) => Object.keys(store)[index] || null),
 };
@@ -41,7 +48,7 @@ vi.stubGlobal('localStorage', localStorageMock);
 describe('useUserStore Unit Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.clear();
+    localStorageMock.clear();
   });
 
   it('debe inicializar el estado del usuario por defecto en nulo', () => {
@@ -74,7 +81,7 @@ describe('useUserStore Unit Tests', () => {
       avatar: 'duo',
       streak: 5,
       xp: 80,
-      level: 1, // Needed XP for level 2: 1 * 100 = 100 XP
+      level: 1,
       dailyGoal: 100,
       levelTitle: 'Monolingüe Comercial 🦉',
       weeklyXp: 0,
@@ -82,8 +89,7 @@ describe('useUserStore Unit Tests', () => {
     };
 
     useUserStore.getState().setUser(mockUser);
-    
-    // Grant 30 XP (total 110 XP -> should level up to level 2 with 10 leftover XP)
+
     await useUserStore.getState().grantXp(30);
 
     const updatedUser = useUserStore.getState().user;
