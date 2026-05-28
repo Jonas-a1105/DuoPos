@@ -51,10 +51,12 @@ import { useSession } from '../hooks/useSession';
 
 // ─── Componente de Sincronización de Sesiones Clerk + Supabase ────────────────
 function ClerkSessionSync({ onSyncUser }: { onSyncUser: (user: User | null) => void }) {
-  const { userId, getToken } = useAuth();
-  const { user: clerkUser } = useUser();
+  const { userId, getToken, isLoaded: isAuthLoaded } = useAuth();
+  const { user: clerkUser, isLoaded: isUserLoaded } = useUser();
 
   useEffect(() => {
+    if (!isAuthLoaded) return; // Wait until Clerk auth state is fully loaded
+
     const syncToken = async () => {
       if (userId) {
         try {
@@ -68,9 +70,11 @@ function ClerkSessionSync({ onSyncUser }: { onSyncUser: (user: User | null) => v
       }
     };
     syncToken();
-  }, [userId, getToken]);
+  }, [userId, getToken, isAuthLoaded]);
 
   useEffect(() => {
+    if (!isUserLoaded) return; // Wait until Clerk user profile is fully loaded
+
     const loadClerkUserProfile = async () => {
       if (clerkUser) {
         try {
@@ -133,16 +137,19 @@ function ClerkSessionSync({ onSyncUser }: { onSyncUser: (user: User | null) => v
               completedMissionsToday: finalProfile.completed_missions_today
             };
             onSyncUser(mappedUser);
+            // Persist locally to avoid loading flicker
+            localStorage.setItem('duo_pos_active_user', JSON.stringify(mappedUser));
           }
         } catch (err) {
           console.error('Error loading Clerk profile in sync:', err);
         }
       } else {
+        // Clerk is fully loaded and there is no active session -> clear active user
         onSyncUser(null);
       }
     };
     loadClerkUserProfile();
-  }, [clerkUser]);
+  }, [clerkUser, isUserLoaded]);
 
   return null;
 }

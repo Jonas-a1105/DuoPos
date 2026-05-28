@@ -98,6 +98,9 @@ const translateClerkError = (err: any): string => {
 
   // 2. Check by message content substring matching
   const msgLower = message.toLowerCase();
+  if (msgLower.includes('already signed in')) {
+    return '¡Ya tienes una sesión activa! 🦉 Permíteme re-conectar tu caja comercial al instante...';
+  }
   if (msgLower.includes('compromised') || msgLower.includes('data breach') || msgLower.includes('breach')) {
     return '¡Ouch! 🦉 Esa contraseña es muy común en internet. ¡Por favor, inventa una diferente para proteger tus gemas!';
   }
@@ -390,6 +393,54 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
       }
     } catch (err: any) {
       addLog(`❌ Error en inicio de sesión: ${err.message || err}`);
+      const message = err.errors?.[0]?.message || err.message || '';
+      if (message.toLowerCase().includes('already signed in') && window.Clerk) {
+        addLog("🚀 [AUTO-RECOVERY] Detectado inicio de sesión activo en Clerk. Auto-sincronizando perfil...");
+        try {
+          const token = await window.Clerk.session?.getToken({ template: 'supabase' });
+          if (token) {
+            setSupabaseToken(token);
+          }
+          const clerkUserObj = window.Clerk.user;
+          if (clerkUserObj) {
+            addLog(`Sincronizando perfil comercial para usuario Clerk "${clerkUserObj.id}"...`);
+            const { data: userProfile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', clerkUserObj.id)
+              .maybeSingle();
+
+            let finalProfile = userProfile;
+            if (!finalProfile) {
+              addLog("Creando perfil comercial faltante en Supabase...");
+              const defaultProfile = createDefaultProfileObj(
+                clerkUserObj.id,
+                clerkUserObj.primaryEmailAddress?.emailAddress || '',
+                clerkUserObj.username || clerkUserObj.firstName || 'Cajero',
+                selectedCharacter,
+                role
+              );
+              const { data: newProfile } = await supabase
+                .from('profiles')
+                .insert(defaultProfile)
+                .select()
+                .maybeSingle();
+              finalProfile = newProfile || defaultProfile;
+            }
+
+            const finalUserObj = mapProfileToUser(finalProfile, selectedCharacter, role);
+            localStorage.setItem('duo_pos_active_user', JSON.stringify(finalUserObj));
+            addLog("¡Perfil sincronizado con éxito! Cargando aplicación...");
+            setSuccessAnimation(true);
+            setTimeout(() => {
+              onLoginSuccess(finalUserObj);
+            }, 1200);
+            return;
+          }
+        } catch (recoveryErr) {
+          addLog(`⚠️ Falló el intento de auto-recuperación: ${recoveryErr}`);
+        }
+      }
       setErrorMessage(translateClerkError(err));
       playSound('error');
     } finally {
