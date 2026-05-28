@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
 import { DUO_CHARACTERS, Character } from '../../initialData';
-import { KeyRound, Mail, User2, ChevronRight, Award, Loader2, Check } from 'lucide-react';
+import { KeyRound, Mail, User2, ChevronRight, Award, Loader2, Check, Eye, EyeOff } from 'lucide-react';
 import { supabase, isSupabaseConfigured, setSupabaseToken } from '../../config/supabaseClient';
 import { useSignIn, useSignUp } from '@clerk/clerk-react';
 
@@ -66,6 +66,7 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('123456');
+  const [showPassword, setShowPassword] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState<string>('duo');
   const [role, setRole] = useState<'admin' | 'supervisor' | 'cashier'>('admin');
   
@@ -554,13 +555,20 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                     </span>
                     <input
                       id="password"
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       required
                       placeholder="••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-[#e5e5e5] rounded-2xl font-bold text-gray-700 outline-none focus:border-[#58cc02] focus:bg-white transition-all text-sm"
+                      className="w-full pl-11 pr-12 py-3 bg-gray-50 border-2 border-[#e5e5e5] rounded-2xl font-bold text-gray-700 outline-none focus:border-[#58cc02] focus:bg-white transition-all text-sm"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
                   </div>
                 </div>
 
