@@ -107,8 +107,8 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
       setErrorMessage('¡Por favor ingresa un correo electrónico válido!');
       return;
     }
-    if (!password || password.length < 6) {
-      setErrorMessage('¡La contraseña debe tener al menos 6 caracteres!');
+    if (!password || password.length < 8) {
+      setErrorMessage('¡La contraseña debe tener al menos 8 caracteres!');
       return;
     }
 
@@ -547,7 +547,7 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                     <label htmlFor="password" className="text-sm font-black tracking-wide text-gray-500 block uppercase">
                       Contraseña Comercial
                     </label>
-                    <span className="text-xs text-gray-400 font-bold">(Al menos 6 caracteres)</span>
+                    <span className="text-xs text-gray-400 font-bold">(Al menos 8 caracteres)</span>
                   </div>
                   <div className="relative">
                     <span className="absolute left-4 top-3.5 text-gray-400">
