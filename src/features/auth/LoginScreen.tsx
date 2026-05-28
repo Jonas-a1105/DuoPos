@@ -572,6 +572,63 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                   </div>
                 </div>
 
+                {/* Requisitos de Registro Interactivos */}
+                {isRegistering && (
+                  <div className="bg-[#f7f7f7] border-2 border-[#e5e5e5] rounded-2xl p-4 space-y-2.5 mt-3 text-xs font-bold text-gray-600 transition-all duration-200 text-left">
+                    <div className="text-[10px] font-black uppercase text-gray-400 tracking-wider mb-1 flex items-center gap-1">
+                      <span>⚡</span> Requisitos de cuenta Clerk
+                    </div>
+                    
+                    {/* Username requirement */}
+                    <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black text-white transition-colors duration-150 ${
+                        username.trim().length >= 4 ? 'bg-[#58cc02]' : 'bg-gray-300'
+                      }`}>
+                        {username.trim().length >= 4 ? '✓' : '•'}
+                      </div>
+                      <span className={username.trim().length >= 4 ? 'text-gray-700' : 'text-gray-400'}>
+                        Nombre de cajero: al menos 4 letras (actual: {username.trim().length})
+                      </span>
+                    </div>
+
+                    {/* Email requirement */}
+                    <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black text-white transition-colors duration-150 ${
+                        email.trim().includes('@') && email.trim().includes('.') ? 'bg-[#58cc02]' : 'bg-gray-300'
+                      }`}>
+                        {email.trim().includes('@') && email.trim().includes('.') ? '✓' : '•'}
+                      </div>
+                      <span className={email.trim().includes('@') && email.trim().includes('.') ? 'text-gray-700' : 'text-gray-400'}>
+                        Correo válido (ej. nombre@gmail.com)
+                      </span>
+                    </div>
+
+                    {/* Password Length requirement */}
+                    <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black text-white transition-colors duration-150 ${
+                        password.length >= 8 ? 'bg-[#58cc02]' : 'bg-gray-300'
+                      }`}>
+                        {password.length >= 8 ? '✓' : '•'}
+                      </div>
+                      <span className={password.length >= 8 ? 'text-gray-700' : 'text-gray-400'}>
+                        Contraseña: mínimo 8 caracteres (actual: {password.length})
+                      </span>
+                    </div>
+
+                    {/* Password Complexity requirement */}
+                    <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black text-white transition-colors duration-150 ${
+                        /[A-Z]/.test(password) && /[0-9]/.test(password) ? 'bg-[#58cc02]' : 'bg-gray-300'
+                      }`}>
+                        {/[A-Z]/.test(password) && /[0-9]/.test(password) ? '✓' : '•'}
+                      </div>
+                      <span className={/[A-Z]/.test(password) && /[0-9]/.test(password) ? 'text-gray-700' : 'text-gray-400'}>
+                        Seguridad: incluir mayúscula y número (ej. DuoPOS.2026)
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Role selections */}
                 <div className="space-y-2 border-t-2 border-[#e5e5e5] pt-4 mt-2">
                   <label className="text-sm font-black tracking-wide text-gray-500 block uppercase">
