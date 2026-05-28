@@ -691,26 +691,47 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
     addLog("----------------------------------------");
     addLog("Iniciando flujo de sesión local...");
     
-    // Iniciar localmente
-    const localUser: User = {
-      id: `local-${username.trim().toLowerCase()}`,
-      username: username.trim(),
-      email: email || `${username.trim()}@local.pos`,
-      avatar: selectedCharacter,
-      streak: 3,
-      lastSaleDate: null,
-      xp: 120,
-      level: 1,
-      dailyGoal: 150,
-      levelTitle: 'Cajero Novato 🦉',
-      role: role,
-      gems: 40,
-      gemsEarnedTotal: 40,
-      unlockedSkins: ['standard'],
-      activeSkin: 'standard',
-      unlockedBadges: [],
-      completedMissionsToday: []
-    };
+    const userId = `local-${username.trim().toLowerCase()}`;
+    const savedUsersRaw = localStorage.getItem('duo_pos_users');
+    const users: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
+    const existingUser = users.find(u => u.id === userId);
+
+    let localUser: User;
+
+    if (existingUser) {
+      addLog("¡Usuario existente encontrado! Recuperando tu racha, XP y nivel...");
+      localUser = {
+        ...existingUser,
+        avatar: selectedCharacter, // allow changing avatar
+        role: role // allow changing role
+      };
+    } else {
+      addLog("Creando un perfil nuevo de cajero local...");
+      localUser = {
+        id: userId,
+        username: username.trim(),
+        email: email || `${username.trim()}@local.pos`,
+        avatar: selectedCharacter,
+        streak: 3,
+        lastSaleDate: null,
+        xp: 120,
+        level: 1,
+        dailyGoal: 150,
+        levelTitle: 'Cajero Novato 🦉',
+        role: role,
+        gems: 40,
+        gemsEarnedTotal: 40,
+        unlockedSkins: ['standard'],
+        activeSkin: 'standard',
+        unlockedBadges: [],
+        completedMissionsToday: []
+      };
+      
+      // Save new user in users array
+      users.push(localUser);
+      localStorage.setItem('duo_pos_users', JSON.stringify(users));
+    }
+
     localStorage.setItem('duo_pos_active_user', JSON.stringify(localUser));
     setSuccessAnimation(true);
     addLog("¡Sesión local iniciada con éxito!");
@@ -729,25 +750,46 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
     addLog("----------------------------------------");
     addLog("Registrando cajero local...");
 
-    const localUser: User = {
-      id: `local-${username.trim().toLowerCase()}`,
-      username: username.trim(),
-      email: email.trim() || `${username.trim()}@local.pos`,
-      avatar: selectedCharacter,
-      streak: 1,
-      lastSaleDate: null,
-      xp: 120,
-      level: 1,
-      dailyGoal: 150,
-      levelTitle: 'Cajero Novato 🦉',
-      role: role,
-      gems: 40,
-      gemsEarnedTotal: 40,
-      unlockedSkins: ['standard'],
-      activeSkin: 'standard',
-      unlockedBadges: [],
-      completedMissionsToday: []
-    };
+    const userId = `local-${username.trim().toLowerCase()}`;
+    const savedUsersRaw = localStorage.getItem('duo_pos_users');
+    const users: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
+    const existingUser = users.find(u => u.id === userId);
+
+    let localUser: User;
+
+    if (existingUser) {
+      addLog("Este cajero ya estaba registrado. Iniciando con perfil existente...");
+      localUser = {
+        ...existingUser,
+        avatar: selectedCharacter,
+        role: role
+      };
+    } else {
+      addLog("Creando perfil nuevo para cajero...");
+      localUser = {
+        id: userId,
+        username: username.trim(),
+        email: email.trim() || `${username.trim()}@local.pos`,
+        avatar: selectedCharacter,
+        streak: 1,
+        lastSaleDate: null,
+        xp: 120,
+        level: 1,
+        dailyGoal: 150,
+        levelTitle: 'Cajero Novato 🦉',
+        role: role,
+        gems: 40,
+        gemsEarnedTotal: 40,
+        unlockedSkins: ['standard'],
+        activeSkin: 'standard',
+        unlockedBadges: [],
+        completedMissionsToday: []
+      };
+      
+      users.push(localUser);
+      localStorage.setItem('duo_pos_users', JSON.stringify(users));
+    }
+
     localStorage.setItem('duo_pos_active_user', JSON.stringify(localUser));
     setSuccessAnimation(true);
     addLog("¡Cajero registrado localmente!");
