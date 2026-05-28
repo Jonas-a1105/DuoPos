@@ -4,6 +4,7 @@ import { DUO_CHARACTERS, Character } from '../../initialData';
 import { KeyRound, Mail, User2, ChevronRight, Award, Loader2, Check, Eye, EyeOff } from 'lucide-react';
 import { supabase, isSupabaseConfigured, setSupabaseToken } from '../../config/supabaseClient';
 import { useSignIn, useSignUp } from '@clerk/clerk-react';
+import { playSound } from '../../services/sounds';
 
 // Clerk global type declaration for window.Clerk
 declare global {
@@ -57,6 +58,89 @@ const createDefaultProfileObj = (userId: string, userEmail: string, userName: st
   completed_missions_today: []
 });
 
+// Helper to translate Clerk errors to beautiful Spanish Duolingo style
+const translateClerkError = (err: any): string => {
+  const firstError = err?.errors?.[0];
+  const code = firstError?.code || err?.code || '';
+  const message = firstError?.message || err?.message || '';
+
+  // 1. Check by error code
+  switch (code) {
+    case 'form_password_pwned':
+      return '¡Ouch! 🦉 Esa contraseña es muy común en internet. ¡Por favor, inventa una diferente para proteger tus gemas!';
+    case 'form_password_length_too_short':
+    case 'password_too_short':
+      return '¡Cuidado! 🦉 Tu contraseña debe tener al menos 8 caracteres para mantener a salvo tu racha de ventas.';
+    case 'form_identifier_not_found':
+    case 'user_not_found':
+      return '¡Espera! 🦉 Ese usuario o correo no existe. ¿Escribiste todo correctamente o quieres crear una cuenta?';
+    case 'form_password_incorrect':
+    case 'password_incorrect':
+      return '¡Ups! 🦉 Contraseña incorrecta. ¡Piénsala bien o usa tu poción de memoria!';
+    case 'form_identifier_exists':
+    case 'email_already_exists':
+    case 'username_already_exists':
+      return '¡Espera! 🦉 Ese correo o usuario ya está en uso. ¿Ya tienes una cuenta registrada?';
+    case 'form_param_format_invalid':
+      if (message.toLowerCase().includes('email')) {
+        return '¡Cuidado! 🦉 Por favor ingresa un correo electrónico con formato válido (ejemplo@dominio.com).';
+      }
+      if (message.toLowerCase().includes('username')) {
+        return '¡Cuidado! 🦉 El nombre de usuario solo puede tener letras, números y guiones bajos.';
+      }
+      return '¡Ouch! 🦉 El formato de uno de los campos no es válido.';
+    case 'form_code_incorrect':
+    case 'verification_failed':
+      return '¡Código incorrecto! 🦉 El código de 6 dígitos no coincide. ¡Revisa tu Gmail y vuelve a intentarlo!';
+    default:
+      break;
+  }
+
+  // 2. Check by message content substring matching
+  const msgLower = message.toLowerCase();
+  if (msgLower.includes('compromised') || msgLower.includes('data breach') || msgLower.includes('breach')) {
+    return '¡Ouch! 🦉 Esa contraseña es muy común en internet. ¡Por favor, inventa una diferente para proteger tus gemas!';
+  }
+  if (msgLower.includes('at least 8 characters') || msgLower.includes('must be 8 characters') || msgLower.includes('too short')) {
+    return '¡Cuidado! 🦉 Tu contraseña debe tener al menos 8 caracteres para mantener a salvo tu racha de ventas.';
+  }
+  if (msgLower.includes('already exists') || msgLower.includes('already in use') || msgLower.includes('taken')) {
+    return '¡Espera! 🦉 Ese correo o usuario ya está registrado. ¿Ya tienes una cuenta?';
+  }
+  if (msgLower.includes('incorrect') || msgLower.includes('invalid password')) {
+    return '¡Ups! 🦉 Contraseña incorrecta. ¡Piénsala bien o usa tu poción de memoria!';
+  }
+  if (msgLower.includes('not found') || msgLower.includes('no user')) {
+    return '¡Espera! 🦉 Ese usuario o correo no existe. ¿Escribiste todo correctamente o quieres crear una cuenta?';
+  }
+  if (msgLower.includes('code') && (msgLower.includes('incorrect') || msgLower.includes('invalid'))) {
+    return '¡Código incorrecto! 🦉 El código de 6 dígitos no coincide. ¡Revisa tu Gmail y vuelve a intentarlo!';
+  }
+
+  // Fallback translation or clean message
+  return `¡Ouch! 🦉 Ha ocurrido un pequeño tropiezo: ${message || 'Error al conectar con la base de datos de Clerk.'}`;
+};
+
+// Dynamic helper to map custom avatar moods per character
+const getCharacterAvatar = (charId: string, mood: 'normal' | 'sad') => {
+  if (charId === 'duo') {
+    return mood === 'sad' ? '🦉💔' : '🦉';
+  }
+  if (charId === 'lily') {
+    return mood === 'sad' ? '🙄' : '💁‍♀️';
+  }
+  if (charId === 'zari') {
+    return mood === 'sad' ? '🥺' : '🧕';
+  }
+  if (charId === 'eddy') {
+    return mood === 'sad' ? '🥵' : '🏃‍♂️';
+  }
+  if (charId === 'junior') {
+    return mood === 'sad' ? '😢' : '👦';
+  }
+  return DUO_CHARACTERS[charId]?.avatar || '🦉';
+};
+
 // ─── 1. COMPONENTE DE LOGIN CON CLERK ──────────────────────────────────────────
 function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const { isLoaded: isSignInLoaded, signIn, setActive: setSignInActive } = useSignIn();
@@ -101,14 +185,17 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
     if (!username.trim()) {
       setErrorMessage('¡Por favor dinos tu nombre o apodo!');
+      playSound('error');
       return;
     }
     if (!email.trim() || !email.includes('@')) {
       setErrorMessage('¡Por favor ingresa un correo electrónico válido!');
+      playSound('error');
       return;
     }
     if (!password || password.length < 8) {
       setErrorMessage('¡La contraseña debe tener al menos 8 caracteres!');
+      playSound('error');
       return;
     }
 
@@ -134,7 +221,8 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
       addLog("📧 Código enviado a tu Gmail. Esperando que lo ingreses en pantalla...");
     } catch (err: any) {
       addLog(`❌ Error en registro: ${err.message || err}`);
-      setErrorMessage(err.errors?.[0]?.message || err.message || 'Error al crear la cuenta en Clerk.');
+      setErrorMessage(translateClerkError(err));
+      playSound('error');
     } finally {
       setIsLoading(false);
     }
@@ -146,6 +234,7 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
     if (!isSignUpLoaded) return;
     if (!verificationCode.trim()) {
       setErrorMessage('¡Por favor ingresa el código de 6 dígitos!');
+      playSound('error');
       return;
     }
 
@@ -198,10 +287,12 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
         addLog(`⚠️ Campos requeridos faltantes: ${JSON.stringify(completeSignUp.missingFields || [])}`);
         addLog(`⚠️ Campos por verificar: ${JSON.stringify(completeSignUp.unverifiedFields || [])}`);
         setErrorMessage(`Registro incompleto (${completeSignUp.status}). Campos faltantes: ${JSON.stringify(completeSignUp.missingFields || [])}. Revisa los requerimientos en tu panel de Clerk.`);
+        playSound('error');
       }
     } catch (err: any) {
       addLog(`❌ Error de verificación: ${err.message || err}`);
-      setErrorMessage(err.errors?.[0]?.message || err.message || 'Código de verificación incorrecto.');
+      setErrorMessage(translateClerkError(err));
+      playSound('error');
     } finally {
       setIsLoading(false);
     }
@@ -214,10 +305,12 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
     if (!username.trim()) {
       setErrorMessage('¡Por favor ingresa tu usuario o correo!');
+      playSound('error');
       return;
     }
     if (!password) {
       setErrorMessage('¡Por favor ingresa tu contraseña!');
+      playSound('error');
       return;
     }
 
@@ -293,10 +386,12 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
       } else {
         addLog(`⚠️ Inicio de sesión Clerk incompleto: ${result.status}`);
         setErrorMessage('La cuenta requiere autenticación adicional o confirmación de email.');
+        playSound('error');
       }
     } catch (err: any) {
       addLog(`❌ Error en inicio de sesión: ${err.message || err}`);
-      setErrorMessage(err.errors?.[0]?.message || err.message || 'Credenciales de acceso incorrectas.');
+      setErrorMessage(translateClerkError(err));
+      playSound('error');
     } finally {
       setIsLoading(false);
     }
@@ -343,21 +438,41 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
           </div>
 
           {/* Character Speech Bubble */}
-          <div className="w-full flex items-start gap-3 bg-white border-2 border-[#e5e5e5] border-b-[6px] rounded-2xl p-4 md:p-6 transition-all duration-300">
+          <div className={`w-full flex items-start gap-3 bg-white border-2 border-b-[6px] rounded-2xl p-4 md:p-6 transition-all duration-300 ${
+            errorMessage ? 'border-[#ff7b7b] bg-[#fff8f8] animate-shake' : 'border-[#e5e5e5] bg-white'
+          }`}>
             <div className="text-6xl select-none transform hover:rotate-12 duration-150">
-              {currentCharacter.avatar}
+              {getCharacterAvatar(selectedCharacter, errorMessage ? 'sad' : 'normal')}
             </div>
-            <div className="flex-1 relative bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 text-sm font-bold text-gray-700">
-              <div className="absolute left-[-8px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-gray-50 border-b-8 border-b-transparent" />
-              <div className="absolute left-[-9px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-gray-200 border-b-8 border-b-transparent -z-10" />
+            <div className={`flex-1 relative border rounded-2xl py-3 px-4 text-sm font-bold transition-all duration-300 ${
+              errorMessage 
+                ? 'bg-[#ffedf0] border-[#ff7b7b] text-[#ff4b4b]' 
+                : 'bg-gray-50 border-gray-200 text-gray-700'
+            }`}>
+              {/* Tooltip arrows matching the background color */}
+              {errorMessage ? (
+                <>
+                  <div className="absolute left-[-8px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-[#ffedf0] border-b-8 border-b-transparent transition-all" />
+                  <div className="absolute left-[-9px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-[#ff7b7b] border-b-8 border-b-transparent -z-10 transition-all" />
+                </>
+              ) : (
+                <>
+                  <div className="absolute left-[-8px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-gray-50 border-b-8 border-b-transparent transition-all" />
+                  <div className="absolute left-[-9px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-gray-200 border-b-8 border-b-transparent -z-10 transition-all" />
+                </>
+              )}
               
-              <span className="text-xs uppercase tracking-wider text-gray-400 block mb-1">
+              <span className={`text-xs uppercase tracking-wider block mb-1 ${
+                errorMessage ? 'text-[#ff7b7b]' : 'text-gray-400'
+              }`}>
                 {currentCharacter.name} dice:
               </span>
-              <p className="leading-snug text-gray-700">
-                {pendingVerification 
-                  ? "📧 ¡Te he enviado un código de 6 dígitos a tu Gmail! Ingrésalo abajo para activar tu cuenta comercial al instante."
-                  : (isRegistering ? currentCharacter.idleQuote : currentCharacter.loginQuote)}
+              <p className="leading-snug">
+                {errorMessage 
+                  ? errorMessage 
+                  : (pendingVerification 
+                      ? "📧 ¡Te he enviado un código de 6 dígitos a tu Gmail! Ingrésalo abajo para activar tu cuenta comercial al instante."
+                      : (isRegistering ? currentCharacter.idleQuote : currentCharacter.loginQuote))}
               </p>
             </div>
           </div>
@@ -430,7 +545,10 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                     maxLength={6}
                     placeholder="123456"
                     value={verificationCode}
-                    onChange={(e) => setVerificationCode(e.target.value.replace(/[^0-9]/g, ''))}
+                    onChange={(e) => {
+                      setVerificationCode(e.target.value.replace(/[^0-9]/g, ''));
+                      if (errorMessage) setErrorMessage('');
+                    }}
                     className="w-full text-center tracking-widest text-3xl font-black py-4 bg-gray-50 border-2 border-[#e5e5e5] rounded-2xl outline-none focus:border-[#58cc02] focus:bg-white transition-all text-gray-700"
                   />
                 </div>
@@ -512,7 +630,10 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                       required
                       placeholder={isRegistering ? "Ej. Poetica" : "Ej. Poetica o jonas@gmail.com"}
                       value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      onChange={(e) => {
+                        setUsername(e.target.value);
+                        if (errorMessage) setErrorMessage('');
+                      }}
                       className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-[#e5e5e5] rounded-2xl font-bold text-gray-700 outline-none focus:border-[#58cc02] focus:bg-white transition-all text-sm"
                     />
                   </div>
@@ -534,7 +655,10 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                         required
                         placeholder="Ej. jonas@empresa.com"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (errorMessage) setErrorMessage('');
+                        }}
                         className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-[#e5e5e5] rounded-2xl font-bold text-gray-700 outline-none focus:border-[#58cc02] focus:bg-white transition-all text-sm"
                       />
                     </div>
@@ -559,7 +683,10 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                       required
                       placeholder="••••••"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (errorMessage) setErrorMessage('');
+                      }}
                       className="w-full pl-11 pr-12 py-3 bg-gray-50 border-2 border-[#e5e5e5] rounded-2xl font-bold text-gray-700 outline-none focus:border-[#58cc02] focus:bg-white transition-all text-sm"
                     />
                     <button
@@ -746,10 +873,12 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
     e.preventDefault();
     if (!username.trim()) {
       setErrorMessage('¡Por favor ingresa tu usuario o correo!');
+      playSound('error');
       return;
     }
     if (!password) {
       setErrorMessage('¡Por favor ingresa tu contraseña!');
+      playSound('error');
       return;
     }
 
@@ -809,6 +938,7 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
     e.preventDefault();
     if (!username.trim()) {
       setErrorMessage('¡Por favor dinos tu nombre o apodo!');
+      playSound('error');
       return;
     }
 
@@ -900,17 +1030,39 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
             </div>
           </div>
 
-          <div className="w-full flex items-start gap-3 bg-white border-2 border-[#e5e5e5] border-b-[6px] rounded-2xl p-4 md:p-6">
+          <div className={`w-full flex items-start gap-3 bg-white border-2 border-b-[6px] rounded-2xl p-4 md:p-6 transition-all duration-300 ${
+            errorMessage ? 'border-[#ff7b7b] bg-[#fff8f8] animate-shake' : 'border-[#e5e5e5] bg-white'
+          }`}>
             <div className="text-6xl select-none transform hover:rotate-12 duration-150">
-              {currentCharacter.avatar}
+              {getCharacterAvatar(selectedCharacter, errorMessage ? 'sad' : 'normal')}
             </div>
-            <div className="flex-1 relative bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 text-sm font-bold text-gray-700">
-              <div className="absolute left-[-8px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-gray-50 border-b-8 border-b-transparent" />
-              <span className="text-xs uppercase tracking-wider text-gray-400 block mb-1">
+            <div className={`flex-1 relative border rounded-2xl py-3 px-4 text-sm font-bold transition-all duration-300 ${
+              errorMessage 
+                ? 'bg-[#ffedf0] border-[#ff7b7b] text-[#ff4b4b]' 
+                : 'bg-gray-50 border-gray-200 text-gray-700'
+            }`}>
+              {/* Tooltip arrows matching the background color */}
+              {errorMessage ? (
+                <>
+                  <div className="absolute left-[-8px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-[#ffedf0] border-b-8 border-b-transparent transition-all" />
+                  <div className="absolute left-[-9px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-[#ff7b7b] border-b-8 border-b-transparent -z-10 transition-all" />
+                </>
+              ) : (
+                <>
+                  <div className="absolute left-[-8px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-gray-50 border-b-8 border-b-transparent transition-all" />
+                  <div className="absolute left-[-9px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-gray-200 border-b-8 border-b-transparent -z-10 transition-all" />
+                </>
+              )}
+              
+              <span className={`text-xs uppercase tracking-wider block mb-1 ${
+                errorMessage ? 'text-[#ff7b7b]' : 'text-gray-400'
+              }`}>
                 {currentCharacter.name} dice:
               </span>
-              <p className="leading-snug text-gray-700">
-                {currentCharacter.loginQuote} (Modo Local Offline Activo)
+              <p className="leading-snug">
+                {errorMessage 
+                  ? errorMessage 
+                  : `${currentCharacter.loginQuote} (Modo Local Offline Activo)`}
               </p>
             </div>
           </div>
@@ -922,7 +1074,11 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 className={`pb-2 font-black text-lg transition-colors duration-150 relative ${
                   !isRegistering ? 'text-[#58cc02]' : 'text-[#afafaf] hover:text-gray-500'
                 }`}
-                onClick={() => setIsRegistering(false)}
+                onClick={() => {
+                  setIsRegistering(false);
+                  setErrorMessage('');
+                  setSuccessMessage('');
+                }}
               >
                 Inicia Sesión (Local)
                 {!isRegistering && (
@@ -934,7 +1090,11 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 className={`pb-2 font-black text-lg transition-colors duration-150 relative ${
                   isRegistering ? 'text-[#58cc02]' : 'text-[#afafaf] hover:text-gray-500'
                 }`}
-                onClick={() => setIsRegistering(true)}
+                onClick={() => {
+                  setIsRegistering(true);
+                  setErrorMessage('');
+                  setSuccessMessage('');
+                }}
               >
                 Crea una Cuenta (Local)
                 {isRegistering && (
@@ -942,6 +1102,13 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 )}
               </button>
             </div>
+
+            {errorMessage && (
+              <div className="bg-[#ffedf0] border-2 border-[#ff7b7b] rounded-2xl p-3.5 text-[#ff4b4b] font-bold text-sm text-center mb-5 animate-shake flex items-center justify-center gap-2">
+                <span>⚠️</span>
+                <span>{errorMessage}</span>
+              </div>
+            )}
 
             <form onSubmit={isRegistering ? handleRegister : handleLogin} className="space-y-5">
               <div className="space-y-2">
@@ -956,7 +1123,10 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                       <button
                         key={key}
                         type="button"
-                        onClick={() => setSelectedCharacter(key)}
+                        onClick={() => {
+                          setSelectedCharacter(key);
+                          if (errorMessage) setErrorMessage('');
+                        }}
                         className={`p-2 rounded-2xl border-2 transition-all duration-150 flex flex-col items-center justify-center ${
                           isSelected
                             ? 'border-[#58cc02] bg-[#f2ffd9] border-b-[6px]'
@@ -987,7 +1157,10 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                     required
                     placeholder="Ej. Poetica"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChange={(e) => {
+                      setUsername(e.target.value);
+                      if (errorMessage) setErrorMessage('');
+                    }}
                     className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-[#e5e5e5] rounded-2xl font-bold text-gray-700 outline-none focus:border-[#58cc02] focus:bg-white transition-all text-sm"
                   />
                 </div>
