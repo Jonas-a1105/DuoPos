@@ -194,7 +194,9 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
         }, 1200);
       } else {
         addLog(`⚠️ El registro de Clerk no se completó. Estado actual: ${completeSignUp.status}`);
-        setErrorMessage('La verificación se completó pero la sesión sigue pendiente. Intenta loguearte.');
+        addLog(`⚠️ Campos requeridos faltantes: ${JSON.stringify(completeSignUp.missingFields || [])}`);
+        addLog(`⚠️ Campos por verificar: ${JSON.stringify(completeSignUp.unverifiedFields || [])}`);
+        setErrorMessage(`Registro incompleto (${completeSignUp.status}). Campos faltantes: ${JSON.stringify(completeSignUp.missingFields || [])}. Revisa los requerimientos en tu panel de Clerk.`);
       }
     } catch (err: any) {
       addLog(`❌ Error de verificación: ${err.message || err}`);
