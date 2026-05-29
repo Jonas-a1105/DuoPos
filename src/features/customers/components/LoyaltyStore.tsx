@@ -184,7 +184,7 @@ export default function LoyaltyStore({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {[
                 { id: 'item-1', name: 'Canje Refresco / Bebida Helada Gratis', cost: 100, icon: '🥤', desc: 'Bebida de lata a elegir en mostrador. Válido un uso inmediato.' },
-                { id: 'item-2', name: 'Descuento de $50 MXN en venta activa', cost: 200, icon: '🎟️', desc: 'Aplica cupón para descontar directo sobre el total de la compra.' },
+                { id: 'item-2', name: 'Descuento de $5 USD en venta activa', cost: 200, icon: '🎟️', desc: 'Aplica cupón para descontar directo sobre el total de la compra.' },
                 { id: 'item-3', name: 'Rebanada de Pizza Familiar de Jamón', cost: 350, icon: '🍕', desc: 'Aplica para comida caliente o lunch del día. ¡Canje de racha!' },
                 { id: 'item-4', name: 'Mochila Oficial DuoAcademy', cost: 500, icon: '🎒', desc: 'Regalo físico de edición limitada con barra de progreso de la racha.' },
                 { id: 'item-5', name: 'Peluche Auténtico de Duo (Búho)', cost: 1000, icon: '🦉', desc: 'Premio supremo de coleccionista. Otorgable solo a ligas de Honor.' }

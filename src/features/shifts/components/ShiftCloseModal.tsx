@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { playSound } from '../../../services/sounds';
 import { toast } from '../../../components/Modal/FlashNotifications';
 import { Calculator } from 'lucide-react';
-import DuoMascot from '../../../components/Mascot/DuoMascot';
+import AeroMascot from '../../../components/Mascot/AeroMascot';
 import { User } from '../../../types';
 
 interface ShiftCloseModalProps {
@@ -20,16 +20,16 @@ interface Denomination {
 }
 
 const DENOMINATIONS: Denomination[] = [
-  { value: 1000, label: '$1,000 MXN / USD', type: 'bill' },
-  { value: 500, label: '$500 MXN / USD', type: 'bill' },
-  { value: 200, label: '$200 MXN / USD', type: 'bill' },
-  { value: 100, label: '$100 MXN / USD', type: 'bill' },
-  { value: 50, label: '$50 MXN / USD', type: 'bill' },
-  { value: 20, label: '$20 MXN / USD', type: 'bill' },
-  { value: 10, label: '$10 MXN / USD', type: 'coin' },
-  { value: 5, label: '$5 MXN / USD', type: 'coin' },
-  { value: 2, label: '$2 MXN / USD', type: 'coin' },
-  { value: 1, label: '$1 MXN / USD', type: 'coin' },
+  { value: 1000, label: '$1,000 USD / VES', type: 'bill' },
+  { value: 500, label: '$500 USD / VES', type: 'bill' },
+  { value: 200, label: '$200 USD / VES', type: 'bill' },
+  { value: 100, label: '$100 USD / VES', type: 'bill' },
+  { value: 50, label: '$50 USD / VES', type: 'bill' },
+  { value: 20, label: '$20 USD / VES', type: 'bill' },
+  { value: 10, label: '$10 USD / VES', type: 'coin' },
+  { value: 5, label: '$5 USD / VES', type: 'coin' },
+  { value: 2, label: '$2 USD / VES', type: 'coin' },
+  { value: 1, label: '$1 USD / VES', type: 'coin' },
   { value: 0.5, label: '$0.50 centavos', type: 'coin' },
 ];
 
@@ -110,7 +110,7 @@ export default function ShiftCloseModal({
               🔒 Cierre de Turno y Declaración Contada
             </h3>
             <span className="text-[10px] font-bold text-gray-400 block font-mono">
-              Se espera: ${computedExpectedCash.toFixed(2)} USD / MXN en efectivo.
+              Se espera: ${computedExpectedCash.toFixed(2)} USD / VES en efectivo.
             </span>
           </div>
           <button 
@@ -148,7 +148,7 @@ export default function ShiftCloseModal({
               ) : (
                 <div>
                   <strong className="font-extrabold uppercase text-[10px] block mb-0.5 text-[#3c9e01]">¡Caja Cuadrada Perfectamente!</strong>
-                  ¡Excelente! El efectivo reportado coincide exactamente con las proyecciones teóricas del sistema de DuoPOS. Recibirá un bono de XP.
+                  ¡Excelente! El efectivo reportado coincide exactamente con las proyecciones teóricas del sistema de StockMaster Pro. Recibirá un bono de XP.
                 </div>
               )}
             </div>
@@ -243,7 +243,7 @@ export default function ShiftCloseModal({
                 onClick={applyCalcToPhysicalCount}
                 className="w-full bg-[#58cc02] text-white border-b-2 border-[#3c9e01] py-2 rounded-xl font-black text-[10px] uppercase tracking-wide hover:bg-[#61e002] transition-colors cursor-pointer mt-2"
               >
-                Usar Suma del Desglose: ${calcTotalAmount.toFixed(2)} USD / MXN ✅
+                Usar Suma del Desglose: ${calcTotalAmount.toFixed(2)} USD / VES ✅
               </button>
             </div>
           )}
@@ -264,9 +264,9 @@ export default function ShiftCloseModal({
 
           {/* Solver suggestions with Mascot */}
           <div className="bg-amber-50 border border-amber-200 p-3 rounded-2xl flex gap-3 text-xs text-amber-900 text-left items-center">
-            <div className="shrink-0"><DuoMascot size={32} activeAccessory={user.activeAccessory} mood="neutral" animate={false} /></div>
+            <div className="shrink-0"><AeroMascot size={32} activeAccessory={user.activeAccessory} mood="neutral" level={user.level} animate={false} /></div>
             <p className="font-extrabold leading-normal">
-              Duo dice: "Recuerda contar billetes y monedas por separado. Un arqueo impecable mantiene sana tu racha financiera y ¡tu liga feliz! 🦉"
+              Aero dice: "Recuerda contar billetes y monedas por separado. Un arqueo impecable mantiene sana tu racha financiera y ¡tu liga feliz! 🛡️"
             </p>
           </div>
 

@@ -28,8 +28,9 @@ import ShiftsScreen from '../features/shifts/ShiftsScreen';
 import LogisticsScreen from '../features/logistics/LogisticsScreen';
 import InstallModal from '../components/Modal/InstallModal';
 import GamificationScreen from '../features/gamification/GamificationScreen';
-import DuoMascot from '../components/Mascot/DuoMascot';
-import type { DuoMood } from '../components/Mascot/DuoMascot';
+import AeroMascot from '../components/Mascot/AeroMascot';
+import type { AeroMood } from '../components/Mascot/AeroMascot';
+import ShieldCrest from '../components/Mascot/ShieldCrest';
 import LicenseBlockScreen from '../components/Modal/LicenseBlockScreen';
 import LevelUpCelebrateModal from '../components/Modal/LevelUpCelebrateModal';
 import RoleLockWarningModal from '../components/Modal/RoleLockWarningModal';
@@ -1083,20 +1084,23 @@ export default function AppRouter() {
           
           <div className="space-y-8">
             
-            {/* Duolingo Character logo header */}
+            {/* StockMaster Pro logo header */}
             <div className="flex items-center gap-2 px-2 cursor-pointer transform hover:scale-102 transition-transform duration-100">
-              <div className="relative inline-block">
+              <div className="relative flex items-center gap-1.5 shrink-0">
                 {user.avatar === 'duo' ? (
-                  <DuoMascot size={44} activeAccessory={user.activeAccessory} mood={duoMood} showSparkles={duoSparkles} />
+                  <>
+                    <ShieldCrest level={user.level} size={36} animate={true} />
+                    <AeroMascot size={36} activeAccessory={user.activeAccessory} mood={duoMood as any} level={user.level} showSparkles={duoSparkles} />
+                  </>
                 ) : (
                   <span className="text-4xl filter drop-shadow-sm select-none">{activeChar.avatar}</span>
                 )}
               </div>
               <div>
                 <h1 className={`text-2xl font-black tracking-wider leading-none ${themeClasses.logoText}`}>
-                  Duo<span className={user?.activeSkin === 'standard' ? 'text-[#3c3c3c]' : 'text-inherit opacity-85'}>POS</span>
+                  Stock<span className={user?.activeSkin === 'standard' ? 'text-[#3c3c3c]' : 'text-inherit opacity-85'}>Master</span>
                 </h1>
-                <span className="text-[9px] tracking-widest uppercase font-black text-gray-400">Punto de venta</span>
+                <span className="text-[9px] tracking-widest uppercase font-black text-gray-400">Pro - Gamificado</span>
               </div>
             </div>
 
@@ -1105,7 +1109,7 @@ export default function AppRouter() {
               {[
                 { id: 'dashboard', label: 'Inicio', icon: <Home size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Tablero' },
                 { id: 'sales', label: 'Vender', icon: <ShoppingBag size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Ventas' },
-                { id: 'gamification', label: 'Duo Club 🏆', icon: <Trophy size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Gamificación' },
+                { id: 'gamification', label: 'Master Club 🏆', icon: <Trophy size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Gamificación' },
                 { id: 'shifts', label: 'Caja y Turnos', icon: <Wallet size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Turnos' },
                 { id: 'customers', label: 'Clientes', icon: <Users size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Clientes' },
                 { id: 'inventory', label: 'Catalogos', icon: <Package size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor'], name: 'Catálogos' },

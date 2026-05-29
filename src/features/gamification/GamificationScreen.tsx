@@ -2,8 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { User, Transaction, Product, Customer, ExpressEvent } from '../../types';
 import { playSound } from '../../services/sounds';
 import { toast } from '../../components/Modal/FlashNotifications';
-import DuoMascot from '../../components/Mascot/DuoMascot';
-import type { DuoMood } from '../../components/Mascot/DuoMascot';
+import AeroMascot from '../../components/Mascot/AeroMascot';
+import type { AeroMood } from '../../components/Mascot/AeroMascot';
 import { LicenseDetails } from '../../services/licensing';
 import { 
   Trophy, 
@@ -350,10 +350,10 @@ export default function GamificationScreen({
         <div className="flex items-center gap-4.5 w-full md:w-auto">
           <div className="relative">
             <div className="bg-white border-2 border-green-200 p-1.5 rounded-3xl flex items-center justify-center shadow-md">
-              <DuoMascot size={60} activeAccessory={user.activeAccessory} mood={(() => {
+              <AeroMascot size={60} activeAccessory={user.activeAccessory} level={user.level} mood={(() => {
                 const allDone = quests.every(q => q.current >= q.target);
-                if (allDone) return 'happy' as DuoMood;
-                return 'neutral' as DuoMood;
+                if (allDone) return 'happy' as AeroMood;
+                return 'neutral' as AeroMood;
               })()} />
             </div>
             {/* Active equipped tier badge */}

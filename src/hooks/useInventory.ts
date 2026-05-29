@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { Product, Supplier, PurchaseOrder } from '../types';
 import { useInventoryStore } from '../stores/useInventoryStore';
+import { useSalesStore } from '../stores/useSalesStore';
 import { syncInsert, syncSave, syncDelete, generateUUID, syncSavePurchaseOrder } from '../services/supabaseSync';
 import { toast } from '../components/Modal/FlashNotifications';
 
@@ -156,21 +157,59 @@ export function useInventory() {
     [purchaseOrders, setPurchaseOrders],
   );
 
+  const activeBranchId = useSalesStore((s) => s.activeBranchId);
+
   const receivePurchaseOrder = useCallback(
     async (id: string) => {
       const order = purchaseOrders.find((p) => p.id === id);
       if (!order) return;
+      
       const updatedOrder: PurchaseOrder = {
         ...order,
         status: 'received',
         receivedAt: new Date().toISOString(),
       };
+
+      // Loop through items in order and update catalog stock
+      const updatedProducts = products.map((p) => {
+        const orderItem = order.items.find((item) => item.productId === p.id);
+        if (orderItem) {
+          const bStock = p.branchesStock ? { ...p.branchesStock } : {};
+          const currentBStock = bStock[activeBranchId] ?? p.stock;
+          bStock[activeBranchId] = currentBStock + orderItem.quantity;
+          
+          // If active branch is Centro, also update general stock
+          const mainStock =
+            activeBranchId === 'branch-centro'
+              ? currentBStock + orderItem.quantity
+              : p.stock;
+
+          return {
+            ...p,
+            branchesStock: bStock,
+            stock: mainStock,
+          };
+        }
+        return p;
+      });
+
+      // Update state
+      setProducts(updatedProducts);
+      
+      // Save changes to IndexedDB / Supabase for each updated product
+      for (const item of order.items) {
+        const matchingProd = updatedProducts.find((p) => p.id === item.productId);
+        if (matchingProd) {
+          await syncSave<Product>('products', 'duo_pos_products', updatedProducts, matchingProd);
+        }
+      }
+
       const updated = purchaseOrders.map((p) => (p.id === id ? updatedOrder : p));
       setPurchaseOrders(updated);
       await syncSavePurchaseOrder(updatedOrder, updated);
       toast.success(`Orden "${id}" recibida. El inventario ha sido actualizado.`, { title: 'Órdenes de Compra 📦' });
     },
-    [purchaseOrders, setPurchaseOrders],
+    [purchaseOrders, setPurchaseOrders, products, setProducts, activeBranchId],
   );
 
   const cancelPurchaseOrder = useCallback(

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, Transaction, Product } from '../../../types';
-import DuoMascot from '../../../components/Mascot/DuoMascot';
+import AeroMascot from '../../../components/Mascot/AeroMascot';
 import { playSound } from '../../../services/sounds';
 import { Send, Brain, HelpCircle } from 'lucide-react';
 
@@ -45,9 +45,9 @@ export default function DuoCopilotTab({
         recentTransactions: transactions.slice(-5).map(t => ({ total: t.total, date: t.date, items: t.items.map(i => i.name) }))
       };
 
-      const systemPrompt = "Eres Duo Copilot, el asistente IA analítico de negocios de alta tecnología de DuoPOS. Tu objetivo es dar recomendaciones estratégicas breves (máximo 4 párrafos cortos), atractivas, lúdicas y extremadamente profesionales. Habla con entusiasmo, usa el tono divertido pero sabio característico del búho Duo. Estructura tus respuestas usando encabezados markdown elegantes, listas de viñetas, y añade sugerencias numéricas específicas de decisiones de racha y precios para las métricas provistas.";
+      const systemPrompt = "Eres Aero Copilot, el asistente IA analítico de negocios de alta tecnología de StockMaster Pro. Tu objetivo es dar recomendaciones estratégicas breves (máximo 4 párrafos cortos), atractivas, lúdicas y extremadamente profesionales. Habla con entusiasmo, usa el tono divertido pero sabio característico del fénix Aero. Estructura tus respuestas usando encabezados markdown elegantes, listas de viñetas, y añade sugerencias numéricas específicas de decisiones de racha y precios para las métricas provistas.";
 
-      const userMessage = `Hola Duo Copilot. Mis datos de hoy/históricos de la tienda son:
+      const userMessage = `Hola Aero Copilot. Mis datos de hoy/históricos de la tienda son:
 - Empleado: ${statsContext.employeeName} (Nivel ${statsContext.level}, Racha: ${statsContext.streak} días)
 - Volumen de Ventas: $${statsContext.totalSalesVolume.toFixed(2)} USD (Transacciones: ${statsContext.transactionsCount})
 - Catálogo: ${statsContext.productsCount} productos (${statsContext.lowStockCount} con stock bajo de 5 unidades)
@@ -63,14 +63,14 @@ Por favor, analízalo con tu telemetría avanzada y dime insights de calibre mun
         body: JSON.stringify({ systemPrompt, userMessage }),
       });
       const data = await response.json();
-      setCopilotResponse(data.text || "No se ha podido recuperar una respuesta de Duo Copilot.");
+      setCopilotResponse(data.text || "No se ha podido recuperar una respuesta de Aero Copilot.");
       
       if (onGrantXp) {
         onGrantXp(25);
       }
     } catch (err: any) {
       console.error(err);
-      setCopilotResponse("⚠️ Error de conexión con Duo Copilot en la nube. Revisa tu racha de conexión.");
+      setCopilotResponse("⚠️ Error de conexión con Aero Copilot en la nube. Revisa tu racha de conexión.");
     } finally {
       setCopilotLoading(false);
     }
@@ -81,15 +81,15 @@ Por favor, analízalo con tu telemetría avanzada y dime insights de calibre mun
       
       {/* ASSISTANT CARD HEADER */}
       <div className="bg-gradient-to-r from-purple-500 to-indigo-600 bg-purple-650 text-white rounded-3xl p-6 shadow-sm border-b-[6px] border-purple-800 flex flex-col md:flex-row items-center gap-6 relative overflow-hidden">
-        <div className="absolute top-[-50px] right-[-20px] text-white opacity-10 font-bold select-none pointer-events-none text-9xl">🦉</div>
+        <div className="absolute top-[-50px] right-[-20px] text-white opacity-10 font-bold select-none pointer-events-none text-9xl">🛡️</div>
         <div className="select-none shrink-0">
-          <DuoMascot size={96} activeAccessory={user.activeAccessory} mood={copilotLoading ? 'happy' : 'neutral'} animate={true} showSparkles={copilotLoading} />
+          <AeroMascot size={96} activeAccessory={user.activeAccessory} mood={copilotLoading ? 'happy' : 'neutral'} level={user.level} animate={true} showSparkles={copilotLoading} />
         </div>
         <div className="space-y-1.5 flex-1 text-center md:text-left">
           <span className="bg-purple-400 text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider inline-block">Asistente Ejecutivo Premium</span>
-          <h3 className="text-xl md:text-2xl font-black tracking-tight text-white uppercase">Duo Copilot IA Analítico</h3>
+          <h3 className="text-xl md:text-2xl font-black tracking-tight text-white uppercase">Aero Copilot IA Analítico</h3>
           <p className="text-xs text-purple-100 font-semibold leading-relaxed max-w-xl">
-            Alimentado de forma segura por el motor de inteligencia de <strong className="text-yellow-300">Gemini server-side</strong>. Duo Copilot lee en tiempo real tu volumen de ventas, rotación de inventarios y patrones de turnos para entregarte sugerencias de negocio ágiles y altamente rentables.
+            Alimentado de forma segura por el motor de inteligencia de <strong className="text-yellow-300">Gemini server-side</strong>. Aero Copilot lee en tiempo real tu volumen de ventas, rotación de inventarios y patrones de turnos para entregarte sugerencias de negocio ágiles y altamente rentables.
           </p>
         </div>
       </div>
@@ -224,7 +224,7 @@ Por favor, analízalo con tu telemetría avanzada y dime insights de calibre mun
                     <div className="flex items-center gap-2">
                       <span className="text-xl">💡</span>
                       <div>
-                        <h4 className="font-black text-sm text-purple-950 uppercase leading-none">Análisis Duo Copilot</h4>
+                        <h4 className="font-black text-sm text-purple-950 uppercase leading-none">Análisis Aero Copilot</h4>
                         <p className="text-[8.5px] text-purple-400 font-extrabold uppercase mt-1 leading-none">Firma Digital Verificada con +25 XP Recibidos</p>
                       </div>
                     </div>
@@ -256,10 +256,10 @@ Por favor, analízalo con tu telemetría avanzada y dime insights de calibre mun
 
                   {/* CONGRATULATIONS CONSOLE NOTICE */}
                   <div className="bg-[#e5f6ff] text-[#155375] border border-blue-200 rounded-2xl p-4 flex gap-3 text-xs font-bold items-center">
-                    <span className="text-xl">🦉🎯</span>
+                    <span className="text-xl">🛡️🔥</span>
                     <div className="flex-1 space-y-0.5">
                       <p className="uppercase text-[10.5px] font-black text-[#155375]">¡Misión Inteligente Completada!</p>
-                      <p className="text-gray-500 uppercase text-[9px] leading-relaxed">Has recibido <span className="text-purple-700 font-black">+25 de XP corporativo</span> de racha empresarial por consultar a Duo Copilot para mejorar tu tienda.</p>
+                      <p className="text-gray-500 uppercase text-[9px] leading-relaxed">Has recibido <span className="text-purple-700 font-black">+25 de XP corporativo</span> de racha empresarial por consultar a Aero Copilot para mejorar tu tienda.</p>
                     </div>
                   </div>
 

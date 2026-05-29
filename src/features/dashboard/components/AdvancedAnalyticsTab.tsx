@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Transaction, Product, User } from '../../../types';
-import DuoMascot from '../../../components/Mascot/DuoMascot';
+import AeroMascot from '../../../components/Mascot/AeroMascot';
 
 interface AdvancedAnalyticsTabProps {
   transactions: Transaction[];
@@ -373,7 +373,7 @@ export default function AdvancedAnalyticsTab({
 
         {/* Calculations and characters suggestions box */}
         <div className="mt-4 pt-4 border-t border-amber-200 flex flex-col sm:flex-row items-center gap-4 text-xs text-amber-900">
-          <div className="flex-shrink-0"><DuoMascot size={40} activeAccessory={user.activeAccessory} mood="neutral" animate={false} /></div>
+          <div className="flex-shrink-0"><AeroMascot size={40} activeAccessory={user.activeAccessory} mood="neutral" level={user.level} animate={false} /></div>
           <p className="font-extrabold flex-1 text-center sm:text-left leading-relaxed">
             {(() => {
               const averageProfitPerItem = advancedMetrics.totalItemsCount > 0 
@@ -389,7 +389,7 @@ export default function AdvancedAnalyticsTab({
 
               return (
                 <span>
-                  Duo dice: "Para generar <strong className="text-amber-950 font-black">${monthlyTargetProfit} USD</strong> de ganancia pura, estimamos que debes despachar <strong className="text-amber-950 font-black">{unitsNeeded} unidades de mercadería</strong>. Esto equivale a <strong className="text-amber-950 font-black">{salesNeeded} clientes atendidos</strong> en tu mostrador (suponiendo carros promedio de {averageCartItems.toFixed(1)} items). ¡A entrenar esa racha de ventas!"
+                  Aero dice: "Para generar <strong className="text-amber-950 font-black">${monthlyTargetProfit} USD</strong> de ganancia pura, estimamos que debes despachar <strong className="text-amber-950 font-black">{unitsNeeded} unidades de mercadería</strong>. Esto equivale a <strong className="text-amber-950 font-black">{salesNeeded} clientes atendidos</strong> en tu mostrador (suponiendo carros promedio de {averageCartItems.toFixed(1)} items). ¡A entrenar esa racha de ventas!"
                 </span>
               );
             })()}

@@ -47,7 +47,7 @@ const DEFAULT_LICENSE_DETAILS: LicenseDetails = {
   currentSalesCount: 0,
   offlineActivationSeed: 'FREE-SEED',
   activatedAt: new Date().toISOString(),
-  companyName: 'DuoPOS Trial Client'
+  companyName: 'StockMaster Pro Trial Client'
 };
 
 
@@ -163,13 +163,13 @@ export const useUserStore = create<UserState>((set, get) => ({
 
     if (didLevelUp) {
       const titles = [
-        'Monolingüe Comercial 🦉',
+        'Novato del Stock 🌱',
         'Cajero de Bronce 🥉',
-        'Supervisor de Rachas 🥈',
+        'Supervisor del Gremio 🥈',
         'Experto en Finanzas 🥇',
-        'Duo Maestro Glorioso 👑',
-        'Dios del Escáner de Barras ⚡',
-        'Socio Corporativo de Duo 💎'
+        'Maestro de Inventario 👑',
+        'Defensor del Fénix ⚡',
+        'Socio de Élite de StockMaster 💎'
       ];
       title = titles[Math.min(currentLevel - 1, titles.length - 1)];
 

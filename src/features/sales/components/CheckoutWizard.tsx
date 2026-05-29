@@ -7,6 +7,7 @@ import React, { useEffect } from 'react';
 import { Customer, LegalBillingSettings, User } from '../../../types/index';
 import { Character, DUO_CHARACTERS } from '../../../initialData';
 import { playSound } from '../../../services/sounds';
+import { isVenezuelanTaxContext } from '../../../services/fiscal';
 
 interface CheckoutWizardProps {
   isOpen: boolean;
@@ -90,6 +91,7 @@ export default function CheckoutWizard({
   if (!isOpen) return null;
 
   const activeChar: Character = DUO_CHARACTERS[user.avatar] || DUO_CHARACTERS.duo;
+  const isVen = isVenezuelanTaxContext(billingSettings);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fadeIn text-gray-805 font-sans">
@@ -104,7 +106,7 @@ export default function CheckoutWizard({
 
         <div className="text-center space-y-1.5">
           <span className="text-4xl select-none">💰</span>
-          <h3 className="text-2xl font-black text-gray-800">Cierre de Caja</h3>
+          <h3 className="text-2xl font-black text-gray-800">Registrar Pago</h3>
           <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">
             Total USD: <span className="text-gray-800 font-black font-mono">${totalAmount.toFixed(2)} USD</span>
           </p>
@@ -366,7 +368,9 @@ export default function CheckoutWizard({
               <span className="text-xl">⚖️</span>
               <div>
                 <span className="text-xs font-black text-gray-800 leading-none block">¿Requieres Factura Legal?</span>
-                <span className="text-[9px] font-black text-[#58cc02] uppercase tracking-wider block">Timbrado Fiscal SAT de la Racha</span>
+                <span className="text-[9px] font-black text-[#58cc02] uppercase tracking-wider block">
+                  {isVen ? 'Facturación SENIAT de la Racha' : 'Timbrado Fiscal SAT de la Racha'}
+                </span>
               </div>
             </div>
 
@@ -383,43 +387,63 @@ export default function CheckoutWizard({
 
           {requestLegalInvoice && (
             <div className="space-y-3.5 border-t border-dashed border-gray-200 pt-3 animate-fadeIn text-xs">
-              {/* Constancia de Situación Fiscal mock OCR parser */}
+              {/* Constancia de Situación Fiscal / RIF mock OCR parser */}
               <div className="bg-emerald-50/70 border border-emerald-100 p-2.5 rounded-xl text-[10.5px] text-emerald-800 space-y-1.5 shadow-inner">
                 <div className="flex justify-between items-center">
-                  <span className="font-black uppercase tracking-wider block">📄 Constancia de Situación Fiscal (CSF)</span>
+                  <span className="font-black uppercase tracking-wider block">
+                    {isVen ? '📄 Registro de Información Fiscal (RIF)' : '📄 Constancia de Situación Fiscal (CSF)'}
+                  </span>
                   <span className="text-[9px] bg-emerald-105 text-emerald-800 px-1.5 py-0.5 rounded-md font-black font-mono">SIMULADOR OCR</span>
                 </div>
                 <p className="text-[9px] text-emerald-700 font-bold leading-tight">
-                  Carga de manera simulada la constancia del contribuyente para auto-completar los datos fiscales legalmente.
+                  {isVen 
+                    ? 'Carga de manera simulada el RIF del contribuyente para auto-completar los datos fiscales legalmente.'
+                    : 'Carga de manera simulada la constancia del contribuyente para auto-completar los datos fiscales legalmente.'}
                 </p>
                 <div className="flex gap-1.5 pt-0.5">
                   <button
                     type="button"
                     onClick={() => {
-                      setInvoiceFiscalName('ESCUELA DUOLINGO DE MÉXICO S.A. DE C.V.');
-                      setInvoiceTaxId('EDM180525H99');
-                      setInvoicePostalCode('06700');
-                      setInvoiceRegime('601 - General de Ley Personas Morales');
-                      setInvoiceUseCFDI('G03 - Gastos en general');
+                      if (isVen) {
+                        setInvoiceFiscalName('DUO COMERCIALIZADORA VENEZUELA C.A.');
+                        setInvoiceTaxId('J-41283625-4');
+                        setInvoicePostalCode('1010');
+                        setInvoiceRegime('Contribuyente Especial');
+                        setInvoiceUseCFDI('Gastos generales');
+                      } else {
+                        setInvoiceFiscalName('ESCUELA DUOLINGO DE MÉXICO S.A. DE C.V.');
+                        setInvoiceTaxId('EDM180525H99');
+                        setInvoicePostalCode('06700');
+                        setInvoiceRegime('601 - General de Ley Personas Morales');
+                        setInvoiceUseCFDI('G03 - Gastos en general');
+                      }
                       playSound('levelup');
                     }}
                     className="flex-1 bg-white hover:bg-emerald-100/50 border border-emerald-200 text-emerald-800 font-black px-1.5 py-1 rounded-lg text-[8.5px] uppercase cursor-pointer text-center"
                   >
-                    🏢 Persona Moral (DuoMex SA)
+                    {isVen ? '🏢 Persona Jurídica (DuoCorp J-4128)' : '🏢 Persona Moral (DuoMex SA)'}
                   </button>
                   <button
                     type="button"
                     onClick={() => {
-                      setInvoiceFiscalName('JUANA REGINA LOPEZ PEREZ');
-                      setInvoiceTaxId('LOPJ881112MX8');
-                      setInvoicePostalCode('45010');
-                      setInvoiceRegime('626 - Régimen Simplificado de Confianza (RESICO)');
-                      setInvoiceUseCFDI('G03 - Gastos en general');
+                      if (isVen) {
+                        setInvoiceFiscalName('JUANA REGINA LOPEZ PEREZ');
+                        setInvoiceTaxId('V-18811128-3');
+                        setInvoicePostalCode('1050');
+                        setInvoiceRegime('Contribuyente Ordinario');
+                        setInvoiceUseCFDI('Gastos generales');
+                      } else {
+                        setInvoiceFiscalName('JUANA REGINA LOPEZ PEREZ');
+                        setInvoiceTaxId('LOPJ881112MX8');
+                        setInvoicePostalCode('45010');
+                        setInvoiceRegime('626 - Régimen Simplificado de Confianza (RESICO)');
+                        setInvoiceUseCFDI('G03 - Gastos en general');
+                      }
                       playSound('levelup');
                     }}
                     className="flex-1 bg-white hover:bg-emerald-100/50 border border-emerald-200 text-emerald-800 font-black px-1.5 py-1 rounded-lg text-[8.5px] uppercase cursor-pointer text-center"
                   >
-                    👤 Persona Física (Juana Lopez)
+                    {isVen ? '👤 Persona Natural (Juana V-1881)' : '👤 Persona Física (Juana Lopez)'}
                   </button>
                 </div>
               </div>
@@ -431,20 +455,22 @@ export default function CheckoutWizard({
                   required
                   value={invoiceFiscalName}
                   onChange={(e) => setInvoiceFiscalName(e.target.value)}
-                  placeholder="Ej. OSCAR EL PINTOR S.A."
+                  placeholder={isVen ? "Ej. DISTRIBUIDORA DUO C.A." : "Ej. OSCAR EL PINTOR S.A."}
                   className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-black uppercase text-gray-800 focus:border-[#58cc02] outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">Reg. Fiscal (RFC / Tax ID) *</label>
+                  <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">
+                    {isVen ? 'R.I.F. / Identificación Fiscal *' : 'Reg. Fiscal (RFC / Tax ID) *'}
+                  </label>
                   <input
                     type="text"
                     required
                     value={invoiceTaxId}
                     onChange={(e) => setInvoiceTaxId(e.target.value)}
-                    placeholder="XAXX010101000"
+                    placeholder={isVen ? "J-12345678-9 o V-12345678-9" : "XAXX010101000"}
                     className="w-full px-2.5 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-black uppercase text-gray-800 focus:border-[#58cc02] outline-none font-mono"
                   />
                 </div>
@@ -456,40 +482,57 @@ export default function CheckoutWizard({
                     required
                     value={invoicePostalCode}
                     onChange={(e) => setInvoicePostalCode(e.target.value)}
-                    placeholder="06700"
+                    placeholder={isVen ? "1010" : "06700"}
                     className="w-full px-2.5 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-black text-gray-805 focus:border-[#58cc02] outline-none font-mono"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] uppercase font-black text-gray-400 block">Régimen Fiscal Legal del Receptor</label>
-                <select
-                  value={invoiceRegime}
-                  onChange={(e) => setInvoiceRegime(e.target.value)}
-                  className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-xl text-[10px] font-black text-gray-700 outline-none cursor-pointer"
-                >
-                  <option value="601 - General de Ley Personas Morales">601 - General de Ley Personas Morales</option>
-                  <option value="626 - Régimen Simplificado de Confianza (RESICO)">626 - Simplificado de Confianza (RESICO)</option>
-                  <option value="605 - Sueldos y Salarios e Ingresos Asimilados a Salarios">605 - Sueldos y Salarios</option>
-                  <option value="612 - Personas Físicas con Actividades Empresariales">612 - Personas Físicas Empresariales</option>
-                  <option value="Sin Obligaciones Fiscales">616 - Sin Obligaciones Fiscales</option>
-                </select>
+                <label className="text-[9px] uppercase font-black text-gray-400 block">
+                  {isVen ? 'Tipo de Contribuyente' : 'Régimen Fiscal Legal del Receptor'}
+                </label>
+                {isVen ? (
+                  <select
+                    value={invoiceRegime}
+                    onChange={(e) => setInvoiceRegime(e.target.value)}
+                    className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-xl text-[10px] font-black text-gray-700 outline-none cursor-pointer"
+                  >
+                    <option value="Contribuyente Ordinario">Contribuyente Ordinario</option>
+                    <option value="Contribuyente Especial">Contribuyente Especial</option>
+                    <option value="Contribuyente Formal">Contribuyente Formal</option>
+                    <option value="Persona Natural No Contribuyente">Persona Natural No Contribuyente</option>
+                  </select>
+                ) : (
+                  <select
+                    value={invoiceRegime}
+                    onChange={(e) => setInvoiceRegime(e.target.value)}
+                    className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-xl text-[10px] font-black text-gray-700 outline-none cursor-pointer"
+                  >
+                    <option value="601 - General de Ley Personas Morales">601 - General de Ley Personas Morales</option>
+                    <option value="626 - Régimen Simplificado de Confianza (RESICO)">626 - Simplificado de Confianza (RESICO)</option>
+                    <option value="605 - Sueldos y Salarios e Ingresos Asimilados a Salarios">605 - Sueldos y Salarios</option>
+                    <option value="612 - Personas Físicas con Actividades Empresariales">612 - Personas Físicas Empresariales</option>
+                    <option value="Sin Obligaciones Fiscales">616 - Sin Obligaciones Fiscales</option>
+                  </select>
+                )}
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[9px] uppercase font-black text-gray-400 block">Uso previsto del CFDI / Factura</label>
-                <select
-                  value={invoiceUseCFDI}
-                  onChange={(e) => setInvoiceUseCFDI(e.target.value)}
-                  className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-xl text-[10px] font-black text-gray-700 outline-none cursor-pointer"
-                >
-                  <option value="G01 - Adquisición de mercancías">G01 - Adquisición de mercancías</option>
-                  <option value="G03 - Gastos en general">G03 - Gastos en general</option>
-                  <option value="D01 - Honorarios médicos, dentales y gastos hospitalarios">D01 - Gastos Médicos/Hospitalarios</option>
-                  <option value="S01 - Sin efectos fiscales">S01 - Sin efectos fiscales / Justificante</option>
-                </select>
-              </div>
+              {!isVen && (
+                <div className="space-y-1">
+                  <label className="text-[9px] uppercase font-black text-gray-400 block">Uso previsto del CFDI / Factura</label>
+                  <select
+                    value={invoiceUseCFDI}
+                    onChange={(e) => setInvoiceUseCFDI(e.target.value)}
+                    className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-xl text-[10px] font-black text-gray-700 outline-none cursor-pointer"
+                  >
+                    <option value="G01 - Adquisición de mercancías">G01 - Adquisición de mercancías</option>
+                    <option value="G03 - Gastos en general">G03 - Gastos en general</option>
+                    <option value="D01 - Honorarios médicos, dentales y gastos hospitalarios">D01 - Gastos Médicos/Hospitalarios</option>
+                    <option value="S01 - Sin efectos fiscales">S01 - Sin efectos fiscales / Justificante</option>
+                  </select>
+                </div>
+              )}
             </div>
           )}
         </div>

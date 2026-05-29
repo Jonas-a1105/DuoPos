@@ -42,11 +42,11 @@ const DEFAULT_BILLING_SETTINGS: LegalBillingSettings = {
     { category: 'Servicios', rate: 16 }
   ],
   taxIncludedInPrice: true,
-  companyName: 'DuoPOS Gamified S.A.C.',
+  companyName: 'StockMaster Pro Gamified S.A.C.',
   companyTaxId: 'DAC120525D10',
   companyRegime: '601 - Regimen General de Ley Personas Morales',
   companyPostalCode: '06700',
-  companyAddress: 'Calle del Búho Sabio #55, Sector Finanzas',
+  companyAddress: 'Avenida del Fénix Dorado #77, Sector Finanzas',
   invoicePrefix: 'FACT-A-',
   nextInvoiceNumber: 1001,
   automaticMockInvoicing: false,
