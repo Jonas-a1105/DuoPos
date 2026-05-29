@@ -287,6 +287,9 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
     }
   };
 
+  const activeSkin = user.activeSkin || 'standard';
+  const isDark = ['dark-galaxy', 'neon-cyberpunk', 'emerald-palace', 'retro-8bit', 'executive-gold', 'deep-ocean'].includes(activeSkin);
+
   return (
     <div className="space-y-6 text-left">
       {/* Header Card with current league information */}
@@ -321,15 +324,25 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Leaderboard Column (2/3 width) */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white border-2 border-gray-250 border-b-6 rounded-3xl p-4 md:p-5 space-y-4">
-            <div className="flex items-center justify-between border-b pb-3 border-gray-150">
-              <h4 className="font-extrabold text-[#3c3c3c] text-sm uppercase tracking-wider">Tabla de Clasificación</h4>
-              <span className="bg-indigo-50 border border-indigo-100 text-indigo-705 text-[10px] px-2 py-0.5 rounded-md font-black">
+          <div className={`border-2 border-b-6 rounded-3xl p-4 md:p-5 space-y-4 shadow-sm transition-colors duration-300 ${
+            isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-250'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-3 transition-colors duration-300 ${
+              isDark ? 'border-zinc-800' : 'border-gray-150'
+            }`}>
+              <h4 className={`font-extrabold text-sm uppercase tracking-wider transition-colors duration-300 ${
+                isDark ? 'text-zinc-200' : 'text-[#3c3c3c]'
+              }`}>Tabla de Clasificación</h4>
+              <span className={`border text-[10px] px-2 py-0.5 rounded-md font-black transition-colors duration-300 ${
+                isDark ? 'bg-indigo-950/40 border-indigo-900 text-indigo-300' : 'bg-indigo-50 border-indigo-100 text-indigo-705'
+              }`}>
                 Participantes: {sortedLeaderboard.length}
               </span>
             </div>
 
-            <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto pr-1">
+            <div className={`divide-y max-h-[500px] overflow-y-auto pr-1 transition-colors duration-300 ${
+              isDark ? 'divide-zinc-800' : 'divide-gray-100'
+            }`}>
               {sortedLeaderboard.map((participant, index) => {
                 const rank = index + 1;
                 const isUser = participant.isCurrentUser;
@@ -338,22 +351,26 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
                 let zoneBg = '';
                 let rankBadge = '';
                 if (rank <= 5) {
-                  zoneBg = 'bg-green-50/45 hover:bg-green-50';
-                  rankBadge = 'bg-green-500 text-white';
+                  zoneBg = isDark ? 'bg-emerald-950/20 hover:bg-emerald-950/30' : 'bg-green-50/45 hover:bg-green-50';
+                  rankBadge = 'bg-emerald-600 text-white';
                 } else if (rank >= 11) {
-                  zoneBg = 'bg-red-50/45 hover:bg-red-50';
-                  rankBadge = 'bg-red-500 text-white';
+                  zoneBg = isDark ? 'bg-rose-950/20 hover:bg-rose-950/30' : 'bg-red-50/45 hover:bg-red-50';
+                  rankBadge = 'bg-rose-600 text-white';
                 } else {
-                  zoneBg = 'hover:bg-gray-50';
-                  rankBadge = 'bg-gray-100 text-gray-500 border border-gray-200';
+                  zoneBg = isDark ? 'hover:bg-zinc-800/40' : 'hover:bg-gray-50';
+                  rankBadge = isDark 
+                    ? 'bg-zinc-800 text-zinc-400 border border-zinc-700' 
+                    : 'bg-gray-100 text-gray-500 border border-gray-200';
                 }
 
                 return (
                   <div
                     key={participant.id}
-                    className={`flex items-center justify-between p-3.5 transition-all rounded-xl my-1.5 ${zoneBg} ${
+                    className={`flex items-center justify-between p-3.5 transition-all duration-300 rounded-xl my-1.5 ${zoneBg} ${
                       isUser
-                        ? 'ring-2 ring-indigo-400 bg-indigo-50/40 border border-indigo-250 font-extrabold shadow-sm'
+                        ? isDark
+                          ? 'ring-2 ring-indigo-500 bg-indigo-950/40 border border-indigo-900 font-extrabold shadow-sm'
+                          : 'ring-2 ring-indigo-400 bg-indigo-50/40 border border-indigo-250 font-extrabold shadow-sm'
                         : ''
                     }`}
                   >
@@ -365,13 +382,19 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
                         {rank}
                       </span>
 
-                      <div className="bg-white border border-gray-200 p-1.5 h-10 w-10 rounded-xl flex items-center justify-center text-xl shadow-xs select-none">
+                      <div className={`border p-1.5 h-10 w-10 rounded-xl flex items-center justify-center text-xl shadow-xs select-none transition-colors duration-300 ${
+                        isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-white border-gray-200'
+                      }`}>
                         {getAvatarEmoji(participant.avatar)}
                       </div>
 
                       <div className="space-y-0.5 text-left">
                         <span
-                          className={`text-xs text-gray-800 tracking-tight flex items-center gap-1.5 ${isUser ? 'font-black text-indigo-950 text-sm' : 'font-bold'}`}
+                          className={`text-xs tracking-tight flex items-center gap-1.5 transition-colors duration-300 ${
+                            isUser 
+                              ? isDark ? 'font-black text-indigo-300 text-sm' : 'font-black text-indigo-950 text-sm' 
+                              : isDark ? 'font-bold text-zinc-200' : 'font-bold text-gray-800'
+                          }`}
                         >
                           {participant.name}
                           {isUser && (
@@ -380,13 +403,13 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
                             </span>
                           )}
                         </span>
-                        <span className="text-[10px] text-gray-400 font-extrabold flex items-center gap-1">
+                        <span className="text-[10px] font-extrabold flex items-center gap-1 leading-none transition-colors duration-300">
                           {rank <= 5 ? (
-                            <span className="text-green-600">🔺 Zona de Ascenso</span>
+                            <span className="text-emerald-500">🔺 Zona de Ascenso</span>
                           ) : rank >= 11 ? (
-                            <span className="text-red-500">🔻 Zona de Descenso</span>
+                            <span className="text-rose-500">🔻 Zona de Descenso</span>
                           ) : (
-                            <span className="text-gray-405">🛡️ Zona Segura</span>
+                            <span className={isDark ? 'text-zinc-500' : 'text-gray-400'}>🛡️ Zona Segura</span>
                           )}
                         </span>
                       </div>
@@ -395,8 +418,12 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
                     {/* XP display */}
                     <div className="flex items-center gap-4">
                       <div className="text-right shrink-0">
-                        <span className="text-sm font-black text-gray-700 font-mono">{participant.weeklyXp}</span>
-                        <span className="text-[9px] font-black text-gray-400 block leading-none">XP</span>
+                        <span className={`text-sm font-black font-mono transition-colors duration-300 ${
+                          isDark ? 'text-zinc-200' : 'text-gray-700'
+                        }`}>{participant.weeklyXp}</span>
+                        <span className={`text-[9px] font-black block leading-none transition-colors duration-300 ${
+                          isDark ? 'text-zinc-500' : 'text-gray-400'
+                        }`}>XP</span>
                       </div>
                     </div>
                   </div>
@@ -409,26 +436,32 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
         {/* Sidebar Column: Rules and Simulator (1/3 width) */}
         <div className="space-y-4 text-left">
           {/* Rules summary Card */}
-          <div className="bg-white border-2 border-gray-250 border-b-6 rounded-3xl p-5 space-y-3.5">
-            <h4 className="font-extrabold text-gray-800 text-sm uppercase tracking-wide flex items-center gap-1">
+          <div className={`border-2 border-b-6 rounded-3xl p-5 space-y-3.5 shadow-sm transition-colors duration-300 ${
+            isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-gray-250'
+          }`}>
+            <h4 className={`font-extrabold text-sm uppercase tracking-wide flex items-center gap-1 transition-colors duration-300 ${
+              isDark ? 'text-zinc-200' : 'text-gray-800'
+            }`}>
               <span>ℹ️ Reglas de División</span>
             </h4>
-            <div className="space-y-3 text-xs text-gray-500 font-semibold leading-relaxed">
+            <div className={`space-y-3 text-xs font-semibold leading-relaxed transition-colors duration-300 ${
+              isDark ? 'text-zinc-400' : 'text-gray-500'
+            }`}>
               <div className="flex items-start gap-2.5">
-                <span className="text-green-500 text-sm mt-0.5">🔺</span>
+                <span className="text-emerald-500 text-sm mt-0.5">🔺</span>
                 <p>
                   <strong>Zona de Ascenso (Top 5)</strong>: Finaliza la semana aquí para subir de liga y conseguir un
                   ascenso de división 🏆✨.
                 </p>
               </div>
               <div className="flex items-start gap-2.5">
-                <span className="text-gray-400 text-sm mt-0.5">🛡️</span>
+                <span className={isDark ? 'text-zinc-550' : 'text-gray-400'}>🛡️</span>
                 <p>
                   <strong>Zona Segura (Puestos 6-10)</strong>: Mantienes tu división actual. No hay cambios de tier.
                 </p>
               </div>
               <div className="flex items-start gap-2.5">
-                <span className="text-red-500 text-sm mt-0.5">🔻</span>
+                <span className="text-rose-500 text-sm mt-0.5">🔻</span>
                 <p>
                   <strong>Zona de Descenso (Bottom 5)</strong>: Si estás por encima de la liga Bronce, bajarás de
                   división al cierre de la semana ⚠️.
@@ -438,11 +471,17 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
           </div>
 
           {/* Simulation Card */}
-          <div className="bg-indigo-50/50 border border-indigo-250 rounded-3xl p-5 space-y-4">
-            <h4 className="font-black text-indigo-900 text-xs uppercase tracking-widest flex items-center gap-1">
+          <div className={`border rounded-3xl p-5 space-y-4 transition-colors duration-300 ${
+            isDark ? 'bg-indigo-950/25 border-indigo-900/60' : 'bg-indigo-50/50 border-indigo-250'
+          }`}>
+            <h4 className={`font-black text-xs uppercase tracking-widest flex items-center gap-1 transition-colors duration-300 ${
+              isDark ? 'text-indigo-300' : 'text-indigo-900'
+            }`}>
               <span>🕹️ Herramientas de Liga</span>
             </h4>
-            <p className="text-xs text-indigo-955/70 font-semibold leading-normal">
+            <p className={`text-xs font-semibold leading-normal transition-colors duration-300 ${
+              isDark ? 'text-indigo-200/70' : 'text-indigo-955/70'
+            }`}>
               Utiliza los simuladores de liga para probar instantáneamente la animación y progresión de las divisiones
               semanales:
             </p>
@@ -450,7 +489,11 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
               <button
                 type="button"
                 onClick={handleSimulateWeeklyXp}
-                className="w-full bg-white hover:bg-gray-50 border-2 border-indigo-200 border-b-4 text-[#3c3c3c] font-black text-xs py-2 px-3.5 rounded-xl transition-all active:translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer"
+                className={`w-full border-2 border-b-4 font-black text-xs py-2 px-3.5 rounded-xl transition-all active:translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer ${
+                  isDark 
+                    ? 'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 text-zinc-200 active:border-b-2' 
+                    : 'bg-white hover:bg-gray-50 border-indigo-200 text-[#3c3c3c]'
+                }`}
               >
                 ⚡ Simular +50 XP Semanal
               </button>

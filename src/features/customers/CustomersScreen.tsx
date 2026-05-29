@@ -309,6 +309,8 @@ export default function CustomersScreen({
           onOpenPayment={(cust) => setPayDebtCust(cust)}
           onDeleteCustomer={onDeleteCustomer}
           onUpdateCustomer={onUpdateCustomer}
+          onAddCustomer={onAddCustomer}
+          onGrantXp={onGrantXp}
         />
       )}
 

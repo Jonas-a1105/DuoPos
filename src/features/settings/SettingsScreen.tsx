@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LegalBillingSettings, TaxCategoryOverride, User } from '../../types';
-import { Percent, Building2, Receipt, ShieldCheck, Save, Sliders, Info, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Percent, Building2, Receipt, ShieldCheck, Save, Sliders, Info, CheckCircle2, RefreshCw, Download } from 'lucide-react';
 import { playSound } from '../../services/sounds';
 import { LicenseDetails } from '../../services/licensing';
 
@@ -10,6 +10,7 @@ import SequenceSettings from './components/SequenceSettings';
 import AppSettings from './components/AppSettings';
 import LicenseSettings from './components/LicenseSettings';
 import UpdatesSettings from './components/UpdatesSettings';
+import DatabaseSettings from './components/DatabaseSettings';
 
 interface SettingsScreenProps {
   settings: LegalBillingSettings;
@@ -21,6 +22,8 @@ interface SettingsScreenProps {
   appVersion: string;
   onUpdateAppVersion: (newVersion: string) => void;
   user: User | null;
+  products: any[];
+  transactions: any[];
 }
 
 export default function SettingsScreen({
@@ -33,8 +36,10 @@ export default function SettingsScreen({
   appVersion,
   onUpdateAppVersion,
   user,
+  products,
+  transactions,
 }: SettingsScreenProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'taxes' | 'company' | 'sequence' | 'app' | 'license' | 'updates'>(
+  const [activeSubTab, setActiveSubTab] = useState<'taxes' | 'company' | 'sequence' | 'app' | 'license' | 'updates' | 'database'>(
     'license',
   );
 
@@ -193,6 +198,7 @@ export default function SettingsScreen({
           {[
             { id: 'license', label: 'Planes y Suscripción 🔑', icon: <ShieldCheck size={15} /> },
             { id: 'updates', label: 'Actualizaciones 📥', icon: <RefreshCw size={15} /> },
+            { id: 'database', label: 'Base de Datos 💾', icon: <Download size={15} /> },
             { id: 'app', label: 'Perfil / Ajustes App', icon: <Sliders size={15} /> },
             { id: 'taxes', label: 'Estructura de Tasas', icon: <Percent size={15} /> },
             { id: 'company', label: 'Emisor Corporativo', icon: <Building2 size={15} /> },
@@ -283,6 +289,15 @@ export default function SettingsScreen({
               setPacUsername={setPacUsername}
               pacPassword={pacPassword}
               setPacPassword={setPacPassword}
+            />
+          )}
+
+          {/* TAB 6: DATABASE INTEGRITY & BACKUPS */}
+          {activeSubTab === 'database' && (
+            <DatabaseSettings
+              user={user}
+              products={products}
+              transactions={transactions}
             />
           )}
 

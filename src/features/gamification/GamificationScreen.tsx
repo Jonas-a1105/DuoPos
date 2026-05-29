@@ -528,6 +528,7 @@ export default function GamificationScreen({
               dailyQuests={quests.filter((q) => !completedQuestsList.includes(q.id))}
               onClaimQuestReward={handleClaimQuest}
               onTriggerExpressEvent={onTriggerExpressEvent || (() => {})}
+              onSwitchTab={setActiveSubTab}
             />
           </div>
 

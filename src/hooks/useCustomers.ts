@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { Customer, LicenseDetails } from '../types';
 import { useCustomerStore } from '../stores/useCustomerStore';
 import { syncInsert, syncSave, syncDelete, generateUUID, syncDailyStats } from '../services/supabaseSync';
+import { addAuditLog } from '../services/auditService';
 import { toast } from '../components/Modal/FlashNotifications';
 import { playSound } from '../services/sounds';
 
@@ -36,6 +37,11 @@ export function useCustomers() {
       setCustomers(updated);
 
       await syncInsert<Customer>('customers', 'duo_pos_customers', updated, formatted);
+      addAuditLog(
+        'clientes',
+        'crear',
+        `Cliente '${newCust.name}' registrado con límite de crédito $${newCust.creditLimit || 0} USD y teléfono ${newCust.phone || 'S/N'}`
+      );
 
       // Increment daily customer registry counts for gamification
       try {
@@ -89,6 +95,29 @@ export function useCustomers() {
       setCustomers(updated);
 
       if (changedItem) {
+        if (previousCust) {
+          const limitBefore = previousCust.creditLimit || 0;
+          const limitAfter = (changedItem as Customer).creditLimit || 0;
+          const gemsBefore = previousCust.gems || 0;
+          const gemsAfter = (changedItem as Customer).gems || 0;
+          const debtBefore = previousCust.creditUsed || 0;
+          const debtAfter = (changedItem as Customer).creditUsed || 0;
+
+          let auditText = `Cliente '${(changedItem as Customer).name}' actualizado. `;
+          if (limitBefore !== limitAfter) {
+            auditText += `Línea de crédito: $${limitBefore} -> $${limitAfter}. `;
+          }
+          if (gemsBefore !== gemsAfter) {
+            auditText += `Gemas de fidelidad: ${gemsBefore} G -> ${gemsAfter} G. `;
+          }
+          if (debtBefore !== debtAfter) {
+            auditText += `Deuda (fiado): $${debtBefore} -> $${debtAfter}. `;
+          }
+          if (limitBefore === limitAfter && gemsBefore === gemsAfter && debtBefore === debtAfter) {
+            auditText += `Datos de perfil de contacto modificados.`;
+          }
+          addAuditLog('clientes', 'modificar', auditText);
+        }
         await syncSave<Customer>('customers', 'duo_pos_customers', updated, changedItem);
       }
 
@@ -104,6 +133,7 @@ export function useCustomers() {
       setCustomers(updated);
 
       await syncDelete('customers', 'duo_pos_customers', updated, id);
+      addAuditLog('clientes', 'eliminar', `Cliente '${deletedName}' eliminado de los registros locales.`);
 
       toast.warning(`Cliente ${deletedName ? `"${deletedName}"` : ''} eliminado de los registros.`, {
         title: 'Panel de Clientes 👥',

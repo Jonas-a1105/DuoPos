@@ -64,3 +64,21 @@ export function exportCustomersToExcel(customers: Customer[], filename = 'duopos
   XLSX.utils.book_append_sheet(wb, ws, 'Clientes');
   XLSX.writeFile(wb, filename);
 }
+
+export function exportAuditLogsToExcel(logs: any[], filename = 'duopos_auditoria.xlsx') {
+  const data = logs.map((l) => ({
+    ID: l.id,
+    Fecha: new Date(l.timestamp).toLocaleString('es-ES'),
+    Usuario: l.username,
+    Rol: l.role,
+    Módulo: l.module.toUpperCase(),
+    Acción: l.action.toUpperCase(),
+    Detalles: l.details,
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Bitacora Auditoria');
+  XLSX.writeFile(wb, filename);
+}
+

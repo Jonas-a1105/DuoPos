@@ -39,6 +39,20 @@ export default function AppSettings({
   kdsDelayMinutes,
   setKdsDelayMinutes,
 }: AppSettingsProps) {
+  const [pinSupervisor, setPinSupervisor] = React.useState(() => localStorage.getItem('duo_pos_pin_supervisor') || '1234');
+  const [pinAdmin, setPinAdmin] = React.useState(() => localStorage.getItem('duo_pos_pin_admin') || '1919');
+
+  const handleSavePin = (role: 'supervisor' | 'admin', val: string) => {
+    const sanitized = val.replace(/[^0-9]/g, '').slice(0, 4);
+    if (role === 'supervisor') {
+      setPinSupervisor(sanitized);
+      localStorage.setItem('duo_pos_pin_supervisor', sanitized);
+    } else {
+      setPinAdmin(sanitized);
+      localStorage.setItem('duo_pos_pin_admin', sanitized);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fadeIn text-left">
       <div className="border-b pb-3 flex items-center gap-2">
@@ -325,6 +339,53 @@ export default function AppSettings({
             className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-200 text-xs font-bold rounded-xl outline-none focus:border-amber-500 focus:bg-white"
             placeholder="Ej: Recuerda registrar tu racha y ganar gemas en nuestra app"
           />
+        </div>
+
+        {/* Security & Access PIN Configuration (Fase 2) */}
+        <div className="md:col-span-2 border-t pt-5 mt-3 space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xl select-none">🛡️</span>
+            <div>
+              <h4 className="text-xs font-black uppercase text-gray-800 tracking-tight font-sans">
+                Seguridad y PINs de Acceso para Cambio de Roles
+              </h4>
+              <p className="text-[9px] text-gray-400 font-bold uppercase">
+                Define las claves numéricas requeridas para la escalada de privilegios en caliente
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase font-black text-gray-400 tracking-wider block">
+                PIN de Supervisor ⚡ (Por defecto: 1234)
+              </label>
+              <input
+                type="text"
+                pattern="[0-9]*"
+                maxLength={4}
+                value={pinSupervisor}
+                onChange={(e) => handleSavePin('supervisor', e.target.value)}
+                className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-200 text-xs font-mono font-black rounded-xl outline-none focus:border-amber-500 focus:bg-white tracking-widest text-center"
+                placeholder="1234"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase font-black text-gray-400 tracking-wider block">
+                PIN de Administrador 👑 (Por defecto: 1919)
+              </label>
+              <input
+                type="text"
+                pattern="[0-9]*"
+                maxLength={4}
+                value={pinAdmin}
+                onChange={(e) => handleSavePin('admin', e.target.value)}
+                className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-200 text-xs font-mono font-black rounded-xl outline-none focus:border-amber-500 focus:bg-white tracking-widest text-center"
+                placeholder="1919"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -3,6 +3,8 @@ import { Product, User, Supplier } from '../../../types';
 import { CATEGORIES } from '../../../initialData';
 import { playSound } from '../../../services/sounds';
 import { exportProductsToExcel } from '../../../services/exportService';
+import { parseProductsExcel, downloadProductsTemplate } from '../../../services/importService';
+import { addAuditLog } from '../../../services/auditService';
 import { Search, Download, Edit, Trash, Plus, X, Check } from 'lucide-react';
 
 interface ProductCatalogProps {
@@ -54,6 +56,11 @@ export default function ProductCatalog({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
 
+  // Import States
+  const [importResult, setImportResult] = useState<any | null>(null);
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+
   // Core Product Forms States
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -68,6 +75,59 @@ export default function ProductCatalog({
   const [productSupplierId, setProductSupplierId] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    playSound('click');
+
+    try {
+      const res = await parseProductsExcel(file);
+      if (res.success && res.imported.length > 0) {
+        // Add each imported product to store
+        res.imported.forEach((prod) => {
+          onAddProduct({
+            name: prod.name,
+            price: prod.price,
+            cost: prod.cost,
+            stock: prod.stock,
+            minStock: prod.minStock,
+            category: prod.category,
+            emoji: prod.emoji,
+            description: prod.description,
+            barcode: prod.barcode,
+          } as any);
+        });
+
+        // Grant XP for successful batch import
+        if (onGrantXp) {
+          onGrantXp(Math.min(100, res.imported.length * 5));
+        }
+        playSound('levelup');
+      } else if (res.errors.length > 0) {
+        playSound('error');
+      }
+
+      setImportResult(res);
+      setShowResultModal(true);
+    } catch (err) {
+      console.error(err);
+      playSound('error');
+      setImportResult({
+        success: false,
+        imported: [],
+        failedCount: 1,
+        errors: ['Ocurrió un error inesperado al procesar la importación: ' + String(err)],
+      });
+      setShowResultModal(true);
+    } finally {
+      setIsImporting(false);
+      // Reset input value to allow uploading same file again
+      e.target.value = '';
+    }
+  };
 
   // Core Math & Filters
   const filteredProducts = useMemo(() => {
@@ -146,9 +206,19 @@ export default function ProductCatalog({
     };
 
     if (editingProduct) {
+      addAuditLog(
+        'catalogo',
+        'modificar',
+        `Producto '${name}' modificado (Precio: $${editingProduct.price.toFixed(2)} -> $${Number(price).toFixed(2)}, Costo: $${editingProduct.cost.toFixed(2)} -> $${Number(cost).toFixed(2)}, Stock: ${editingProduct.stock} -> ${Number(stock)})`
+      );
       onUpdateProduct({ id: editingProduct.id, ...details } as any);
       playSound('success');
     } else {
+      addAuditLog(
+        'catalogo',
+        'crear',
+        `Producto '${name}' registrado con precio $${Number(price).toFixed(2)}, costo $${Number(cost).toFixed(2)} y stock inicial ${Number(stock)}`
+      );
       onAddProduct(details as any);
       if (onGrantXp) onGrantXp(15);
       playSound('levelup');
@@ -163,6 +233,10 @@ export default function ProductCatalog({
       );
       setDeleteConfirmId(null);
       return;
+    }
+    const prod = products.find((p) => p.id === id);
+    if (prod) {
+      addAuditLog('catalogo', 'eliminar', `Producto '${prod.name}' eliminado del catálogo principal.`);
     }
     onDeleteProduct(id);
     setDeleteConfirmId(null);
@@ -214,15 +288,41 @@ export default function ProductCatalog({
               {cat}
             </button>
           ))}
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-1.5 flex-wrap">
             <button
+              type="button"
+              onClick={() => {
+                playSound('click');
+                downloadProductsTemplate();
+              }}
+              className="py-1.5 px-3 rounded-xl font-black text-[10px] md:text-xs uppercase cursor-pointer bg-white text-[#1cb0f6] border border-[#1cb0f6] border-b-2 hover:bg-sky-50 active:translate-y-0.5 flex items-center gap-1"
+              title="Descargar Plantilla Excel Estructurada"
+            >
+              📄 Plantilla
+            </button>
+            <label
+              htmlFor="product-import-input"
+              className="py-1.5 px-3 rounded-xl font-black text-[10px] md:text-xs uppercase cursor-pointer bg-white text-[#58cc02] border border-[#58cc02] border-b-2 hover:bg-green-50 active:translate-y-0.5 flex items-center gap-1"
+            >
+              📥 {isImporting ? 'Cargando...' : 'Importar'}
+            </label>
+            <input
+              type="file"
+              id="product-import-input"
+              className="hidden"
+              accept=".xlsx, .xls, .csv"
+              onChange={handleImportFile}
+              disabled={isImporting}
+            />
+            <button
+              type="button"
               onClick={() => {
                 playSound('click');
                 exportProductsToExcel(filteredProducts);
               }}
               className="py-1.5 px-3 rounded-xl font-black text-[10px] md:text-xs uppercase cursor-pointer bg-[#58cc02] text-white border-b-2 border-[#46a302] hover:bg-[#61e002] active:translate-y-0.5 flex items-center gap-1"
             >
-              <Download size={12} /> Excel
+              <Download size={12} /> Exportar
             </button>
           </div>
         </div>
@@ -535,6 +635,82 @@ export default function ProductCatalog({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* 📊 IMPORT RESULTS SUMMARY MODAL */}
+      {showResultModal && importResult && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fadeIn text-gray-800">
+          <div className="bg-white border-4 border-gray-205 border-b-[10px] rounded-3xl max-w-lg w-full p-6 space-y-5 relative text-left">
+            
+            {/* Header / Owl illustration */}
+            <div className="flex items-center gap-4">
+              <span className="text-5xl select-none animate-bounce">
+                {importResult.imported.length > 0 ? '🦉' : '❌'}
+              </span>
+              <div>
+                <h3 className="text-xl font-black text-gray-800 uppercase tracking-wide">
+                  {importResult.imported.length > 0 ? '¡Importación Lista!' : 'Fallo en Importación'}
+                </h3>
+                <p className="text-xs text-gray-400 font-extrabold uppercase">
+                  Auditoría y Bitácora del Archivo Excel
+                </p>
+              </div>
+            </div>
+
+            {/* Stats boxes */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-3 text-center">
+                <span className="text-2xl block">🎉</span>
+                <span className="text-[10px] font-black uppercase text-green-700 block leading-tight">Procesados con Éxito</span>
+                <span className="text-xl font-black text-green-600 font-mono">{importResult.imported.length} un.</span>
+              </div>
+              <div className={`rounded-2xl p-3 text-center border-2 ${importResult.failedCount > 0 ? 'bg-red-55 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
+                <span className="text-2xl block">⚠️</span>
+                <span className="text-[10px] font-black uppercase text-red-650 block leading-tight">Registros Omitidos</span>
+                <span className={`text-xl font-black font-mono ${importResult.failedCount > 0 ? 'text-red-500' : 'text-gray-500'}`}>{importResult.failedCount} filas</span>
+              </div>
+            </div>
+
+            {/* Error log bitácora */}
+            {importResult.errors.length > 0 && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-black uppercase text-gray-400">Detalles y Advertencias Encontradas ({importResult.errors.length}):</label>
+                <div className="bg-red-50/50 border border-red-200 rounded-2xl p-4 max-h-[160px] overflow-y-auto font-mono text-[10px] text-red-700 space-y-1 scrollbar-thin">
+                  {importResult.errors.map((err: string, i: number) => (
+                    <div key={i} className="flex gap-1">
+                      <span>•</span>
+                      <span>{err}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Success message / tip */}
+            {importResult.imported.length > 0 && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-2xl flex items-start gap-2.5 text-xs text-blue-800 font-semibold leading-relaxed">
+                <span>💡</span>
+                <p>
+                  Los productos válidos se han incorporado a la base local <strong>IndexedDB</strong>. Si cuentas con sincronización activa, se guardarán en Supabase la próxima vez que se inicie sesión o se sincronice. ¡Sigue así!
+                </p>
+              </div>
+            )}
+
+            {/* Close action button */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowResultModal(false);
+                  setImportResult(null);
+                  playSound('click');
+                }}
+                className="w-full bg-[#58cc02] text-white hover:bg-[#61e002] py-3 font-black text-sm rounded-2xl border-b-4 border-green-700 uppercase tracking-wide cursor-pointer transition-all active:translate-y-0.5 active:border-b-2 text-center flex items-center justify-center gap-1"
+              >
+                ¡Entendido, Duo! 🚀
+              </button>
+            </div>
           </div>
         </div>
       )}

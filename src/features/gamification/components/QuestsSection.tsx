@@ -1,5 +1,7 @@
 import React from 'react';
 import { Zap, CheckCircle2, Trophy, Sparkles, Flame, Gift, HelpCircle, RefreshCw } from 'lucide-react';
+import AeroGuideModal from './AeroGuideModal';
+import { playSound } from '../../../services/sounds';
 
 interface Quest {
   id: string;
@@ -30,6 +32,7 @@ interface QuestsSectionProps {
   dailyQuests: DailyQuest[];
   onClaimQuestReward: (questId: string) => void;
   onTriggerExpressEvent: (type: 'happy_hour' | 'scan_challenge' | 'loyalty_challenge') => void;
+  onSwitchTab?: (tab: 'quests' | 'leagues' | 'map' | 'season' | 'trophies' | 'store') => void;
 }
 
 const QuestsSection: React.FC<QuestsSectionProps> = ({
@@ -37,7 +40,10 @@ const QuestsSection: React.FC<QuestsSectionProps> = ({
   dailyQuests,
   onClaimQuestReward,
   onTriggerExpressEvent,
+  onSwitchTab,
 }) => {
+  const [isGuideOpen, setIsGuideOpen] = React.useState(false);
+
   const mapQuestTypeToEvent = (
     type: 'sale' | 'barcode' | 'customer' | 'invoice',
   ): 'happy_hour' | 'scan_challenge' | 'loyalty_challenge' => {
@@ -114,8 +120,15 @@ const QuestsSection: React.FC<QuestsSectionProps> = ({
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-black text-lg">Misiones Diarias</h3>
           <button
-            onClick={() => onTriggerExpressEvent('loyalty_challenge')}
-            className="text-sm text-[#58cc02] hover:text-[#46a302]"
+            onClick={() => {
+              playSound('click');
+              if (onSwitchTab) {
+                onSwitchTab('trophies');
+              } else {
+                onTriggerExpressEvent('loyalty_challenge');
+              }
+            }}
+            className="text-sm text-[#58cc02] hover:text-[#46a302] cursor-pointer"
           >
             Ver todas
           </button>
@@ -181,7 +194,15 @@ const QuestsSection: React.FC<QuestsSectionProps> = ({
       <div className="bg-white border border-[#e5e5e5] rounded-xl p-5">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-black text-lg">Sobre las Misiones</h3>
-          <button className="text-sm text-[#58cc02] hover:text-[#46a302]">Aprender más</button>
+          <button
+            onClick={() => {
+              playSound('click');
+              setIsGuideOpen(true);
+            }}
+            className="text-sm text-[#58cc02] hover:text-[#46a302] cursor-pointer"
+          >
+            Aprender más
+          </button>
         </div>
 
         <div className="space-y-4 text-sm">
@@ -210,6 +231,9 @@ const QuestsSection: React.FC<QuestsSectionProps> = ({
           </div>
         </div>
       </div>
+
+      {/* 🦉 AERO DIDACTICAL GUIDE OVERLAY */}
+      <AeroGuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
     </div>
   );
 };

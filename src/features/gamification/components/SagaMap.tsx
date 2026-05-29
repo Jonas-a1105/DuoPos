@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, Transaction, Customer } from '../../../types';
+import { DUO_CHARACTERS } from '../../../initialData';
 import { playSound } from '../../../services/sounds';
 import { toast } from '../../../components/Modal/FlashNotifications';
 
@@ -260,6 +261,18 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
     { x: 300, y: 90 },
   ];
 
+  const CURVE_SEGMENTS = [
+    'C 370,715 420,715 440,680', // n1 to n2
+    'C 400,640 380,620 360,600', // n2 to n3
+    'C 280,570 240,570 200,540', // n3 to n4
+    'C 180,510 150,490 160,460', // n4 to n5
+    'C 220,425 240,425 280,390', // n5 to n6
+    'C 350,360 390,360 420,330', // n6 to n7
+    'C 390,290 380,270 360,250', // n7 to n8
+    'C 290,215 250,215 220,180', // n8 to n9
+    'C 260,135 260,135 300,90'   // n9 to n10
+  ];
+
   let furthestUnlockedIndex = 0;
   for (let i = 0; i < nodesData.length; i++) {
     const isUnlocked = i === 0 || user.progressionClaimed?.includes(nodesData[i - 1].id) || false;
@@ -268,10 +281,8 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
     }
   }
 
-  const activePathD = points
-    .slice(0, furthestUnlockedIndex + 1)
-    .map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x},${p.y}`)
-    .join(' ');
+  const basePathD = 'M 300,750 ' + CURVE_SEGMENTS.join(' ');
+  const activePathD = 'M 300,750 ' + CURVE_SEGMENTS.slice(0, furthestUnlockedIndex).join(' ');
 
   return (
     <div className="space-y-6 text-left">
@@ -302,6 +313,44 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
           <div className="w-full bg-[#1e293b] border-2 border-slate-700 rounded-3xl p-4 flex justify-center shadow-lg relative overflow-hidden iso-grid-bg min-h-[500px]">
             {/* SVG Isometric Render */}
             <svg width="600" height="800" className="w-full h-auto max-w-[600px] drop-shadow-md select-none">
+              <style>{`
+                @keyframes float {
+                  0%, 100% { transform: translateY(0px); }
+                  50% { transform: translateY(-10px); }
+                }
+                @keyframes float-shadow {
+                  0%, 100% { transform: scale(1); opacity: 0.25; }
+                  50% { transform: scale(0.85); opacity: 0.15; }
+                }
+                .animate-float {
+                  animation: float 4s ease-in-out infinite;
+                }
+                .animate-float-delayed-1 {
+                  animation: float 4s ease-in-out infinite;
+                  animation-delay: 1s;
+                }
+                .animate-float-delayed-2 {
+                  animation: float 4s ease-in-out infinite;
+                  animation-delay: 2s;
+                }
+                .animate-float-shadow {
+                  animation: float-shadow 4s ease-in-out infinite;
+                  transform-origin: center;
+                }
+                .animate-float-shadow-delayed-1 {
+                  animation: float-shadow 4s ease-in-out infinite;
+                  animation-delay: 1s;
+                  transform-origin: center;
+                }
+                .animate-float-shadow-delayed-2 {
+                  animation: float-shadow 4s ease-in-out infinite;
+                  animation-delay: 2s;
+                  transform-origin: center;
+                }
+                .animate-bounce-slow {
+                  animation: float 2.5s ease-in-out infinite;
+                }
+              `}</style>
               <defs>
                 <filter id="glow-pulsing" x="-20%" y="-20%" width="140%" height="140%">
                   <feGaussianBlur stdDeviation="5" result="blur" />
@@ -329,28 +378,121 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
                 ☁️
               </text>
 
-              {/* Winding base pipeline (grey) */}
+              {/* 2.5D FLOATING CHARACTERS ALONG THE ROAD */}
+              {/* Zari 👧 */}
+              <g transform="translate(480, 640)">
+                <ellipse cx="0" cy="30" rx="20" ry="8" fill="black" className="animate-float-shadow-delayed-1" />
+                <g className="animate-float-delayed-1">
+                  <text x="0" y="10" textAnchor="middle" className="text-4xl select-none">👧</text>
+                  <text x="0" y="-20" textAnchor="middle" className="text-[8px] bg-slate-800 text-white px-1.5 py-0.5 rounded font-black uppercase tracking-wider leading-none">Zari</text>
+                </g>
+              </g>
+
+              {/* Oscar 🤵 */}
+              <g transform="translate(90, 500)">
+                <ellipse cx="0" cy="30" rx="20" ry="8" fill="black" className="animate-float-shadow" />
+                <g className="animate-float">
+                  <text x="0" y="10" textAnchor="middle" className="text-4xl select-none">🤵</text>
+                  <text x="0" y="-20" textAnchor="middle" className="text-[8px] bg-slate-800 text-white px-1.5 py-0.5 rounded font-black uppercase tracking-wider leading-none">Oscar</text>
+                </g>
+              </g>
+
+              {/* Lily 👧💜 */}
+              <g transform="translate(490, 280)">
+                <ellipse cx="0" cy="30" rx="20" ry="8" fill="black" className="animate-float-shadow-delayed-2" />
+                <g className="animate-float-delayed-2">
+                  <text x="0" y="10" textAnchor="middle" className="text-4xl select-none">👧💜</text>
+                  <text x="0" y="-20" textAnchor="middle" className="text-[8px] bg-slate-800 text-white px-1.5 py-0.5 rounded font-black uppercase tracking-wider leading-none">Lily</text>
+                </g>
+              </g>
+
+              {/* Duo Owl Assistant 🦉 */}
+              <g transform="translate(140, 130)">
+                <ellipse cx="0" cy="30" rx="20" ry="8" fill="black" className="animate-float-shadow" />
+                <g className="animate-float">
+                  <text x="0" y="10" textAnchor="middle" className="text-4xl select-none">🦉💼</text>
+                  <text x="0" y="-20" textAnchor="middle" className="text-[8px] bg-emerald-600 text-white px-1.5 py-0.5 rounded font-black uppercase tracking-wider leading-none">Mentor</text>
+                </g>
+              </g>
+
+              {/* Winding base curved sinoidal pipeline (grey) */}
               <path
-                d="M 300,750 L 440,680 L 360,600 L 200,540 L 160,460 L 280,390 L 420,330 L 360,250 L 220,180 L 300,90"
+                d={basePathD}
+                stroke="#334155"
+                strokeWidth="12"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+              <path
+                d={basePathD}
                 stroke="#475569"
-                strokeWidth="10"
+                strokeWidth="8"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 fill="none"
               />
 
-              {/* Active segment pipeline (glowing/green) */}
-              {points.slice(0, furthestUnlockedIndex + 1).length > 1 && (
-                <path
-                  d={activePathD}
-                  stroke="#10b981"
-                  strokeWidth="10"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                  className="animate-pulse"
-                />
+              {/* Active curved sinoidal segment pipeline (glowing/green) */}
+              {furthestUnlockedIndex > 0 && (
+                <>
+                  <path
+                    d={activePathD}
+                    stroke="#059669"
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
+                    className="opacity-40"
+                  />
+                  <path
+                    d={activePathD}
+                    stroke="#10b981"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
+                    filter="url(#glow-pulsing)"
+                  />
+                </>
               )}
+
+              {/* Cashier position marker indicator */}
+              {(() => {
+                const activeNode = nodesData[furthestUnlockedIndex] || nodesData[0];
+                const cashierEmoji = DUO_CHARACTERS[user.avatar]?.avatar || '🦉';
+                const accessoryMapping: Record<string, string> = {
+                  'accessory-hat': '🎩',
+                  'accessory-glasses': '😎',
+                  'accessory-corona': '👑',
+                  'accessory-traje': '🕴️',
+                  'accessory-capa': '🦸',
+                };
+                const cashierAccessory = user.activeAccessory ? accessoryMapping[user.activeAccessory] : '';
+
+                return (
+                  <g transform={`translate(${activeNode.x}, ${activeNode.y})`} className="select-none">
+                    {/* Shadow scaling beneath the floating marker */}
+                    <ellipse cx="0" cy="28" rx="16" ry="6" fill="black" className="animate-float-shadow" />
+                    
+                    {/* Bouncing container */}
+                    <g className="animate-bounce-slow" style={{ transformOrigin: '0px 0px' }}>
+                      {/* Current Equipped Accessory */}
+                      {cashierAccessory && (
+                        <text x="0" y="-55" textAnchor="middle" className="text-xl filter drop-shadow-xs">{cashierAccessory}</text>
+                      )}
+                      {/* Avatar */}
+                      <text x="0" y="-35" textAnchor="middle" className="text-4xl filter drop-shadow-sm">{cashierEmoji}</text>
+                      
+                      {/* Position Tag / "TÚ" banner */}
+                      <g transform="translate(0, -78)">
+                        <rect x="-18" y="-10" width="36" height="15" rx="5" fill="#ffd700" stroke="#b45309" strokeWidth="1.5" />
+                        <text x="0" y="1" textAnchor="middle" fill="#78350f" className="text-[9px] font-black tracking-widest leading-none">TÚ</text>
+                      </g>
+                    </g>
+                  </g>
+                );
+              })()}
 
               {/* Render Isometric Pillars and Nodes */}
               {nodesData.map((node, index) => {

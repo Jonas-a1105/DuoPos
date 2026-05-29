@@ -63,6 +63,8 @@ import ShieldCrest from '../components/Mascot/ShieldCrest';
 import LicenseBlockScreen from '../components/Modal/LicenseBlockScreen';
 import LevelUpCelebrateModal from '../components/Modal/LevelUpCelebrateModal';
 import RoleLockWarningModal from '../components/Modal/RoleLockWarningModal';
+import PinLockModal from '../components/Modal/PinLockModal';
+import { addAuditLog } from '../services/auditService';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import {
   Home,
@@ -212,6 +214,9 @@ function ClerkSessionSync({ onSyncUser }: { onSyncUser: (user: User | null) => v
 }
 
 export default function AppRouter() {
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [pendingRole, setPendingRole] = useState<'cashier' | 'supervisor' | 'admin' | null>(null);
+
   // Zustand Stores Hooks
   const user = useUserStore((state) => state.user);
   const setUser = useUserStore((state) => state.setUser);
@@ -350,10 +355,24 @@ export default function AppRouter() {
   // Sync React Query data to Zustand store + localStorage
   useEffect(() => {
     if (exchangeRatesQuery) {
+      const oldRates = exchangeRates;
+      const isDiff =
+        !oldRates ||
+        oldRates.oficial !== exchangeRatesQuery.oficial ||
+        oldRates.paralelo !== exchangeRatesQuery.paralelo;
+
       setExchangeRates(exchangeRatesQuery);
       try {
         localStorage.setItem('duo_pos_exchange_rates', JSON.stringify(exchangeRatesQuery));
       } catch {}
+
+      if (isDiff) {
+        addAuditLog(
+          'tasas',
+          'ajuste',
+          `Tasas cambiarias VES actualizadas automáticamente: BCV = ${exchangeRatesQuery.oficial.toFixed(2)} Bs. | Paralelo = ${exchangeRatesQuery.paralelo.toFixed(2)} Bs.`
+        );
+      }
     }
   }, [exchangeRatesQuery]);
 
@@ -372,6 +391,12 @@ export default function AppRouter() {
     toast.info(
       `Precios convertidos usando tasas de tipo: ${type === 'oficial' ? 'BCV Oficial' : 'Paralelo (Monitor)'}`,
       { title: 'Tasa Alternada 🔄' },
+    );
+    // Registrar en la bitácora
+    addAuditLog(
+      'tasas',
+      'ajuste',
+      `Tasa cambiaria VES activa de conversión cambiada a: ${type === 'oficial' ? 'BCV Oficial' : 'Paralelo (Monitor)'} (${type === 'oficial' ? exchangeRates.oficial.toFixed(2) : exchangeRates.paralelo.toFixed(2)} Bs.)`
     );
   };
 
@@ -1630,27 +1655,41 @@ export default function AppRouter() {
                     value={user.role || 'cashier'}
                     onChange={(e) => {
                       const nextRole = e.target.value as any;
-                      const updatedUser = { ...user, role: nextRole };
-                      setUser(updatedUser);
-                      localStorage.setItem('duo_pos_active_user', JSON.stringify(updatedUser));
+                      const currentRole = user.role || 'cashier';
 
-                      // Update user in users list in localStorage too
-                      const savedUsersRaw = localStorage.getItem('duo_pos_users');
-                      if (savedUsersRaw) {
-                        try {
-                          const users = JSON.parse(savedUsersRaw);
-                          const idx = users.findIndex(
-                            (u: any) => u.username.toLowerCase() === user.username.toLowerCase(),
-                          );
-                          if (idx !== -1) {
-                            users[idx].role = nextRole;
-                            localStorage.setItem('duo_pos_users', JSON.stringify(users));
+                      // CASO 1: Bajar privilegios o mantener el mismo (no requiere PIN)
+                      if (
+                        nextRole === 'cashier' || 
+                        (nextRole === 'supervisor' && currentRole === 'admin') ||
+                        nextRole === currentRole
+                      ) {
+                        const updatedUser = { ...user, role: nextRole };
+                        setUser(updatedUser);
+                        localStorage.setItem('duo_pos_active_user', JSON.stringify(updatedUser));
+
+                        // Update user in users list in localStorage too
+                        const savedUsersRaw = localStorage.getItem('duo_pos_users');
+                        if (savedUsersRaw) {
+                          try {
+                            const users = JSON.parse(savedUsersRaw);
+                            const idx = users.findIndex(
+                              (u: any) => u.username.toLowerCase() === user.username.toLowerCase(),
+                            );
+                            if (idx !== -1) {
+                              users[idx].role = nextRole;
+                              localStorage.setItem('duo_pos_users', JSON.stringify(users));
+                            }
+                          } catch (err) {
+                            console.error(err);
                           }
-                        } catch (err) {
-                          console.error(err);
                         }
+                        playSound('levelup');
+                        return;
                       }
-                      playSound('levelup');
+
+                      // CASO 2: Escalar privilegios (Requiere PIN de Supervisor o Administrador)
+                      setPendingRole(nextRole);
+                      setIsPinModalOpen(true);
                     }}
                     className="w-full text-xs font-black text-gray-750 bg-gray-50 border-2 border-gray-200 p-1 px-1.5 py-1.5 rounded-xl outline-none focus:border-[#1cb0f6] transition-all cursor-pointer select-none"
                   >
@@ -1871,6 +1910,8 @@ export default function AppRouter() {
                     appVersion={appVersion}
                     onUpdateAppVersion={handleUpdateAppVersion}
                     user={user}
+                    products={products}
+                    transactions={transactions}
                   />
                 }
               />
@@ -2077,6 +2118,51 @@ export default function AppRouter() {
 
       {/* RBAC Role Restriction Warnings Modal */}
       <RoleLockWarningModal setActiveTab={setActiveTab} />
+
+      {/* Security Pin Lock Modal */}
+      {isPinModalOpen && pendingRole && (
+        <PinLockModal
+          isOpen={isPinModalOpen}
+          requiredRole={pendingRole === 'admin' ? 'admin' : 'supervisor'}
+          onClose={() => {
+            setIsPinModalOpen(false);
+            setPendingRole(null);
+          }}
+          onSuccess={() => {
+            setIsPinModalOpen(false);
+            if (pendingRole) {
+              const updatedUser = { ...user, role: pendingRole };
+              setUser(updatedUser);
+              localStorage.setItem('duo_pos_active_user', JSON.stringify(updatedUser));
+
+              // Update user in users list in localStorage too
+              const savedUsersRaw = localStorage.getItem('duo_pos_users');
+              if (savedUsersRaw) {
+                try {
+                  const users = JSON.parse(savedUsersRaw);
+                  const idx = users.findIndex(
+                    (u: any) => u.username.toLowerCase() === user.username.toLowerCase(),
+                  );
+                  if (idx !== -1) {
+                    users[idx].role = pendingRole;
+                    localStorage.setItem('duo_pos_users', JSON.stringify(users));
+                  }
+                } catch (err) {
+                  console.error(err);
+                }
+              }
+              playSound('levelup');
+              // Registrar en la bitácora de auditoría
+              addAuditLog(
+                'roles',
+                'escalar',
+                `Usuario ${user?.username || 'Cajero'} escaló privilegios al rol de ${pendingRole} tras validar PIN con éxito`
+              );
+            }
+            setPendingRole(null);
+          }}
+        />
+      )}
 
       {isHardwareHubOpen && (
         <HardwareHubModal
