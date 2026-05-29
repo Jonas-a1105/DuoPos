@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { Customer, LicenseDetails } from '../types';
 import { useCustomerStore } from '../stores/useCustomerStore';
-import { syncInsert, syncSave, syncDelete, generateUUID } from '../services/supabaseSync';
+import { syncInsert, syncSave, syncDelete, generateUUID, syncDailyStats } from '../services/supabaseSync';
 import { toast } from '../components/Modal/FlashNotifications';
 import { playSound } from '../services/sounds';
 
@@ -46,6 +46,8 @@ export function useCustomers() {
           : { barcodeScans: 0, invoicesEmitted: 0, customersRegistered: 0 };
         currentStats.customersRegistered = (currentStats.customersRegistered || 0) + 1;
         localStorage.setItem(`duo_pos_daily_acts_${today}`, JSON.stringify(currentStats));
+        // Sincronizar estadísticas en Supabase
+        syncDailyStats(today, currentStats).catch((err) => console.error('Error syncing daily stats:', err));
       } catch (e) {}
 
       toast.success(`Cliente "${newCust.name}" registrado correctamente en Duo Loyalty. 🎉`, {

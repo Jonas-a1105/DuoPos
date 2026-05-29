@@ -203,12 +203,37 @@ export function useInventory() {
         }
       }
 
+      // If credit purchase order, increase the supplier's balance and set due date
+      let updatedSuppliers = [...suppliers];
+      if (order.paymentMethod === 'credit') {
+        updatedSuppliers = suppliers.map((s) => {
+          if (s.id === order.supplierId) {
+            const termDays = s.paymentTermDays ?? 30;
+            const dueDateObj = new Date();
+            dueDateObj.setDate(dueDateObj.getDate() + termDays);
+
+            return {
+              ...s,
+              balance: s.balance + order.total,
+              dueDate: dueDateObj.toISOString().split('T')[0],
+            };
+          }
+          return s;
+        });
+        setSuppliers(updatedSuppliers);
+
+        const targetSup = updatedSuppliers.find((s) => s.id === order.supplierId);
+        if (targetSup) {
+          await syncSave<Supplier>('suppliers', 'duo_pos_suppliers', updatedSuppliers, targetSup);
+        }
+      }
+
       const updated = purchaseOrders.map((p) => (p.id === id ? updatedOrder : p));
       setPurchaseOrders(updated);
       await syncSavePurchaseOrder(updatedOrder, updated);
       toast.success(`Orden "${id}" recibida. El inventario ha sido actualizado.`, { title: 'Órdenes de Compra 📦' });
     },
-    [purchaseOrders, setPurchaseOrders, products, setProducts, activeBranchId],
+    [purchaseOrders, setPurchaseOrders, products, setProducts, activeBranchId, suppliers, setSuppliers],
   );
 
   const cancelPurchaseOrder = useCallback(
@@ -225,10 +250,27 @@ export function useInventory() {
   );
 
   const registerSupplierPayout = useCallback(
-    async (supplierId: string, amount: number, _notes: string) => {
-      const updated = suppliers.map((s) =>
-        s.id === supplierId ? { ...s, balance: Math.max(0, s.balance - amount) } : s,
-      );
+    async (supplierId: string, amount: number, notes: string) => {
+      const updated = suppliers.map((s) => {
+        if (s.id === supplierId) {
+          const newBal = Math.max(0, s.balance - amount);
+          const history = s.paymentHistory ? [...s.paymentHistory] : [];
+          history.push({
+            id: `pay-${Date.now()}`,
+            amount,
+            date: new Date().toISOString(),
+            method: notes.includes('Transferencia') ? 'transfer' : 'cash',
+            notes,
+          });
+          return {
+            ...s,
+            balance: newBal,
+            paymentHistory: history,
+            dueDate: newBal === 0 ? undefined : s.dueDate,
+          };
+        }
+        return s;
+      });
       setSuppliers(updated);
       const changed = updated.find((s) => s.id === supplierId);
       if (changed) {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { playSound } from '../../../services/sounds';
-import { FileText, Key, Info } from 'lucide-react';
+import { FileText, Key, Info, ShieldAlert } from 'lucide-react';
 
 interface SequenceSettingsProps {
   invoicePrefix: string;
@@ -17,6 +17,10 @@ interface SequenceSettingsProps {
   setCsdFileName: (val: string) => void;
   csdPass: string;
   setCsdPass: (val: string) => void;
+  pacUsername?: string;
+  setPacUsername?: (val: string) => void;
+  pacPassword?: string;
+  setPacPassword?: (val: string) => void;
 }
 
 export default function SequenceSettings({
@@ -34,6 +38,10 @@ export default function SequenceSettings({
   setCsdFileName,
   csdPass,
   setCsdPass,
+  pacUsername = '',
+  setPacUsername,
+  pacPassword = '',
+  setPacPassword,
 }: SequenceSettingsProps) {
   return (
     <div className="space-y-6 animate-fadeIn text-left">
@@ -67,7 +75,7 @@ export default function SequenceSettings({
 
         {/* Siguiente Folio */}
         <div className="space-y-1">
-          <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">
+          <label className="text-[10px] uppercase font-black text-gray-455 tracking-wider block">
             Siguiente Número de Folio
           </label>
           <input
@@ -83,17 +91,16 @@ export default function SequenceSettings({
         {/* PAC Certificador */}
         <div className="space-y-1">
           <label className="text-[10px] uppercase font-black text-gray-455 tracking-wider block">
-            Proveedor Autorizado de Certificación (PAC Mock)
+            Proveedor Autorizado de Certificación (PAC)
           </label>
           <select
             value={certifyingAuthority}
             onChange={(e) => setCertifyingAuthority(e.target.value)}
             className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-200 text-xs font-bold rounded-xl outline-none focus:border-amber-500 focus:bg-white cursor-pointer"
           >
-            <option value="DuoPac Internacional S.A.">DuoPac Internacional S.A. 🦉</option>
-            <option value="LilyCFDI Soluciones">LilyCFDI Soluciones 👧</option>
-            <option value="Finkok Mock Premium">Finkok Mock Premium ⚡</option>
-            <option value="SAT Direct Connection">SAT Conexión Directa Mock 🏛️</option>
+            <option value="DuoPac Internacional S.A.">Simulador Integrado (Mock SAT)</option>
+            <option value="Facturama Sandbox API">Facturama Sandbox API (PAC Real)</option>
+            <option value="Finkok Mock Premium">Finkok Premium (Simulado)</option>
           </select>
         </div>
 
@@ -118,6 +125,52 @@ export default function SequenceSettings({
           </label>
         </div>
       </div>
+
+      {/* FACTURAMA CREDENTIALS CONTAINER */}
+      {certifyingAuthority.includes('Facturama') && (
+        <div className="bg-amber-50/50 border-2 border-amber-200 rounded-3xl p-5 space-y-4 animate-fadeIn">
+          <div className="flex items-start gap-3">
+            <div className="bg-amber-100 border border-amber-200 p-2.5 rounded-xl text-amber-800">
+              <ShieldAlert size={18} />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-xs font-black text-slate-800 uppercase">
+                Credenciales Facturama Sandbox
+              </h4>
+              <p className="text-[9.5px] text-gray-400 font-extrabold uppercase leading-none">
+                Conexión real CFDI 4.0 al entorno de pruebas del PAC
+              </p>
+              <p className="text-xs text-gray-550 leading-relaxed font-bold lowercase">
+                Si no tienes credenciales o decides operar sin contratarlas, la aplicación simulará de forma 100% autónoma el proceso con disclaimers informativos.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1 text-xs">
+              <label className="text-[9px] uppercase font-black text-gray-400">Usuario Facturama API</label>
+              <input
+                type="text"
+                value={pacUsername}
+                onChange={(e) => setPacUsername?.(e.target.value)}
+                placeholder="Ingresa tu usuario del PAC"
+                className="w-full bg-white border p-2.5 rounded-xl outline-none focus:border-amber-500 font-mono text-[10.5px] font-bold text-gray-700"
+              />
+            </div>
+
+            <div className="space-y-1 text-xs">
+              <label className="text-[9px] uppercase font-black text-gray-400">Contraseña Facturama API</label>
+              <input
+                type="password"
+                value={pacPassword}
+                onChange={(e) => setPacPassword?.(e.target.value)}
+                placeholder="Ingresa tu contraseña de API"
+                className="w-full bg-white border p-2.5 rounded-xl outline-none focus:border-amber-500 font-mono text-[10.5px] font-bold text-gray-750"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* CSD CERTIFICATES CONTAINER */}
       <div className="bg-slate-50 border-2 border-slate-200 rounded-3xl p-5 space-y-4 pt-4">

@@ -13,6 +13,8 @@ interface ProductCatalogProps {
   onDeleteProduct: (id: string) => void;
   onGrantXp?: (xp: number) => void;
   currentUser: User;
+  exchangeRate?: number;
+  activeRateType?: 'oficial' | 'paralelo';
 }
 
 const QUICK_EMOJIS = [
@@ -46,6 +48,8 @@ export default function ProductCatalog({
   onDeleteProduct,
   onGrantXp,
   currentUser,
+  exchangeRate = 0,
+  activeRateType = 'oficial',
 }: ProductCatalogProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
@@ -332,18 +336,31 @@ export default function ProductCatalog({
                 </div>
 
                 {/* Cost / Price layout */}
-                <div className="pt-2 border-t border-gray-100 flex justify-between items-center text-xs">
+                <div className="pt-2 border-t border-gray-100 flex justify-between items-start text-xs">
                   <div>
                     <span className="text-[9px] text-gray-405 font-extrabold uppercase block leading-none">
                       P. Venta
                     </span>
-                    <span className="text-sm font-black text-gray-700">${prod.price.toFixed(2)}</span>
+                    <span className="text-sm font-black text-gray-700 block">${prod.price.toFixed(2)}</span>
+                    {exchangeRate > 0 && (
+                      <span className="text-[10px] font-bold text-sky-600 block mt-1 select-none leading-tight">
+                        Bs. {(prod.price * exchangeRate).toFixed(2)}
+                        <span className="text-[7.5px] uppercase font-black px-1 py-0.5 bg-sky-50 border border-sky-200 rounded ml-1 text-sky-600">
+                          {activeRateType === 'paralelo' ? 'PAR' : 'BCV'}
+                        </span>
+                      </span>
+                    )}
                   </div>
                   <div className="text-right">
                     <span className="text-[9px] text-gray-405 font-extrabold uppercase block leading-none">
                       Costo Fábrica
                     </span>
-                    <span className="text-xs font-black text-gray-500">${prod.cost.toFixed(2)}</span>
+                    <span className="text-xs font-black text-gray-500 block">${prod.cost.toFixed(2)}</span>
+                    {exchangeRate > 0 && (
+                      <span className="text-[9px] font-bold text-gray-400 block mt-1 select-none leading-tight">
+                        Bs. {(prod.cost * exchangeRate).toFixed(2)}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

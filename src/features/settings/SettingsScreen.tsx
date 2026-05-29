@@ -69,6 +69,8 @@ export default function SettingsScreen({
     settings.customTicketFooter || '¡Gracias por su racha de compra!',
   );
   const [kdsDelayMinutes, setKdsDelayMinutes] = useState(settings.kdsDelayMinutes || 10);
+  const [pacUsername, setPacUsername] = useState(settings.pacUsername || '');
+  const [pacPassword, setPacPassword] = useState(settings.pacPassword || '');
 
   // Sello digital mock state
   const [isCsdLoaded, setIsCsdLoaded] = useState(true);
@@ -102,6 +104,8 @@ export default function SettingsScreen({
       customTicketHeader,
       customTicketFooter,
       kdsDelayMinutes: Number(kdsDelayMinutes),
+      pacUsername,
+      pacPassword,
     };
 
     onSaveSettings(updatedSettings);
@@ -275,6 +279,10 @@ export default function SettingsScreen({
               setCsdFileName={setCsdFileName}
               csdPass={csdPass}
               setCsdPass={setCsdPass}
+              pacUsername={pacUsername}
+              setPacUsername={setPacUsername}
+              pacPassword={pacPassword}
+              setPacPassword={setPacPassword}
             />
           )}
 

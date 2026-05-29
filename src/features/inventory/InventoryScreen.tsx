@@ -32,6 +32,8 @@ interface InventoryScreenProps {
   onReceivePurchaseOrder: (id: string) => void;
   onCancelPurchaseOrder: (id: string) => void;
   onRegisterSupplierPayout: (supplierId: string, amount: number, notes: string) => void;
+  exchangeRate?: number;
+  activeRateType?: 'oficial' | 'paralelo';
 }
 
 export default function InventoryScreen({
@@ -53,6 +55,8 @@ export default function InventoryScreen({
   onReceivePurchaseOrder,
   onCancelPurchaseOrder,
   onRegisterSupplierPayout,
+  exchangeRate,
+  activeRateType,
 }: InventoryScreenProps) {
   // Tabs & Filters state
   const [activeSubTab, setActiveSubTab] = useState<'catalog' | 'alerts' | 'suppliers' | 'orders' | 'accounts'>(
@@ -144,6 +148,8 @@ export default function InventoryScreen({
           onDeleteProduct={onDeleteProduct}
           onGrantXp={onGrantXp}
           currentUser={currentUser}
+          exchangeRate={exchangeRate}
+          activeRateType={activeRateType}
         />
       )}
 

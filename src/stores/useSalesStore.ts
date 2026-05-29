@@ -96,7 +96,14 @@ export const useSalesStore = create<SalesState>((set) => ({
       return DEFAULT_HARDWARE_SETTINGS;
     }
   })(),
-  billingSettings: DEFAULT_BILLING_SETTINGS,
+  billingSettings: (() => {
+    try {
+      const raw = localStorage.getItem('duo_pos_billing_settings');
+      return raw ? JSON.parse(raw) : DEFAULT_BILLING_SETTINGS;
+    } catch {
+      return DEFAULT_BILLING_SETTINGS;
+    }
+  })(),
 
   setActiveBranchId: (activeBranchId) => {
     set({ activeBranchId });
@@ -123,5 +130,8 @@ export const useSalesStore = create<SalesState>((set) => ({
     set({ hardwareSettings });
     localStorage.setItem('duo_pos_hardware_settings', JSON.stringify(hardwareSettings));
   },
-  setBillingSettings: (billingSettings) => set({ billingSettings }),
+  setBillingSettings: (billingSettings) => {
+    set({ billingSettings });
+    localStorage.setItem('duo_pos_billing_settings', JSON.stringify(billingSettings));
+  },
 }));

@@ -377,6 +377,7 @@ export async function syncLoad<T>(
     orderBy?: string;
     ascending?: boolean;
     select?: string;
+    branchId?: string;
   },
 ): Promise<T[]> {
   const prefix =
@@ -398,6 +399,8 @@ export async function syncLoad<T>(
       table !== 'branches' &&
       table !== 'cash_registers' &&
       table !== 'settings' &&
+      table !== 'app_settings' &&
+      table !== 'user_preferences' &&
       table !== 'suppliers' &&
       table !== 'purchase_orders'
     ) {
@@ -551,16 +554,51 @@ export async function syncLoad<T>(
   if (isOnline()) {
     try {
       const selectStr = options?.select || '*';
-      let query = supabase.from(table).select(selectStr);
+      const allData: any[] = [];
+      let fromOffset = 0;
+      const pageSize = 500;
+      let hasMore = true;
+      let lastError: any = null;
 
-      if (options?.orderBy) {
-        query = query.order(options.orderBy, { ascending: options.ascending ?? true });
+      while (hasMore) {
+        let query = supabase
+          .from(table)
+          .select(selectStr)
+          .range(fromOffset, fromOffset + pageSize - 1);
+
+        // Filter by branch_id if specified and table is multi-tenant
+        if (options?.branchId && (table === 'transactions' || table === 'cash_shifts' || table === 'cash_registers' || table === 'stock_transfers')) {
+          if (table === 'stock_transfers') {
+            query = query.or(`from_branch_id.eq.${options.branchId},to_branch_id.eq.${options.branchId}`);
+          } else {
+            query = query.eq('branch_id', options.branchId);
+          }
+        }
+
+        if (options?.orderBy) {
+          query = query.order(options.orderBy, { ascending: options.ascending ?? true });
+        }
+
+        const { data, error } = await query;
+        if (error) {
+          lastError = error;
+          throw error;
+        }
+
+        if (data && data.length > 0) {
+          allData.push(...data);
+          if (data.length < pageSize) {
+            hasMore = false;
+          } else {
+            fromOffset += pageSize;
+          }
+        } else {
+          hasMore = false;
+        }
       }
 
-      const { data, error } = await query;
-
-      if (!error && data) {
-        let mappedData = data.map(sanitizeAndMap);
+      if (allData.length >= 0) {
+        let mappedData = allData.map(sanitizeAndMap);
 
         // Fusión inteligente con la cola de operaciones pendientes localmente
         const localPending = getPendingQueue().filter((op) => op.table === table);
@@ -700,8 +738,8 @@ export async function syncLoad<T>(
         return mappedData;
       }
 
-      if (error) {
-        console.warn(`⚠️ syncLoad(${table}): Error de Supabase, usando caché local.`, error.message);
+      if (lastError) {
+        console.warn(`⚠️ syncLoad(${table}): Error de Supabase, usando caché local.`, lastError.message);
       }
     } catch (err) {
       console.warn(`⚠️ syncLoad(${table}): Sin conexión, usando caché local.`);
@@ -795,7 +833,7 @@ export async function syncSave<T extends Record<string, any>>(
 
   await setLocalData(localStorageKey, allItems);
 
-  let dbRecord: any = null;
+  let dbRecord: any;
   let isParentSynced = false;
   let syncError: string | undefined = undefined;
 
@@ -843,7 +881,7 @@ export async function syncInsert<T extends Record<string, any>>(
 ): Promise<{ success: boolean; error?: string }> {
   await setLocalData(localStorageKey, allItems);
 
-  let dbRecord: any = null;
+  let dbRecord: any;
   let isParentSynced = false;
   let syncError: string | undefined = undefined;
 
@@ -1021,10 +1059,14 @@ export async function syncSaveShift(
   } else {
     try {
       await db.generic_store.delete('duo_pos_active_shift');
-    } catch {}
+    } catch (e) {
+      void e;
+    }
     try {
       localStorage.removeItem('duo_pos_active_shift');
-    } catch {}
+    } catch (e) {
+      void e;
+    }
     await setLocalData('duo_pos_shift_history', allHistory);
   }
 
@@ -1225,17 +1267,46 @@ export async function flushPendingQueue(): Promise<{ synced: number; failed: num
     for (const op of queue) {
       try {
         let error: any = null;
+        let shouldSync = true;
 
-        if (op.action === 'upsert') {
-          const res = await supabase.from(op.table).upsert(op.data);
-          error = res.error;
-        } else if (op.action === 'insert') {
-          const res = await supabase.from(op.table).insert(op.data);
-          error = res.error;
-        } else if (op.action === 'delete') {
-          const idField = Object.keys(op.data)[0];
-          const res = await supabase.from(op.table).delete().eq(idField, op.data[idField]);
-          error = res.error;
+        // Conflict resolution: if the table supports updated_at, check if remote is newer
+        if (op.action === 'upsert' && op.data && op.data.updated_at) {
+          try {
+            const pkField = op.table === 'daily_stats' ? 'day_date' : op.table === 'user_preferences' ? 'user_id' : 'id';
+            const pkVal = op.data[pkField];
+            if (pkVal) {
+              const { data: remoteData } = await supabase
+                .from(op.table)
+                .select('updated_at')
+                .eq(pkField, pkVal)
+                .maybeSingle();
+              
+              if (remoteData && remoteData.updated_at) {
+                const remoteTime = new Date(remoteData.updated_at).getTime();
+                const localTime = new Date(op.data.updated_at).getTime();
+                if (remoteTime > localTime) {
+                  console.log(`⚠️ [CONFLICT] Remote version is newer for ${op.table} ${pkField} ${pkVal}. Discarding local change.`);
+                  shouldSync = false;
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('⚠️ Failed to check conflict, proceeding with overwrite.');
+          }
+        }
+
+        if (shouldSync) {
+          if (op.action === 'upsert') {
+            const res = await supabase.from(op.table).upsert(op.data);
+            error = res.error;
+          } else if (op.action === 'insert') {
+            const res = await supabase.from(op.table).insert(op.data);
+            error = res.error;
+          } else if (op.action === 'delete') {
+            const idField = Object.keys(op.data)[0];
+            const res = await supabase.from(op.table).delete().eq(idField, op.data[idField]);
+            error = res.error;
+          }
         }
 
         if (error) {
@@ -1258,6 +1329,121 @@ export async function flushPendingQueue(): Promise<{ synced: number; failed: num
   }
 
   return { synced, failed };
+}
+
+/**
+ * Synchronizes daily stats (barcodeScans, invoicesEmitted, customersRegistered) to Supabase.
+ */
+export async function syncDailyStats(todayStr: string, stats: any): Promise<void> {
+  const localKey = `duo_pos_daily_acts_${todayStr}`;
+  localStorage.setItem(localKey, JSON.stringify(stats));
+
+  const dbData = {
+    day_date: todayStr,
+    stats_json: stats,
+    updated_at: new Date().toISOString()
+  };
+
+  if (isOnline()) {
+    try {
+      await supabase.from('daily_stats').upsert(dbData, { onConflict: 'day_date' });
+    } catch (e) {
+      console.warn('⚠️ syncDailyStats: Failed to save to Supabase, offline queue fallback.');
+      addToPendingQueue({ table: 'daily_stats', action: 'upsert', data: dbData });
+    }
+  } else {
+    addToPendingQueue({ table: 'daily_stats', action: 'upsert', data: dbData });
+  }
+}
+
+/**
+ * Synchronizes user UI preferences (theme, sound) to Supabase.
+ */
+export async function syncUserPreferences(userId: string, theme: string, soundEnabled: boolean): Promise<void> {
+  const prefs = {
+    user_id: userId,
+    theme: theme,
+    sound_enabled: soundEnabled,
+    updated_at: new Date().toISOString()
+  };
+  
+  await setLocalData(`duo_pos_prefs_${userId}`, prefs);
+
+  if (isOnline()) {
+    try {
+      await supabase.from('user_preferences').upsert(prefs, { onConflict: 'user_id' });
+    } catch (e) {
+      console.warn('⚠️ syncUserPreferences: Failed to save to Supabase, enqueuing.');
+      addToPendingQueue({ table: 'user_preferences', action: 'upsert', data: prefs });
+    }
+  } else {
+    addToPendingQueue({ table: 'user_preferences', action: 'upsert', data: prefs });
+  }
+}
+
+/**
+ * Loads user UI preferences from Supabase with local fallback.
+ */
+export async function loadUserPreferences(userId: string): Promise<{ theme: string; sound_enabled: boolean } | null> {
+  if (isOnline()) {
+    try {
+      const { data, error } = await supabase
+        .from('user_preferences')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (!error && data) {
+        await setLocalData(`duo_pos_prefs_${userId}`, data);
+        return { theme: data.theme, sound_enabled: data.sound_enabled };
+      }
+    } catch (e) {
+      console.warn('⚠️ loadUserPreferences: Error fetching from Supabase, using local fallback.');
+    }
+  }
+  
+  const cached = await getLocalData(`duo_pos_prefs_${userId}`);
+  if (cached) {
+    return { theme: cached.theme, sound_enabled: cached.sound_enabled };
+  }
+  return null;
+}
+
+/**
+ * Smartly prunes non-critical localStorage items to prevent QuotaExceeded errors,
+ * while keeping all critical session keys, since everything is safely persistent in IndexedDB.
+ */
+export function pruneOldLocalStorage(): void {
+  try {
+    const criticalKeys = [
+      'duo_pos_active_user',
+      'duo_pos_licensing_details',
+      'duo_pos_billing_settings',
+      'duo_pos_active_branch_id',
+      'duo_pos_active_register_id',
+      'duo_pos_muted'
+    ];
+    
+    // Prune items if localStorage is heavily used or on startup
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && !criticalKeys.includes(key) && !key.startsWith('duo_pos_daily_acts_') && !key.startsWith('sb-')) {
+        keysToRemove.push(key);
+      }
+    }
+    
+    keysToRemove.forEach((key) => {
+      try {
+        localStorage.removeItem(key);
+      } catch (err) {
+        void err;
+      }
+    });
+    console.log(`🧹 [OPTIMIZATION] Pruned ${keysToRemove.length} non-essential keys from localStorage.`);
+  } catch (e) {
+    void e;
+  }
 }
 
 // ─── Escuchar reconexión a internet para auto-sincronizar ───────────────────────

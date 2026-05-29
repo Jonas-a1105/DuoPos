@@ -3,6 +3,7 @@ import { User, LicenseDetails } from '../types';
 import { playSound } from '../services/sounds';
 import { toast } from '../components/Modal/FlashNotifications';
 import { supabase } from '../config/supabaseClient';
+import { syncUserPreferences } from '../services/supabaseSync';
 
 interface UserState {
   user: User | null;
@@ -80,6 +81,16 @@ export const useUserStore = create<UserState>((set, get) => ({
     set({ user: updatedUser });
     localStorage.setItem('duo_pos_active_user', JSON.stringify(updatedUser));
 
+    // Sync user UI preferences to Supabase
+    if (updatedUser.id) {
+      const isMuted = localStorage.getItem('duo_pos_muted') === 'true';
+      const soundEnabled = !isMuted;
+      const theme = updatedUser.activeSkin || 'standard';
+      syncUserPreferences(updatedUser.id, theme, soundEnabled).catch((err) => {
+        console.error('Error syncing user preferences:', err);
+      });
+    }
+
     // Also update in registered list index
     const savedUsersRaw = localStorage.getItem('duo_pos_users');
     const users: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
@@ -130,7 +141,9 @@ export const useUserStore = create<UserState>((set, get) => ({
     try {
       const savedCharges = localStorage.getItem('duo_pos_xp_booster_charges') || '0';
       chargesNum = parseInt(savedCharges, 10);
-    } catch {}
+    } catch (e) {
+      void e;
+    }
 
     if (chargesNum > 0) {
       xpGained = amount * 2;

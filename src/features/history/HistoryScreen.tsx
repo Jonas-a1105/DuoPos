@@ -174,6 +174,7 @@ export default function HistoryScreen({
                   minute: '2-digit',
                 });
 
+                const isRefunded = (t as any).refunded || t.status === 'refunded';
                 return (
                   <div
                     key={t.id}
@@ -192,6 +193,11 @@ export default function HistoryScreen({
                           <span className="text-[10px] bg-white border border-gray-200 px-1.5 py-0.2 rounded-md font-bold text-gray-500 uppercase tracking-wider text-[8px] flex items-center gap-0.5">
                             XP: +{t.xpGained} ✨
                           </span>
+                          {isRefunded && (
+                            <span className="text-[9px] bg-red-100 text-red-700 border border-red-200 px-1.5 py-0.5 rounded font-black uppercase leading-none">
+                              Reembolsado
+                            </span>
+                          )}
                         </div>
                         <p className="text-xs text-gray-400 font-bold flex items-center gap-1 flex-wrap">
                           <span className="flex items-center gap-0.5 font-extrabold text-[#3c3c3c]">
@@ -210,7 +216,9 @@ export default function HistoryScreen({
                         <span className="text-[10px] text-gray-400 font-black uppercase tracking-tight block">
                           Total cobrado
                         </span>
-                        <span className="text-lg font-black text-gray-800">${t.total.toFixed(2)}</span>
+                        <span className={`text-lg font-black ${isRefunded ? 'text-red-505 text-red-500 line-through' : 'text-gray-800'}`}>
+                          ${t.total.toFixed(2)}
+                        </span>
                       </div>
                       <span className="text-gray-300 md:block hidden">▶</span>
                     </div>
@@ -377,7 +385,11 @@ export default function HistoryScreen({
 
               {/* Refund / Ticket reversal controls with RBAC restriction */}
               <div>
-                {currentUser.role === 'cashier' ? (
+                {((activeReceipt as any).refunded || activeReceipt.status === 'refunded') ? (
+                  <div className="bg-red-50 border border-red-200 text-red-700 text-center py-3 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 select-none font-sans">
+                    ⚠️ Ticket Reembolsado e Invalidado
+                  </div>
+                ) : currentUser.role === 'cashier' ? (
                   <button
                     type="button"
                     onClick={() => {
@@ -385,7 +397,7 @@ export default function HistoryScreen({
                       setPinInput('');
                       setPinError('');
                     }}
-                    className="w-full bg-gray-50 text-gray-400 border-2 border-gray-205 border-b-4 hover:bg-gray-100 hover:text-gray-500 py-2.5 rounded-2xl font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                    className="w-full bg-gray-50 text-gray-400 border-2 border-gray-205 border-b-4 hover:bg-gray-100 hover:text-gray-500 py-2.5 rounded-2xl font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-1.5 cursor-pointer transition-all animate-fadeIn"
                   >
                     <span>🔒 Reembolsar (Requiere Supervisor)</span>
                   </button>
@@ -402,7 +414,7 @@ export default function HistoryScreen({
                         setSelectedReceiptId(null);
                       }
                     }}
-                    className="w-full bg-white text-red-500 border-2 border-red-200 border-b-4 hover:bg-red-50 active:translate-y-[2px] active:border-b-2 font-black py-2.5 rounded-2xl transition-all text-xs uppercase tracking-wider text-center flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="w-full bg-white text-red-500 border-2 border-red-200 border-b-4 hover:bg-red-50 active:translate-y-[2px] active:border-b-2 font-black py-2.5 rounded-2xl transition-all text-xs uppercase tracking-wider text-center flex items-center justify-center gap-1.5 cursor-pointer animate-fadeIn"
                   >
                     <RefreshCcw size={14} /> Reembolsar & Restituir Stock
                   </button>

@@ -21,6 +21,8 @@ import FiscalInspectorModal from './components/FiscalInspectorModal';
 import PaymentTerminalModal from './components/PaymentTerminalModal';
 import { toast } from '../../components/Modal/FlashNotifications';
 import { HardwareDeviceSettings } from '../../services/printService';
+import { stampInvoice } from '../../services/fiscalService';
+import { canMakeSale, getUpgradePrompt } from '../../services/planEnforcement';
 import {
   DEFAULT_TABLES,
   TableState,
@@ -61,6 +63,7 @@ interface SalesScreenProps {
   exchangeRates?: { oficial: number; paralelo: number };
   activeEvent?: ExpressEvent | null;
   onTriggerEventProgress?: (type: 'scan' | 'loyalty' | 'sale') => void;
+  licenseDetails?: any;
 }
 
 export default function SalesScreen({
@@ -84,6 +87,7 @@ export default function SalesScreen({
   exchangeRates = { oficial: 53.05, paralelo: 57.1 },
   activeEvent,
   onTriggerEventProgress,
+  licenseDetails,
 }: SalesScreenProps) {
   const activeChar: Character = DUO_CHARACTERS[user.avatar] || DUO_CHARACTERS.duo;
 
@@ -592,7 +596,18 @@ export default function SalesScreen({
     setIsCheckoutOpen(true);
   };
 
-  const submitCheckout = (cardDetailsFromTerminal?: any) => {
+  const submitCheckout = async (cardDetailsFromTerminal?: any) => {
+    if (licenseDetails) {
+      const enforcement = canMakeSale(licenseDetails.currentSalesCount || 0, licenseDetails.tier);
+      if (!enforcement.allowed) {
+        toast.error(
+          `${enforcement.message} ${getUpgradePrompt(licenseDetails.tier, 'ventas')}`,
+          { title: 'Límite de Ventas Superado 🔒', duration: 8000 }
+        );
+        return;
+      }
+    }
+
     if (isMixedPayment) {
       const cashPart = Number(mixedCashAmount) || 0;
       if (cashPart < 0) {
@@ -656,37 +671,69 @@ export default function SalesScreen({
 
     let calculatedInvoice = undefined;
     if (requestLegalInvoice && invoiceFiscalName && invoiceTaxId) {
-      const mockUuid =
-        'DUO00000-' +
-        Math.random().toString(36).substring(2, 6).toUpperCase() +
-        '-' +
-        Math.floor(1000 + Math.random() * 9000) +
-        '-4FFF-ACCB-' +
-        Math.random().toString(36).substring(2, 14).toUpperCase();
-      const nextNo = billingSettings
-        ? `${billingSettings.invoicePrefix}${billingSettings.nextInvoiceNumber}`
-        : `DUO-FAC-${Math.floor(10000 + Math.random() * 90000)}`;
-      const duoSeal =
-        'SelloSAT|' +
-        activeChar.avatar +
-        '|' +
-        Math.random().toString(36).substring(2, 15).toUpperCase() +
-        '==' +
-        '|' +
-        user.username.toUpperCase();
-
-      calculatedInvoice = {
-        uuid: mockUuid,
-        invoiceNo: nextNo,
-        fiscalName: invoiceFiscalName.toUpperCase(),
-        taxId: invoiceTaxId.toUpperCase(),
-        regime: invoiceRegime,
-        postalCode: invoicePostalCode,
-        certifiedAt: new Date().toISOString(),
-        satSignature: duoSeal,
-        paymentForm: isMixedPayment ? '99 - Por definir (Pago Mixto)' : invoicePaymentForm,
-        useCFDI: invoiceUseCFDI,
+      // Build a temporary draft transaction to pass to the stamping engine
+      const tempTxn: Transaction = {
+        id: newTxnId,
+        date: new Date().toISOString(),
+        items: cart.map((it) => {
+          const itemAddonsPrice = it.addons ? it.addons.reduce((sum, a) => sum + a.price, 0) : 0;
+          const itemUnitPrice = it.customPrice !== undefined ? it.customPrice : it.product.price;
+          const baseItemTotal = itemUnitPrice + itemAddonsPrice;
+          const finalCalculatedItemPrice = it.discountPercent
+            ? baseItemTotal * (1 - it.discountPercent / 100)
+            : baseItemTotal;
+          return {
+            productId: it.product.id,
+            name: it.product.name,
+            price: finalCalculatedItemPrice,
+            emoji: it.product.emoji,
+            quantity: it.quantity,
+            taxRateApplied: getTaxRateForCategory(it.product.category),
+          };
+        }),
+        subtotal: subtotalDesglosado,
+        tax: taxAmount,
+        discount: discountAmount,
+        total: totalAmount,
+        paymentMethod: isMixedPayment ? 'cash' : paymentMethod,
+        employeeName: user.username,
+        xpGained: xpGranted,
+        invoiceData: {
+          uuid: '',
+          invoiceNo: '',
+          fiscalName: invoiceFiscalName,
+          taxId: invoiceTaxId,
+          regime: invoiceRegime,
+          postalCode: invoicePostalCode,
+          certifiedAt: new Date().toISOString(),
+          paymentForm: invoicePaymentForm,
+          useCFDI: invoiceUseCFDI,
+        }
       };
+
+      const stampResult = await stampInvoice(tempTxn, billingSettings);
+      if (stampResult.success) {
+        calculatedInvoice = {
+          uuid: stampResult.uuid || '',
+          invoiceNo: stampResult.invoiceNo || '',
+          fiscalName: invoiceFiscalName.toUpperCase(),
+          taxId: invoiceTaxId.toUpperCase(),
+          regime: invoiceRegime,
+          postalCode: invoicePostalCode,
+          certifiedAt: stampResult.certifiedAt || new Date().toISOString(),
+          satSignature: stampResult.satSignature || '',
+          paymentForm: isMixedPayment ? '99 - Por definir (Pago Mixto)' : invoicePaymentForm,
+          useCFDI: invoiceUseCFDI,
+        };
+        toast.success(`Factura CFDI 4.0 timbrada con éxito (${stampResult.isMock ? 'Simulación' : 'Real PAC Facturama'})`, {
+          title: 'Timbrado Exitoso 🧾'
+        });
+      } else {
+        toast.error(`Error de Timbrado SAT: ${stampResult.error || 'No se pudo certificar el CFDI.'}`, {
+          title: 'Fallo de Factura Fiscal ⚠️'
+        });
+        return; // Halt the checkout if stamping fails when explicitly requested
+      }
     }
 
     const newTransaction: Transaction = {

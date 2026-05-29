@@ -36,6 +36,10 @@ import {
   syncSavePurchaseOrder,
   getLocalData,
   setLocalData,
+  syncDailyStats,
+  loadUserPreferences,
+  pruneOldLocalStorage,
+  syncUserPreferences,
 } from '../services/supabaseSync';
 
 import { useUserStore } from '../stores/useUserStore';
@@ -465,6 +469,107 @@ export default function AppRouter() {
     }
   }, [licenseDetails.tier, activeRateType]);
 
+  // Load and apply user UI preferences (theme, sound) on login
+  useEffect(() => {
+    if (!user || !user.id) return;
+    
+    const applyUserPreferences = async () => {
+      try {
+        const prefs = await loadUserPreferences(user.id);
+        if (prefs) {
+          console.log('🎨 [PREFERENCES] Aplicando preferencias cargadas de Supabase:', prefs);
+          
+          // Apply theme (activeSkin)
+          if (prefs.theme && prefs.theme !== user.activeSkin) {
+            const updatedUser = { ...user, activeSkin: prefs.theme };
+            saveUser(updatedUser);
+          }
+          
+          // Apply sound (enableSounds)
+          const isMutedNow = !prefs.sound_enabled;
+          setIsMuted(isMutedNow);
+          localStorage.setItem('duo_pos_muted', String(isMutedNow));
+          
+          const updatedBilling = { ...billingSettings, enableSounds: prefs.sound_enabled };
+          setBillingSettings(updatedBilling);
+        }
+      } catch (e) {
+        console.error('Error loading/applying user preferences:', e);
+      }
+    };
+    
+    applyUserPreferences();
+    
+    // Perform smart localStorage pruning on startup/login
+    pruneOldLocalStorage();
+  }, [user?.id]);
+
+  // ─── Supabase Realtime Subscriptions for Products and Transactions ────────────
+  useEffect(() => {
+    if (!user || !isSupabaseConfigured()) return;
+
+    console.log('📡 [REALTIME] Suscribiendo a canales de Supabase Realtime...');
+    
+    // Subscribe to products table modifications
+    const productsChannel = supabase
+      .channel('realtime-products-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'products' },
+        async (payload) => {
+          console.log('📡 [REALTIME] Cambio detectado en tabla products:', payload);
+          try {
+            const loaded = await syncLoad<Product>('products', 'duo_pos_products', []);
+            const augmented = loaded.map((p) => {
+              if (!p.branchesStock) {
+                return {
+                  ...p,
+                  branchesStock: {
+                    'branch-centro': p.stock,
+                    'branch-central': p.stock * 3 + 40,
+                    'branch-norte': Math.round(p.stock * 0.7) + 5,
+                  },
+                };
+              }
+              return p;
+            });
+            setProducts(augmented);
+          } catch (e) {
+            console.error('Error reloading products in realtime:', e);
+          }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to transactions table modifications
+    const transactionsChannel = supabase
+      .channel('realtime-transactions-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'transactions' },
+        async (payload) => {
+          console.log('📡 [REALTIME] Cambio detectado en tabla transactions:', payload);
+          try {
+            const loaded = await syncLoad<Transaction>('transactions', 'duo_pos_transactions', [], {
+              orderBy: 'date',
+              ascending: false,
+              branchId: activeBranchId,
+            });
+            setTransactions(loaded);
+          } catch (e) {
+            console.error('Error reloading transactions in realtime:', e);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('📡 [REALTIME] Removiendo canales de Supabase Realtime...');
+      supabase.removeChannel(productsChannel);
+      supabase.removeChannel(transactionsChannel);
+    };
+  }, [user, activeBranchId]);
+
   // Periodic License Validity & Clock Tampering Verification
   useEffect(() => {
     const checkLicenseValidity = () => {
@@ -631,13 +736,14 @@ export default function AppRouter() {
           setProducts(augmented);
           await setLocalData('duo_pos_products', augmented);
         }),
-        syncLoad<Transaction>('transactions', 'duo_pos_transactions', [], { orderBy: 'date', ascending: false }).then(
+        syncLoad<Transaction>('transactions', 'duo_pos_transactions', [], { orderBy: 'date', ascending: false, branchId: activeBranchId }).then(
           setTransactions,
         ),
         syncLoad<Customer>('customers', 'duo_pos_customers', []).then(setCustomers),
         syncLoad<CashShift>('cash_shifts', 'duo_pos_shift_history', [], {
           orderBy: 'opening_time',
           ascending: false,
+          branchId: activeBranchId,
         }).then((loaded) => {
           const active = loaded.find(
             (s) => s.status === 'open' && s.branchId === activeBranchId && s.registerId === activeRegisterId,
@@ -817,7 +923,7 @@ export default function AppRouter() {
       localStorage.setItem('duo_pos_muted', String(isMutedNow));
     }
 
-    // Save to Supabase (Local-First Sync)
+    // Save to Supabase (Local-First Sync) using app_settings table name
     const loadedSettingsRaw = localStorage.getItem('duo_pos_settings');
     let allSettings: { id: string; data: any }[] = [];
     try {
@@ -825,10 +931,18 @@ export default function AppRouter() {
     } catch {}
 
     allSettings = allSettings.filter((s) => s.id !== 'billing');
-    const newRow = { id: 'billing', data: updated };
+    const newRow = { id: 'billing', data: updated, updated_at: new Date().toISOString() };
     allSettings.push(newRow);
 
-    await syncSave<{ id: string; data: any }>('settings', 'duo_pos_settings', allSettings, newRow);
+    await syncSave<{ id: string; data: any }>('app_settings', 'duo_pos_settings', allSettings, newRow);
+
+    // Sync preferences (sound) to Supabase user_preferences table if logged in
+    if (user && user.id) {
+      const theme = user.activeSkin || 'standard';
+      syncUserPreferences(user.id, theme, updated.enableSounds !== false).catch((err) => {
+        console.error('Error syncing preferences on save:', err);
+      });
+    }
   };
 
   // Suppliers and Purchase Orders handlers (delegated to useInventory hook)
@@ -900,6 +1014,8 @@ export default function AppRouter() {
           : { barcodeScans: 0, invoicesEmitted: 0, customersRegistered: 0 };
         currentStats.invoicesEmitted = (currentStats.invoicesEmitted || 0) + 1;
         localStorage.setItem(`duo_pos_daily_acts_${today}`, JSON.stringify(currentStats));
+        // Sincronizar estadísticas en Supabase
+        syncDailyStats(today, currentStats).catch((err) => console.error('Error syncing daily stats:', err));
       } catch (e) {}
     }
 
@@ -964,12 +1080,20 @@ export default function AppRouter() {
     const targetTxn = transactions.find((t) => t.id === txnId);
     if (!targetTxn) return;
 
-    // 1. Restore product inventory stocks
+    // 1. Restore product inventory stocks (including branch stock)
     const changedProducts: Product[] = [];
     const updatedProducts = products.map((p) => {
       const soldItem = targetTxn.items.find((item) => item.productId === p.id);
       if (soldItem) {
-        const changed = { ...p, stock: p.stock + soldItem.quantity };
+        let updatedBranchesStock = p.branchesStock ? { ...p.branchesStock } : undefined;
+        if (updatedBranchesStock && activeBranchId) {
+          updatedBranchesStock[activeBranchId] = (updatedBranchesStock[activeBranchId] ?? 0) + soldItem.quantity;
+        }
+        const changed = { 
+          ...p, 
+          stock: p.stock + soldItem.quantity,
+          branchesStock: updatedBranchesStock
+        };
         changedProducts.push(changed);
         return changed;
       }
@@ -983,15 +1107,25 @@ export default function AppRouter() {
       await syncSave<Product>('products', 'duo_pos_products', updatedProducts, cp);
     }
 
-    // 2. Erase transaction from audit log
-    const updatedTxns = transactions.filter((t) => t.id !== txnId);
-    setTransactions(updatedTxns);
+    // 2. Mark transaction as refunded instead of deleting
+    const refundedTxn = {
+      ...targetTxn,
+      status: 'refunded',
+      refunded: true,
+      refundedAt: new Date().toISOString()
+    };
+    const updatedTxns = transactions.map((t) => (t.id === txnId ? refundedTxn : t));
+    setTransactions(updatedTxns as any);
 
-    await syncDelete('transactions', 'duo_pos_transactions', updatedTxns, txnId);
+    await syncSave<Transaction>('transactions', 'duo_pos_transactions', updatedTxns as any, refundedTxn as any);
 
     // 2b. Adjust active shift sales values if cash (delegated to useShifts hook)
     if (activeShift) {
       updateShiftAfterRefund(targetTxn.total, targetTxn.paymentMethod === 'cash');
+      // Register explicit cash movement egreso (out) if it was a cash sale
+      if (targetTxn.paymentMethod === 'cash') {
+        handleAddShiftMovement('out', targetTxn.total, `Reembolso Ticket #${txnId.slice(0, 8).toUpperCase()}`);
+      }
     }
 
     // 3. Subtract XP (or give warning feedback)
@@ -1664,6 +1798,7 @@ export default function AppRouter() {
                     exchangeRates={exchangeRates}
                     activeEvent={activeEvent}
                     onTriggerEventProgress={handleTriggerEventProgress}
+                    licenseDetails={licenseDetails}
                   />
                 }
               />
@@ -1705,6 +1840,8 @@ export default function AppRouter() {
                     onReceivePurchaseOrder={handleReceivePurchaseOrder}
                     onCancelPurchaseOrder={handleCancelPurchaseOrder}
                     onRegisterSupplierPayout={handleRegisterSupplierPayout}
+                    exchangeRate={exchangeRates[activeRateType]}
+                    activeRateType={activeRateType}
                   />
                 }
               />

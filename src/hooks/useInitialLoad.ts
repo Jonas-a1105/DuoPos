@@ -131,9 +131,11 @@ async function loadProducts() {
 
 async function loadTransactions() {
   try {
+    const activeBranchId = localStorage.getItem('duo_pos_active_branch_id') || 'branch-centro';
     const loaded = await syncLoad<Transaction>('transactions', 'duo_pos_transactions', [], {
       orderBy: 'date',
       ascending: false,
+      branchId: activeBranchId,
     });
     useSalesStore.getState().setTransactions(loaded);
   } catch {
@@ -161,7 +163,7 @@ async function loadCustomers() {
 
 async function loadBillingSettings() {
   try {
-    const loaded = await syncLoad<{ id: string; data: any }>('settings', 'duo_pos_settings', [
+    const loaded = await syncLoad<{ id: string; data: any }>('app_settings', 'duo_pos_settings', [
       { id: 'billing', data: DEFAULT_BILLING_SETTINGS },
     ]);
     const billingRow = loaded.find((s) => s.id === 'billing');

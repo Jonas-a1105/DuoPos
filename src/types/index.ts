@@ -155,6 +155,9 @@ export interface Transaction {
   mixedCashAmount?: number;
   mixedCardAmount?: number;
   employeeName: string;
+  status?: 'active' | 'refunded';
+  refunded?: boolean;
+  refundedAt?: string;
   xpGained: number;
   customerId?: string;
   gemsGained?: number;
@@ -255,6 +258,8 @@ export interface LegalBillingSettings {
   customTicketHeader?: string;
   customTicketFooter?: string;
   kdsDelayMinutes?: number;
+  pacUsername?: string;
+  pacPassword?: string;
 }
 
 export interface DailyGoalStatus {
@@ -339,6 +344,9 @@ export interface Supplier {
   deliveryDays: number;
   reliability: number; // 0 - 100
   balance: number; // outstanding liability
+  paymentHistory?: { id: string; amount: number; date: string; method: string; notes: string }[];
+  dueDate?: string; // Due date for outstanding balance
+  paymentTermDays?: number; // Payment term in days (default: 30)
 }
 
 export interface PurchaseOrderItem {
