@@ -11,5 +11,5 @@ interface CustomerState {
 export const useCustomerStore = create<CustomerState>((set) => ({
   customers: [],
 
-  setCustomers: (customers) => set({ customers })
+  setCustomers: (customers) => set({ customers }),
 }));

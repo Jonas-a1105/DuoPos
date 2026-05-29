@@ -82,10 +82,10 @@ export function notifyXpResult(
 ) {
   if (levelUpResult.didLevelUp) {
     playSound('levelup');
-    toast.achievement(
-      `¡Subiste al nivel ${levelUpResult.newLevel}! Título: ${levelUpResult.title}`,
-      { title: '¡NIVEL ALCANZADO! 🎉', duration: 8000 },
-    );
+    toast.achievement(`¡Subiste al nivel ${levelUpResult.newLevel}! Título: ${levelUpResult.title}`, {
+      title: '¡NIVEL ALCANZADO! 🎉',
+      duration: 8000,
+    });
     options?.triggerHappyMood?.();
   } else if (xpGained > 0) {
     toast.info(`¡Ganaste +${xpGained} XP! Sigue así ⚡`, {

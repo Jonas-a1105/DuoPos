@@ -73,10 +73,10 @@ export function useShifts() {
           duration: 6000,
         });
       } else {
-        toast.warning(
-          `Turno cerrado. Descrepancia de caja calculada: $${difference.toFixed(2)} USD.`,
-          { title: 'Cierre de Turno 📂', duration: 5500 },
-        );
+        toast.warning(`Turno cerrado. Descrepancia de caja calculada: $${difference.toFixed(2)} USD.`, {
+          title: 'Cierre de Turno 📂',
+          duration: 5500,
+        });
       }
       onGrantXp?.(xpReward);
     },

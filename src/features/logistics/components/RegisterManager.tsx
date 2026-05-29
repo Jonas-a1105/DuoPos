@@ -36,16 +36,15 @@ export default function RegisterManager({
   onGrantXp,
   showRegisterForm,
   onCloseForm,
-  onOpenRegisterForm
+  onOpenRegisterForm,
 }: RegisterManagerProps) {
-  
   // Localized form states
   const [newRegName, setNewRegName] = useState('');
   const [newRegEmoji, setNewRegEmoji] = useState('💵');
 
   // filtered registers of current branch
   const activeBranchRegisters = useMemo(() => {
-    return registers.filter(r => r.branchId === activeBranchId);
+    return registers.filter((r) => r.branchId === activeBranchId);
   }, [registers, activeBranchId]);
 
   const handleCreateRegister = async (e: React.FormEvent) => {
@@ -61,7 +60,7 @@ export default function RegisterManager({
       branchId: activeBranchId,
       name: newRegName.trim(),
       emoji: newRegEmoji,
-      status: 'active'
+      status: 'active',
     };
 
     const updated = [...registers, newReg];
@@ -76,14 +75,15 @@ export default function RegisterManager({
 
   return (
     <div className="space-y-4 animate-fadeIn text-left font-sans">
-      
       {/* Modal Añadir Caja */}
       {showRegisterForm && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl border-2 border-gray-200 p-5 max-w-sm w-full space-y-4 animate-scaleUp text-left">
             <div className="flex justify-between items-center border-b pb-2">
               <h3 className="text-base font-black text-gray-800">🖥️ Añadir Caja / Terminal de Cobro</h3>
-              <button onClick={onCloseForm} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+              <button onClick={onCloseForm} className="text-gray-400 hover:text-gray-600">
+                <X size={18} />
+              </button>
             </div>
 
             <form onSubmit={handleCreateRegister} className="space-y-3.5 text-xs font-bold">
@@ -104,7 +104,7 @@ export default function RegisterManager({
                     type="text"
                     placeholder="Ej. Caja Rápida, Kiosco K-2"
                     value={newRegName}
-                    onChange={e => setNewRegName(e.target.value)}
+                    onChange={(e) => setNewRegName(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-gray-50 border-2 rounded-xl focus:border-indigo-500 outline-none"
                   />
                 </div>
@@ -113,7 +113,7 @@ export default function RegisterManager({
                   <label className="text-gray-500 block uppercase">Icono</label>
                   <select
                     value={newRegEmoji}
-                    onChange={e => setNewRegEmoji(e.target.value)}
+                    onChange={(e) => setNewRegEmoji(e.target.value)}
                     className="w-full px-2 py-2.5 bg-gray-50 border-2 rounded-xl outline-none"
                   >
                     <option value="💵">💵 Caja</option>
@@ -150,13 +150,17 @@ export default function RegisterManager({
           <h3 className="text-lg font-black text-gray-800 flex items-center gap-1.5 font-sans">
             Terminales en: <span className="text-[#58cc02]">{activeBranch?.name}</span>
           </h3>
-          <p className="text-xs text-gray-400 font-extrabold">Cada terminal o caja registra de forma aislada su propio arqueo de fondos y turnos de cajeros.</p>
+          <p className="text-xs text-gray-400 font-extrabold">
+            Cada terminal o caja registra de forma aislada su propio arqueo de fondos y turnos de cajeros.
+          </p>
         </div>
-        
+
         <button
           onClick={() => {
             if (currentUser.role !== 'admin') {
-              alert('🔒 Acceso Denegado: Solo el Administrador Corporativo puede agregar o configurar nuevas cajas registradoras de flujo legal de dinero.');
+              alert(
+                '🔒 Acceso Denegado: Solo el Administrador Corporativo puede agregar o configurar nuevas cajas registradoras de flujo legal de dinero.',
+              );
             } else {
               playSound('click');
               onOpenRegisterForm();
@@ -169,30 +173,28 @@ export default function RegisterManager({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 font-sans">
-        {activeBranchRegisters.map(reg => {
+        {activeBranchRegisters.map((reg) => {
           const isSelected = reg.id === activeRegisterId;
-          
+
           // Find if this register currently has an active shift
           const isShiftOpen = activeShift && activeShift.registerId === reg.id;
-          
+
           return (
-            <div 
-              key={reg.id} 
+            <div
+              key={reg.id}
               className={`bg-white border-2 rounded-3xl p-5 flex flex-col justify-between relative transition-all ${
-                isSelected 
-                  ? 'border-indigo-500 border-b-8 ring-4 ring-indigo-500/10' 
-                  : 'border-gray-200 border-b-[6px]'
+                isSelected ? 'border-indigo-500 border-b-8 ring-4 ring-indigo-500/10' : 'border-gray-200 border-b-[6px]'
               }`}
             >
               <div className="space-y-3 text-left">
                 <div className="flex justify-between items-center">
                   <span className="text-3xl p-1 bg-slate-50 border rounded-xl">{reg.emoji || '🖥️'}</span>
-                  
-                  <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded ${
-                    isShiftOpen 
-                      ? 'bg-green-100 text-green-700 animate-pulse' 
-                      : 'bg-gray-100 text-gray-550'
-                  }`}>
+
+                  <span
+                    className={`text-[8px] font-black uppercase px-2 py-0.5 rounded ${
+                      isShiftOpen ? 'bg-green-100 text-green-700 animate-pulse' : 'bg-gray-100 text-gray-550'
+                    }`}
+                  >
                     {isShiftOpen ? '● Turno Abierto' : '● Turno Cerrado'}
                   </span>
                 </div>

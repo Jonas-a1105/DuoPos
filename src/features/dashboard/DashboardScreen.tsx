@@ -34,7 +34,7 @@ export default function DashboardScreen({
   onSetNewGoal,
   onNavigateToSell,
   onGrantXp,
-  onUpdateUser
+  onUpdateUser,
 }: DashboardScreenProps) {
   const activeChar = DUO_CHARACTERS[user.avatar] || DUO_CHARACTERS.duo;
 
@@ -42,11 +42,20 @@ export default function DashboardScreen({
 
   // Compute stats for TODAY
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
-  const todayTransactions = useMemo(() => transactions.filter(t => t.date.startsWith(todayStr)), [transactions, todayStr]);
-  const todaySalesSum = useMemo(() => todayTransactions.reduce((acc, curr) => acc + curr.total, 0), [todayTransactions]);
+  const todayTransactions = useMemo(
+    () => transactions.filter((t) => t.date.startsWith(todayStr)),
+    [transactions, todayStr],
+  );
+  const todaySalesSum = useMemo(
+    () => todayTransactions.reduce((acc, curr) => acc + curr.total, 0),
+    [todayTransactions],
+  );
   const isGoalReached = todaySalesSum >= user.dailyGoal;
 
-  const pctGoal = useMemo(() => Math.min(Math.round((todaySalesSum / user.dailyGoal) * 100), 100), [todaySalesSum, user.dailyGoal]);
+  const pctGoal = useMemo(
+    () => Math.min(Math.round((todaySalesSum / user.dailyGoal) * 100), 100),
+    [todaySalesSum, user.dailyGoal],
+  );
   const xpNeededForNextLevel = user.level * 100;
   const xpPct = Math.min((user.xp / xpNeededForNextLevel) * 100, 100);
 
@@ -58,9 +67,9 @@ export default function DashboardScreen({
         products,
         transactions,
         version: 'DuoPOS_v1.8',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
+
       const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -71,7 +80,7 @@ export default function DashboardScreen({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (err) {
-       toast.error('Error al exportar los datos: ' + err);
+      toast.error('Error al exportar los datos: ' + err);
     }
   };
 
@@ -86,19 +95,19 @@ export default function DashboardScreen({
         const parsed = JSON.parse(e.target?.result as string);
         if (parsed && typeof parsed === 'object') {
           if (!parsed.user || !parsed.products || !parsed.transactions) {
-             toast.error('⛔ Error: El archivo cargado no tiene un esquema de DuoPOS válido.');
+            toast.error('⛔ Error: El archivo cargado no tiene un esquema de DuoPOS válido.');
             return;
           }
 
           localStorage.setItem('duo_pos_active_user', JSON.stringify(parsed.user));
           await setLocalData('duo_pos_products', parsed.products);
           await setLocalData('duo_pos_transactions', parsed.transactions);
-          
-           toast.success('✅ ¡Base de datos de DuoPOS restaurada éxitosamente! Reiniciando vista...');
+
+          toast.success('✅ ¡Base de datos de DuoPOS restaurada éxitosamente! Reiniciando vista...');
           window.location.reload();
         }
       } catch (err) {
-         toast.error('⛔ Fallo de parseo: El archivo no contiene JSON válido.');
+        toast.error('⛔ Fallo de parseo: El archivo no contiene JSON válido.');
       }
     };
     reader.readAsText(file);
@@ -106,23 +115,24 @@ export default function DashboardScreen({
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fadeIn font-sans pb-10 text-left">
-      
       {/* 1. Header Banner: Hero Streak & XP indicators */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        
         {/* Profile Card & Level */}
         <div className="duo-theme-card p-5 flex items-center gap-4">
           <div className="bg-gradient-to-tr from-yellow-300 to-amber-400 p-1.5 rounded-2xl shadow-sm border border-amber-300 flex-shrink-0 relative">
             <span className="text-4xl block filter drop-shadow-sm select-none">{activeChar.avatar}</span>
             {user.activeAccessory && (
-              <span className="absolute -top-2.5 -right-1.5 text-xl select-none filter drop-shadow-xs animate-bounce" style={{ animationDuration: '3s' }}>
+              <span
+                className="absolute -top-2.5 -right-1.5 text-xl select-none filter drop-shadow-xs animate-bounce"
+                style={{ animationDuration: '3s' }}
+              >
                 {(() => {
                   const mapping: Record<string, string> = {
                     'accessory-hat': '🎩',
                     'accessory-glasses': '😎',
                     'accessory-corona': '👑',
                     'accessory-traje': '🕴️',
-                    'accessory-capa': '🦸'
+                    'accessory-capa': '🦸',
                   };
                   return mapping[user.activeAccessory] || '';
                 })()}
@@ -131,12 +141,17 @@ export default function DashboardScreen({
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-xl truncate" style={{ color: 'var(--duo-text)' }}>{user.username}</span>
+              <span className="font-extrabold text-xl truncate" style={{ color: 'var(--duo-text)' }}>
+                {user.username}
+              </span>
               <span className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border-b-2 border-amber-250 text-[10px] px-2 py-0.5 rounded-md font-black uppercase tracking-wider flex items-center gap-0.5">
                 Nivel {user.level}
               </span>
             </div>
-            <p className="text-xs font-extrabold truncate uppercase tracking-tight mt-0.5" style={{ color: 'var(--duo-text-muted)' }}>
+            <p
+              className="text-xs font-extrabold truncate uppercase tracking-tight mt-0.5"
+              style={{ color: 'var(--duo-text-muted)' }}
+            >
               👑 {user.levelTitle}
             </p>
           </div>
@@ -148,15 +163,20 @@ export default function DashboardScreen({
             <span className="flex items-center gap-1" style={{ color: 'var(--duo-primary)' }}>
               <Award size={18} /> Puntos de Experiencia (XP)
             </span>
-            <span style={{ color: 'var(--duo-text-muted)' }}>{user.xp} / {xpNeededForNextLevel} XP</span>
+            <span style={{ color: 'var(--duo-text-muted)' }}>
+              {user.xp} / {xpNeededForNextLevel} XP
+            </span>
           </div>
           <div className="w-full bg-gray-100 dark:bg-zinc-800 h-4 rounded-full p-[2px] overflow-hidden">
-            <div 
+            <div
               className="h-full rounded-full transition-all duration-500"
               style={{ width: `${xpPct}%`, backgroundColor: 'var(--duo-progress-bar)' }}
             />
           </div>
-          <p className="text-[10px] font-black tracking-wide uppercase text-right" style={{ color: 'var(--duo-text-muted)' }}>
+          <p
+            className="text-[10px] font-black tracking-wide uppercase text-right"
+            style={{ color: 'var(--duo-text-muted)' }}
+          >
             ¡Haz ventas o agrega inventario para subir de nivel!
           </p>
         </div>
@@ -178,7 +198,6 @@ export default function DashboardScreen({
           </div>
           <div className="text-3xl select-none">🔥</div>
         </div>
-
       </div>
 
       {/* 2. Interactive Character Bubble */}
@@ -186,39 +205,60 @@ export default function DashboardScreen({
         <div className="text-7xl select-none transform hover:scale-110 active:-rotate-12 duration-200 flex-shrink-0 relative">
           {activeChar.avatar}
           {user.activeAccessory && (
-            <span className="absolute -top-3.5 -right-2 text-3xl select-none filter drop-shadow-xs animate-bounce" style={{ animationDuration: '3s' }}>
+            <span
+              className="absolute -top-3.5 -right-2 text-3xl select-none filter drop-shadow-xs animate-bounce"
+              style={{ animationDuration: '3s' }}
+            >
               {(() => {
                 const mapping: Record<string, string> = {
                   'accessory-hat': '🎩',
                   'accessory-glasses': '😎',
                   'accessory-corona': '👑',
                   'accessory-traje': '🕴️',
-                  'accessory-capa': '🦸'
+                  'accessory-capa': '🦸',
                 };
                 return mapping[user.activeAccessory] || '';
               })()}
             </span>
           )}
         </div>
-        <div className="flex-1 relative border rounded-2xl py-4 px-5 text-base font-bold" style={{ backgroundColor: 'var(--duo-bg)', borderColor: 'var(--duo-card-border)', color: 'var(--duo-text)' }}>
+        <div
+          className="flex-1 relative border rounded-2xl py-4 px-5 text-base font-bold"
+          style={{ backgroundColor: 'var(--duo-bg)', borderColor: 'var(--duo-card-border)', color: 'var(--duo-text)' }}
+        >
           {/* Triangular pointer */}
-          <div className="absolute left-[-8px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-b-8 border-b-transparent" style={{ borderRightColor: 'var(--duo-bg)' }} />
-          <div className="absolute left-[-9px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-b-8 border-b-transparent -z-10" style={{ borderRightColor: 'var(--duo-card-border)' }} />
-          
+          <div
+            className="absolute left-[-8px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-b-8 border-b-transparent"
+            style={{ borderRightColor: 'var(--duo-bg)' }}
+          />
+          <div
+            className="absolute left-[-9px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-b-8 border-b-transparent -z-10"
+            style={{ borderRightColor: 'var(--duo-card-border)' }}
+          />
+
           <div className="flex justify-between items-center mb-1.5">
-            <span className="text-xs uppercase tracking-wider font-black animate-pulse" style={{ color: 'var(--duo-primary)' }}>
+            <span
+              className="text-xs uppercase tracking-wider font-black animate-pulse"
+              style={{ color: 'var(--duo-primary)' }}
+            >
               {activeChar.name} • Tu Mentor Financiero
             </span>
-            <span className="text-xs flex items-center gap-1 font-extrabold px-2 py-0.5 rounded-full shadow-xs border" style={{ backgroundColor: 'var(--duo-card-bg)', borderColor: 'var(--duo-card-border)', color: 'var(--duo-text-muted)' }}>
+            <span
+              className="text-xs flex items-center gap-1 font-extrabold px-2 py-0.5 rounded-full shadow-xs border"
+              style={{
+                backgroundColor: 'var(--duo-card-bg)',
+                borderColor: 'var(--duo-card-border)',
+                color: 'var(--duo-text-muted)',
+              }}
+            >
               <MessageSquare size={12} /> Sugerencia activa
             </span>
           </div>
 
           <p className="leading-relaxed font-extrabold pr-2">
-            {isGoalReached 
+            {isGoalReached
               ? `¡ESPECTACULAR! Hemos alcanzado el objetivo de ventas de hoy ($${todaySalesSum.toFixed(2)} / $${user.dailyGoal.toFixed(2)}). ¡Has salvado la racha familiar y ganado bonificaciones extra!`
-              : `Llevamos $${todaySalesSum.toFixed(2)} facturados hoy en ${todayTransactions.length} ventas. Nos faltan $${Math.max(0, user.dailyGoal - todaySalesSum).toFixed(2)} para completar la meta de $${user.dailyGoal}. ${activeChar.idleQuote}`
-            }
+              : `Llevamos $${todaySalesSum.toFixed(2)} facturados hoy en ${todayTransactions.length} ventas. Nos faltan $${Math.max(0, user.dailyGoal - todaySalesSum).toFixed(2)} para completar la meta de $${user.dailyGoal}. ${activeChar.idleQuote}`}
           </p>
         </div>
       </div>
@@ -243,12 +283,12 @@ export default function DashboardScreen({
           {/* Large custom progress tracker with star award at the end */}
           <div className="relative pt-1">
             <div className="w-full bg-gray-100 dark:bg-zinc-800 h-8 rounded-2xl p-1 overflow-hidden relative border border-gray-200 dark:border-zinc-700 shadow-inner flex items-center">
-              <div 
-                className="h-full rounded-xl transition-all duration-500 border-b-4 flex items-center justify-end pr-2 overflow-hidden" 
-                style={{ 
-                  width: `${pctGoal}%`, 
-                  backgroundColor: 'var(--duo-primary)', 
-                  borderBottomColor: 'var(--duo-primary-dark)' 
+              <div
+                className="h-full rounded-xl transition-all duration-500 border-b-4 flex items-center justify-end pr-2 overflow-hidden"
+                style={{
+                  width: `${pctGoal}%`,
+                  backgroundColor: 'var(--duo-primary)',
+                  borderBottomColor: 'var(--duo-primary-dark)',
                 }}
               >
                 {pctGoal > 15 && (
@@ -257,9 +297,11 @@ export default function DashboardScreen({
                   </span>
                 )}
               </div>
-              
+
               {/* Star flag icon at the end */}
-              <div className={`absolute right-3 text-lg transition-transform ${isGoalReached ? 'scale-125 duration-300 text-yellow-400 animate-bounce' : 'text-gray-300'}`}>
+              <div
+                className={`absolute right-3 text-lg transition-transform ${isGoalReached ? 'scale-125 duration-300 text-yellow-400 animate-bounce' : 'text-gray-300'}`}
+              >
                 ⭐
               </div>
             </div>
@@ -273,15 +315,13 @@ export default function DashboardScreen({
               Ajustar Meta del Día (Admin)
             </span>
             <div className="grid grid-cols-3 gap-1.5">
-              {[100, 150, 300].map(val => (
+              {[100, 150, 300].map((val) => (
                 <button
                   key={val}
                   type="button"
                   onClick={() => onSetNewGoal(val)}
                   className={`py-1.5 px-1 rounded-xl font-bold text-xs transition-all cursor-pointer ${
-                    user.dailyGoal === val
-                      ? 'duo-theme-btn-primary scale-105'
-                      : 'duo-theme-btn-secondary'
+                    user.dailyGoal === val ? 'duo-theme-btn-primary scale-105' : 'duo-theme-btn-secondary'
                   }`}
                 >
                   ${val}
@@ -291,9 +331,7 @@ export default function DashboardScreen({
           </div>
         ) : (
           <div className="bg-gray-50 dark:bg-zinc-900/60 border border-[var(--duo-card-border)] rounded-2xl p-4 flex flex-col justify-center items-center text-center space-y-1">
-            <span className="text-xs font-black uppercase text-gray-400">
-              Meta Diaria
-            </span>
+            <span className="text-xs font-black uppercase text-gray-400">Meta Diaria</span>
             <span className="text-2xl font-black" style={{ color: 'var(--duo-text)' }}>
               ${user.dailyGoal} USD
             </span>
@@ -307,11 +345,11 @@ export default function DashboardScreen({
       {/* META COOPERATIVA DE SUCURSAL */}
       {(() => {
         const branchSalesGoal = 500;
-        const simulatedOtherSales = 285.50;
+        const simulatedOtherSales = 285.5;
         const totalBranchSales = todaySalesSum + simulatedOtherSales;
         const branchPct = Math.min(Math.round((totalBranchSales / branchSalesGoal) * 100), 100);
         const isBranchGoalReached = totalBranchSales >= branchSalesGoal;
-        
+
         const claimedDate = localStorage.getItem('duo_pos_branch_reward_claimed_date') || '';
         const isClaimedToday = claimedDate === todayStr;
 
@@ -334,15 +372,17 @@ export default function DashboardScreen({
           } catch {}
 
           localStorage.setItem('duo_pos_branch_reward_claimed_date', todayStr);
-          
+
           if (onUpdateUser) {
             const updatedUser = {
               ...user,
               gems: (user.gems ?? 40) + 50,
-              gemsEarnedTotal: (user.gemsEarnedTotal ?? 40) + 50
+              gemsEarnedTotal: (user.gemsEarnedTotal ?? 40) + 50,
             };
             onUpdateUser(updatedUser);
-            toast.success('¡Excelente! Has reclamado el Bono de Trabajo en Equipo de la Sucursal: +50 Gemas 💎. ¡Felicidades a todo el equipo!');
+            toast.success(
+              '¡Excelente! Has reclamado el Bono de Trabajo en Equipo de la Sucursal: +50 Gemas 💎. ¡Felicidades a todo el equipo!',
+            );
           }
         };
 
@@ -353,25 +393,26 @@ export default function DashboardScreen({
                 <div>
                   <h3 className="text-xl font-black text-indigo-950 flex items-center gap-2">
                     👥 Meta Cooperativa de Sucursal
-                    <span className="text-indigo-600 animate-pulse text-sm font-black px-2 py-0.5 bg-indigo-50 border border-indigo-150 rounded-full">¡En Vivo! 🤝</span>
+                    <span className="text-indigo-600 animate-pulse text-sm font-black px-2 py-0.5 bg-indigo-50 border border-indigo-150 rounded-full">
+                      ¡En Vivo! 🤝
+                    </span>
                   </h3>
                   <p className="text-xs font-extrabold uppercase mt-0.5 text-indigo-500">
-                    Suma grupal de la sucursal activa • Meta: <span className="font-black text-indigo-950">${branchSalesGoal} USD</span>
+                    Suma grupal de la sucursal activa • Meta:{' '}
+                    <span className="font-black text-indigo-950">${branchSalesGoal} USD</span>
                   </p>
                 </div>
-                <span className="text-lg font-black text-indigo-600">
-                  {branchPct}% completado
-                </span>
+                <span className="text-lg font-black text-indigo-600">{branchPct}% completado</span>
               </div>
 
               {/* Progress bar */}
               <div className="relative pt-1">
                 <div className="w-full bg-indigo-50 dark:bg-zinc-800 h-8 rounded-2xl p-1 overflow-hidden relative border border-indigo-150 shadow-inner flex items-center">
-                  <div 
+                  <div
                     className="h-full rounded-xl transition-all duration-500 border-b-4 flex items-center justify-end pr-2 overflow-hidden bg-gradient-to-r from-indigo-500 to-[#8c52ff]"
-                    style={{ 
-                      width: `${branchPct}%`, 
-                      borderBottomColor: '#6c22ff' 
+                    style={{
+                      width: `${branchPct}%`,
+                      borderBottomColor: '#6c22ff',
                     }}
                   >
                     {branchPct > 20 && (
@@ -380,7 +421,9 @@ export default function DashboardScreen({
                       </span>
                     )}
                   </div>
-                  <div className={`absolute right-3 text-lg transition-transform ${isBranchGoalReached ? 'scale-125 duration-300 text-yellow-400 animate-bounce' : 'text-gray-300'}`}>
+                  <div
+                    className={`absolute right-3 text-lg transition-transform ${isBranchGoalReached ? 'scale-125 duration-300 text-yellow-400 animate-bounce' : 'text-gray-300'}`}
+                  >
                     🎁
                   </div>
                 </div>
@@ -406,10 +449,8 @@ export default function DashboardScreen({
 
             {/* Reward claim panel */}
             <div className="bg-indigo-50/50 dark:bg-zinc-900/60 border border-indigo-150 rounded-2xl p-4 flex flex-col justify-center items-center text-center space-y-3 h-full">
-              <span className="text-xs font-black uppercase text-indigo-600">
-                Bono Grupal de Sucursal
-              </span>
-              
+              <span className="text-xs font-black uppercase text-indigo-600">Bono Grupal de Sucursal</span>
+
               {isClaimedToday ? (
                 <div className="space-y-1">
                   <span className="text-green-600 text-sm font-black flex items-center gap-1 justify-center">
@@ -430,7 +471,11 @@ export default function DashboardScreen({
               ) : (
                 <div className="space-y-1">
                   <span className="text-gray-400 text-xs font-bold block">
-                    Faltan <strong className="text-indigo-600">${Math.max(0, branchSalesGoal - totalBranchSales).toFixed(2)} USD</strong> en conjunto para desbloquear la recompensa grupal diaria.
+                    Faltan{' '}
+                    <strong className="text-indigo-600">
+                      ${Math.max(0, branchSalesGoal - totalBranchSales).toFixed(2)} USD
+                    </strong>{' '}
+                    en conjunto para desbloquear la recompensa grupal diaria.
                   </span>
                 </div>
               )}
@@ -485,10 +530,7 @@ export default function DashboardScreen({
       {/* CORE VIEWPORTS TAB RENDERING */}
       {activeDashboardTab === 'overview' && (
         <div className="space-y-6 md:space-y-8">
-          <BentoStats
-            transactions={transactions}
-            products={products}
-          />
+          <BentoStats transactions={transactions} products={products} />
           <SalesChartCard
             transactions={transactions}
             products={products}
@@ -499,20 +541,11 @@ export default function DashboardScreen({
       )}
 
       {activeDashboardTab === 'advanced' && (
-        <AdvancedAnalyticsTab
-          transactions={transactions}
-          products={products}
-          user={user}
-        />
+        <AdvancedAnalyticsTab transactions={transactions} products={products} user={user} />
       )}
 
       {activeDashboardTab === 'copilot' && (
-        <DuoCopilotTab
-          user={user}
-          transactions={transactions}
-          products={products}
-          onGrantXp={onGrantXp}
-        />
+        <DuoCopilotTab user={user} transactions={transactions} products={products} onGrantXp={onGrantXp} />
       )}
 
       {/* Backup Footer Panel */}
@@ -522,19 +555,16 @@ export default function DashboardScreen({
             💾 Copia de Seguridad y Portabilidad de Datos (Soporte Multi-dispositivo)
           </h4>
           <p className="text-xs text-gray-500 font-bold leading-normal">
-            Luea tu tienda de un dispositivo a otro de verdad y sin simulaciones. Genera un archivo con todo tu inventario, racha actual, nivel de XP y registros históricos de ventas para restaurarla en cualquier navegador o celular.
+            Luea tu tienda de un dispositivo a otro de verdad y sin simulaciones. Genera un archivo con todo tu
+            inventario, racha actual, nivel de XP y registros históricos de ventas para restaurarla en cualquier
+            navegador o celular.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-3 w-full md:w-auto shrink-0 justify-end">
           <label className="bg-white text-gray-600 border-2 border-gray-200 border-b-4 hover:bg-gray-55 active:translate-y-[2px] active:border-b-2 py-3.5 px-6 rounded-2xl font-black text-xs uppercase cursor-pointer flex items-center gap-2 tracking-wider transition-all shadow-xs">
             <Upload size={14} /> Restaurar Copia (.json)
-            <input 
-              type="file" 
-              accept=".json" 
-              onChange={handleImportDB} 
-              className="hidden" 
-            />
+            <input type="file" accept=".json" onChange={handleImportDB} className="hidden" />
           </label>
 
           <button
@@ -545,7 +575,6 @@ export default function DashboardScreen({
           </button>
         </div>
       </div>
-
     </div>
   );
 }

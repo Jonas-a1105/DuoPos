@@ -70,7 +70,10 @@ export function useLicenseValidation(
     optionsRef.current.onSetClockTampered(false);
 
     if (licenseDetails.activated && licenseDetails.expiresAt !== 'Nunca') {
-      const expiryDate = setMilliseconds(setSeconds(setMinutes(setHours(new Date(licenseDetails.expiresAt), 23), 59), 59), 999);
+      const expiryDate = setMilliseconds(
+        setSeconds(setMinutes(setHours(new Date(licenseDetails.expiresAt), 23), 59), 59),
+        999,
+      );
       const today = setMilliseconds(setSeconds(setMinutes(setHours(new Date(), 0), 0), 0), 0);
       optionsRef.current.onSetLicenseExpired(isAfter(today, expiryDate));
     } else {

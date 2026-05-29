@@ -46,18 +46,21 @@ export default function CashDrawer({
     const isPerfect = Math.abs(diff) < 0.01;
     const isShort = diff < 0;
 
-    const inSum = rep.movements.filter(m => m.type === 'in').reduce((acc, m) => acc + m.amount, 0);
-    const outSum = rep.movements.filter(m => m.type === 'out').reduce((acc, m) => acc + m.amount, 0);
+    const inSum = rep.movements.filter((m) => m.type === 'in').reduce((acc, m) => acc + m.amount, 0);
+    const outSum = rep.movements.filter((m) => m.type === 'out').reduce((acc, m) => acc + m.amount, 0);
     const cashSales = Math.max(0, rep.expectedCash - rep.initialCash - inSum + outSum);
 
-    let characterMsg = "¡Impecable! Tu racha de precisión brilla. La caja cuadra perfectamente. Lily te da un choca esos cinco. 🙌";
-    let charAvatar = "lily";
+    let characterMsg =
+      '¡Impecable! Tu racha de precisión brilla. La caja cuadra perfectamente. Lily te da un choca esos cinco. 🙌';
+    let charAvatar = 'lily';
     if (isShort) {
-      characterMsg = "🦉🔎 *Duo te observa fijamente desconfiado...* Falta dinero en el conteo final. ¡Asegúrate de registrar cada centavo!";
-      charAvatar = "duo";
+      characterMsg =
+        '🦉🔎 *Duo te observa fijamente desconfiado...* Falta dinero en el conteo final. ¡Asegúrate de registrar cada centavo!';
+      charAvatar = 'duo';
     } else if (diff > 0) {
-      characterMsg = "✨ ¡Vaya! Sobró cambio en el cajón. Asegúrate de que no le hayas cobrado de más a Zari por distraerte con su moda.";
-      charAvatar = "lily";
+      characterMsg =
+        '✨ ¡Vaya! Sobró cambio en el cajón. Asegúrate de que no le hayas cobrado de más a Zari por distraerte con su moda.';
+      charAvatar = 'lily';
     }
 
     return (
@@ -65,7 +68,10 @@ export default function CashDrawer({
         <div className="bg-white border-2 border-gray-200 border-b-8 rounded-3xl max-w-sm w-full p-6 relative shadow-2xl">
           <button
             type="button"
-            onClick={() => { setLastClosedShiftReport(null); playSound('click'); }}
+            onClick={() => {
+              setLastClosedShiftReport(null);
+              playSound('click');
+            }}
             className="absolute right-4 top-4 text-gray-400 hover:text-gray-650 rounded-full hover:bg-gray-100 p-1 bg-gray-50 border cursor-pointer font-black text-xs h-7 w-7 flex items-center justify-center select-none"
           >
             ✕
@@ -76,15 +82,33 @@ export default function CashDrawer({
 
             <div className="text-center space-y-1 mt-1">
               <h4 className="text-sm font-black uppercase tracking-wider text-gray-700">🦜 DUOPOS SYSTEM</h4>
-              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest leading-none">Corte de Caja / Z-Report</p>
-              <p className="text-[9px] text-[#949494] font-medium leading-none">Turno: #{rep.id.slice(-6).toUpperCase()}</p>
+              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest leading-none">
+                Corte de Caja / Z-Report
+              </p>
+              <p className="text-[9px] text-[#949494] font-medium leading-none">
+                Turno: #{rep.id.slice(-6).toUpperCase()}
+              </p>
             </div>
 
             <div className="border-t border-dashed border-gray-300 py-2 space-y-1 text-[10px] font-bold text-gray-650">
-              <p>OPERADOR: <span className="text-gray-800">{rep.employeeName.toUpperCase()}</span></p>
-              <p>APERTURA: <span>{new Date(rep.openingTime).toLocaleDateString()} {new Date(rep.openingTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></p>
+              <p>
+                OPERADOR: <span className="text-gray-800">{rep.employeeName.toUpperCase()}</span>
+              </p>
+              <p>
+                APERTURA:{' '}
+                <span>
+                  {new Date(rep.openingTime).toLocaleDateString()}{' '}
+                  {new Date(rep.openingTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </p>
               {rep.closingTime && (
-                <p>CIERRE   : <span>{new Date(rep.closingTime).toLocaleDateString()} {new Date(rep.closingTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></p>
+                <p>
+                  CIERRE :{' '}
+                  <span>
+                    {new Date(rep.closingTime).toLocaleDateString()}{' '}
+                    {new Date(rep.closingTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </p>
               )}
             </div>
 
@@ -104,7 +128,9 @@ export default function CashDrawer({
 
               {rep.movements && rep.movements.length > 0 && (
                 <div className="pt-1.5 space-y-1 border-t border-slate-150 text-[10px] text-gray-500 font-medium">
-                  <p className="uppercase tracking-widest text-[#949494] text-[8px] font-black">Ajustes manuales y retiros:</p>
+                  <p className="uppercase tracking-widest text-[#949494] text-[8px] font-black">
+                    Ajustes manuales y retiros:
+                  </p>
                   {rep.movements.map((m) => (
                     <div key={m.id} className="flex justify-between pl-1">
                       <span className="truncate max-w-[120px] text-slate-405">
@@ -128,12 +154,16 @@ export default function CashDrawer({
                 <span>EFECTIVO CLASIF. :</span>
                 <span>${rep.actualCash !== undefined ? rep.actualCash.toFixed(2) : '-'}</span>
               </div>
-              
-              <div className={`flex justify-between font-black border-t-2 border-double border-gray-300 pt-1.5 text-xs ${
-                isPerfect ? 'text-green-650' : 'text-red-650'
-              }`}>
+
+              <div
+                className={`flex justify-between font-black border-t-2 border-double border-gray-300 pt-1.5 text-xs ${
+                  isPerfect ? 'text-green-650' : 'text-red-650'
+                }`}
+              >
                 <span>DIFERENCIA (Z):</span>
-                <span>{diff >= 0 ? '+' : ''}${diff.toFixed(2)}</span>
+                <span>
+                  {diff >= 0 ? '+' : ''}${diff.toFixed(2)}
+                </span>
               </div>
             </div>
 
@@ -146,9 +176,7 @@ export default function CashDrawer({
               <span className="text-[10px] font-black text-[#58cc02] uppercase tracking-wider block">
                 Auditoría DuoPOS
               </span>
-              <p className="text-[11px] font-bold text-gray-650 leading-normal">
-                {characterMsg}
-              </p>
+              <p className="text-[11px] font-bold text-gray-650 leading-normal">{characterMsg}</p>
             </div>
           </div>
 
@@ -163,7 +191,10 @@ export default function CashDrawer({
               <span>Imprimir Informe 🖨️</span>
             </button>
             <button
-              onClick={() => { setLastClosedShiftReport(null); playSound('click'); }}
+              onClick={() => {
+                setLastClosedShiftReport(null);
+                playSound('click');
+              }}
               className="w-full bg-gray-150 hover:bg-gray-200 py-3 rounded-2xl font-black text-xs text-gray-655 uppercase text-center cursor-pointer"
             >
               Cerrar Reporte
@@ -185,16 +216,13 @@ export default function CashDrawer({
       <div className="max-w-md mx-auto my-12 bg-white border-2 border-gray-200 border-b-8 rounded-3xl p-6 md:p-8 space-y-6 text-center animate-scaleUp text-gray-850">
         <div className="space-y-2">
           <div className="relative inline-block mt-2">
-            <span className="text-8xl block select-none drop-shadow-sm leading-none animate-bounce">
-              🔑
-            </span>
+            <span className="text-8xl block select-none drop-shadow-sm leading-none animate-bounce">🔑</span>
             <span className="absolute -top-1 -right-1 text-2xl select-none">🦉</span>
           </div>
-          <h2 className="text-2xl font-black text-gray-800 uppercase tracking-tight">
-            Apertura de Turno
-          </h2>
+          <h2 className="text-2xl font-black text-gray-800 uppercase tracking-tight">Apertura de Turno</h2>
           <p className="text-xs text-[#949494] font-bold leading-relaxed px-4">
-            ¡Hola, <strong className="text-gray-700">{user.username}</strong>! Para poder facturar y realizar ventas con DuoPOS, debes abrir tu turno declarando tu fondo inicial en efectivo.
+            ¡Hola, <strong className="text-gray-700">{user.username}</strong>! Para poder facturar y realizar ventas con
+            DuoPOS, debes abrir tu turno declarando tu fondo inicial en efectivo.
           </p>
         </div>
 
@@ -204,11 +232,14 @@ export default function CashDrawer({
             Fondo de Caja Recomendado
           </span>
           <div className="grid grid-cols-4 gap-2">
-            {['100', '250', '500', '1000'].map(val => (
+            {['100', '250', '500', '1000'].map((val) => (
               <button
                 key={val}
                 type="button"
-                onClick={() => { setOpeningCashInput(val); playSound('click'); }}
+                onClick={() => {
+                  setOpeningCashInput(val);
+                  playSound('click');
+                }}
                 className={`py-2 rounded-xl text-xs font-black border-2 transition-all cursor-pointer ${
                   openingCashInput === val
                     ? 'bg-[#1cb0f6] border-[#1cb0f6] text-white shadow-xs'
@@ -221,13 +252,9 @@ export default function CashDrawer({
           </div>
 
           <div className="space-y-1.5 pt-1">
-            <label className="text-[10px] uppercase font-bold text-gray-500 block">
-              Monto del fondo inicial ($)
-            </label>
+            <label className="text-[10px] uppercase font-bold text-gray-500 block">Monto del fondo inicial ($)</label>
             <div className="relative">
-              <span className="absolute left-3.5 top-2.5 font-extrabold text-[#58cc02] text-sm leading-none">
-                $
-              </span>
+              <span className="absolute left-3.5 top-2.5 font-extrabold text-[#58cc02] text-sm leading-none">$</span>
               <input
                 type="number"
                 value={openingCashInput}
@@ -238,7 +265,8 @@ export default function CashDrawer({
               />
             </div>
             <p className="text-[9px] text-[#949494] font-medium leading-normal pt-1.5 leading-relaxed">
-              * El fondo de caja inicial es la cantidad en efectivo disponible al abrir para facilitar el cambio sencillo a los clientes. En POS reales, esto evita descuadres.
+              * El fondo de caja inicial es la cantidad en efectivo disponible al abrir para facilitar el cambio
+              sencillo a los clientes. En POS reales, esto evita descuadres.
             </p>
           </div>
         </div>
@@ -263,13 +291,17 @@ export default function CashDrawer({
             </div>
             <div className="max-h-[160px] overflow-y-auto space-y-1.5 pr-1 text-left">
               {shiftHistory.map((hist) => (
-                <div key={hist.id} className="bg-gray-50 hover:bg-gray-100 border border-gray-200 p-2.5 rounded-xl flex items-center justify-between text-xs font-bold text-gray-600 transition-colors">
+                <div
+                  key={hist.id}
+                  className="bg-gray-50 hover:bg-gray-100 border border-gray-200 p-2.5 rounded-xl flex items-center justify-between text-xs font-bold text-gray-600 transition-colors"
+                >
                   <div>
                     <span className="bg-emerald-100 text-[#3c9e01] border border-emerald-250 text-[8px] font-black uppercase tracking-wider py-0.5 px-1.5 rounded-md">
                       Arqueo OK
                     </span>
                     <p className="mt-1 text-[10px] text-gray-700 font-black leading-none">
-                      {new Date(hist.openingTime).toLocaleDateString()} a las {new Date(hist.openingTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(hist.openingTime).toLocaleDateString()} a las{' '}
+                      {new Date(hist.openingTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                     <p className="text-[9px] text-[#949494] font-bold mt-0.5 block font-sans">
                       Fondo: ${hist.initialCash.toFixed(2)} • Ventas: ${hist.salesVolume.toFixed(2)}
@@ -277,7 +309,10 @@ export default function CashDrawer({
                   </div>
                   <button
                     type="button"
-                    onClick={() => { setLastClosedShiftReport(hist); playSound('click'); }}
+                    onClick={() => {
+                      setLastClosedShiftReport(hist);
+                      playSound('click');
+                    }}
                     className="text-[#1cb0f6] border border-[#1cb0f6]/20 bg-[#1cb0f6]/5 text-[9px] font-black uppercase tracking-wider py-1.5 px-2.5 rounded-lg hover:bg-sky-100 transition-colors cursor-pointer select-none"
                   >
                     Ver Ticket 🧾
@@ -299,9 +334,7 @@ export default function CashDrawer({
       {/* CASH DRAWER PANEL WIDGET */}
       <div className="bg-[#f7f7f7] border-2 border-gray-200 rounded-3xl p-4 flex flex-col md:flex-row gap-4 justify-between items-center shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="bg-[#58cc02] text-white p-2.5 rounded-2xl shadow-xs select-none font-black text-lg">
-            💰
-          </div>
+          <div className="bg-[#58cc02] text-white p-2.5 rounded-2xl shadow-xs select-none font-black text-lg">💰</div>
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs uppercase font-black text-gray-400 tracking-wider">Turno de Caja</span>
@@ -309,9 +342,7 @@ export default function CashDrawer({
                 Activo
               </span>
             </div>
-            <h4 className="text-sm font-black text-gray-800 uppercase">
-              Operador: {activeShift.employeeName}
-            </h4>
+            <h4 className="text-sm font-black text-gray-800 uppercase">Operador: {activeShift.employeeName}</h4>
           </div>
         </div>
 
@@ -336,7 +367,10 @@ export default function CashDrawer({
           {/* Movimiento de caja button */}
           <button
             type="button"
-            onClick={() => { setIsMovementOpen(true); playSound('click'); }}
+            onClick={() => {
+              setIsMovementOpen(true);
+              playSound('click');
+            }}
             className="flex-1 md:flex-none py-2 px-3.5 border-2 border-[#e5e5e5] hover:bg-white text-gray-655 bg-gray-50 text-[10px] font-black uppercase tracking-wider rounded-xl active:translate-y-[2px] transition-all cursor-pointer flex items-center justify-center gap-1"
             title="Ingresar o Retirar efectivo auxiliar para control de caja"
           >
@@ -346,10 +380,10 @@ export default function CashDrawer({
           {/* Cierre de caja button */}
           <button
             type="button"
-            onClick={() => { 
+            onClick={() => {
               setClosingCashCount(activeShift.expectedCash.toFixed(2));
-              setIsClosingShiftOpen(true); 
-              playSound('click'); 
+              setIsClosingShiftOpen(true);
+              playSound('click');
             }}
             className="flex-1 md:flex-none py-2 px-4 bg-red-500 text-white border-b-4 border-red-700 hover:bg-red-400 active:translate-y-[2px] active:border-b-0 text-[10px] font-black uppercase tracking-wider rounded-xl cursor-pointer flex items-center justify-center gap-1"
             title="Realizar arqueo de caja manual, cuadrar caja y cerrar turno"
@@ -365,7 +399,10 @@ export default function CashDrawer({
           <div className="bg-white border-2 border-gray-200 border-b-8 rounded-3xl max-w-md w-full p-5 sm:p-6 space-y-6 relative shadow-2xl">
             <button
               type="button"
-              onClick={() => { setIsClosingShiftOpen(false); playSound('click'); }}
+              onClick={() => {
+                setIsClosingShiftOpen(false);
+                playSound('click');
+              }}
               className="absolute right-4 top-4 text-gray-400 hover:text-gray-650 rounded-full hover:bg-gray-100 p-1 bg-gray-50 border cursor-pointer font-black text-xs h-7 w-7 flex items-center justify-center select-none"
             >
               ✕
@@ -404,17 +441,32 @@ export default function CashDrawer({
                   <span>(+) Fondo inicial</span>
                   <span>+${activeShift.initialCash.toFixed(2)}</span>
                 </div>
-                
+
                 <div className="flex justify-between text-gray-500 font-medium">
                   <span>(+) Entregas en efectivo (Ventas)</span>
-                  <span>+${Math.max(0, Number((activeShift.expectedCash - activeShift.initialCash - activeShift.movements.filter(m => m.type === 'in').reduce((acc, m) => acc + m.amount, 0) + activeShift.movements.filter(m => m.type === 'out').reduce((acc, m) => acc + m.amount, 0)).toFixed(2))).toFixed(2)}</span>
+                  <span>
+                    +$
+                    {Math.max(
+                      0,
+                      Number(
+                        (
+                          activeShift.expectedCash -
+                          activeShift.initialCash -
+                          activeShift.movements.filter((m) => m.type === 'in').reduce((acc, m) => acc + m.amount, 0) +
+                          activeShift.movements.filter((m) => m.type === 'out').reduce((acc, m) => acc + m.amount, 0)
+                        ).toFixed(2),
+                      ),
+                    ).toFixed(2)}
+                  </span>
                 </div>
 
                 {activeShift.movements && activeShift.movements.length > 0 && (
                   <div className="space-y-0.5 border-t pt-2 mt-2 font-medium text-[11px]">
-                    {activeShift.movements.map(m => (
+                    {activeShift.movements.map((m) => (
                       <div key={m.id} className="flex justify-between text-slate-400">
-                        <span>{m.type === 'in' ? '📈 Inyección:' : '📉 Retiro:'} {m.reason}</span>
+                        <span>
+                          {m.type === 'in' ? '📈 Inyección:' : '📉 Retiro:'} {m.reason}
+                        </span>
                         <span className={m.type === 'in' ? 'text-green-600' : 'text-red-500'}>
                           {m.type === 'in' ? '+' : '-'}${m.amount.toFixed(2)}
                         </span>
@@ -446,7 +498,7 @@ export default function CashDrawer({
                     step="any"
                   />
                 </div>
-                
+
                 {(() => {
                   const counted = parseFloat(closingCashCount) || 0;
                   const diff = counted - activeShift.expectedCash;
@@ -454,23 +506,26 @@ export default function CashDrawer({
                   const isShort = diff < 0;
 
                   return (
-                    <div className={`mt-2 p-2 rounded-xl text-xs font-bold flex items-center gap-1.5 border leading-tight ${
-                      isPerfect 
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-250' 
-                        : isShort 
-                          ? 'bg-red-50 text-red-750 border-red-200' 
-                          : 'bg-amber-50 text-amber-700 border-amber-250'
-                    }`}>
+                    <div
+                      className={`mt-2 p-2 rounded-xl text-xs font-bold flex items-center gap-1.5 border leading-tight ${
+                        isPerfect
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-250'
+                          : isShort
+                            ? 'bg-red-50 text-red-750 border-red-200'
+                            : 'bg-amber-50 text-amber-700 border-amber-250'
+                      }`}
+                    >
                       <span className="select-none h-4 w-4">⚖️</span>
                       <div>
                         <p className="font-extrabold text-gray-805">
-                          Diferencia: {diff >= 0 ? '+' : ''}${diff.toFixed(2)} ({isPerfect ? 'Perfecto' : isShort ? 'Faltante de Caja' : 'Sobrante de Caja'})
+                          Diferencia: {diff >= 0 ? '+' : ''}${diff.toFixed(2)} (
+                          {isPerfect ? 'Perfecto' : isShort ? 'Faltante de Caja' : 'Sobrante de Caja'})
                         </p>
                         <p className="text-[9px] font-medium opacity-80 mt-0.5 leading-normal">
-                          {isPerfect 
-                            ? '¡Perfecto! No hay discrepancia entre el esperado y el saldo físico.' 
-                            : isShort 
-                              ? 'El saldo físico reportado es menor al estimado por el sistema.' 
+                          {isPerfect
+                            ? '¡Perfecto! No hay discrepancia entre el esperado y el saldo físico.'
+                            : isShort
+                              ? 'El saldo físico reportado es menor al estimado por el sistema.'
                               : 'El saldo reportado físico es mayor que los movimientos registrados.'}
                         </p>
                       </div>
@@ -501,7 +556,7 @@ export default function CashDrawer({
                 const diffVal = actualVal - expectedVal;
 
                 onCloseShift(actualVal, expectedVal, diffVal, closingNotes);
-                
+
                 // Save the closed shift details locally to display the final Ticket Audit view
                 const summaryRep: CashShift = {
                   ...activeShift,
@@ -509,7 +564,7 @@ export default function CashDrawer({
                   actualCash: actualVal,
                   difference: diffVal,
                   status: 'closed',
-                  expectedCash: expectedVal
+                  expectedCash: expectedVal,
                 };
                 setLastClosedShiftReport(summaryRep);
 
@@ -518,7 +573,7 @@ export default function CashDrawer({
                 } else {
                   playSound('error');
                 }
-                
+
                 setIsClosingShiftOpen(false);
                 setClosingCashCount('');
                 setClosingNotes('');
@@ -537,7 +592,10 @@ export default function CashDrawer({
           <div className="bg-white border-2 border-gray-200 border-b-8 rounded-3xl max-w-sm w-full p-5 sm:p-6 space-y-6 relative shadow-2xl">
             <button
               type="button"
-              onClick={() => { setIsMovementOpen(false); playSound('click'); }}
+              onClick={() => {
+                setIsMovementOpen(false);
+                playSound('click');
+              }}
               className="absolute right-4 top-4 text-gray-400 hover:text-gray-655 rounded-full hover:bg-gray-100 p-1 bg-gray-50 border cursor-pointer font-black text-xs h-7 w-7 flex items-center justify-center select-none"
             >
               ✕
@@ -561,7 +619,10 @@ export default function CashDrawer({
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => { setMovementType('in'); playSound('click'); }}
+                    onClick={() => {
+                      setMovementType('in');
+                      playSound('click');
+                    }}
                     className={`py-2 rounded-xl text-xs font-black border-2 text-center cursor-pointer select-none transition-all ${
                       movementType === 'in'
                         ? 'bg-green-500 border-green-500 text-white shadow-xs'
@@ -572,7 +633,10 @@ export default function CashDrawer({
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setMovementType('out'); playSound('click'); }}
+                    onClick={() => {
+                      setMovementType('out');
+                      playSound('click');
+                    }}
                     className={`py-2 rounded-xl text-xs font-black border-2 text-center cursor-pointer select-none transition-all ${
                       movementType === 'out'
                         ? 'bg-red-500 border-red-500 text-white shadow-xs'
@@ -627,7 +691,9 @@ export default function CashDrawer({
                 }
                 if (movementType === 'out' && amt > activeShift.expectedCash) {
                   playSound('error');
-                  alert(`Fondos insuficientes. No puedes retirar más del efectivo disponible ($${activeShift.expectedCash.toFixed(2)})`);
+                  alert(
+                    `Fondos insuficientes. No puedes retirar más del efectivo disponible ($${activeShift.expectedCash.toFixed(2)})`,
+                  );
                   return;
                 }
                 onAddShiftMovement(movementType, amt, movementReason);

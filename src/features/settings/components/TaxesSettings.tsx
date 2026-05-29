@@ -23,7 +23,7 @@ export default function TaxesSettings({
   taxIncludedInPrice,
   setTaxIncludedInPrice,
   categoryOverrides,
-  setCategoryOverrides
+  setCategoryOverrides,
 }: TaxesSettingsProps) {
   const [newCategory, setNewCategory] = useState('');
   const [newRate, setNewRate] = useState('');
@@ -33,7 +33,7 @@ export default function TaxesSettings({
     const rateVal = parseFloat(newRate);
     if (isNaN(rateVal)) return;
 
-    if (categoryOverrides.some(o => o.category.toLowerCase() === newCategory.trim().toLowerCase())) {
+    if (categoryOverrides.some((o) => o.category.toLowerCase() === newCategory.trim().toLowerCase())) {
       toast.error('La categoría ya tiene un impuesto asignado.');
       return;
     }
@@ -46,7 +46,7 @@ export default function TaxesSettings({
   };
 
   const handleRemoveOverride = (category: string) => {
-    const updated = categoryOverrides.filter(o => o.category !== category);
+    const updated = categoryOverrides.filter((o) => o.category !== category);
     setCategoryOverrides(updated);
     playSound('error');
   };
@@ -56,14 +56,20 @@ export default function TaxesSettings({
       <div className="border-b pb-3 flex items-center gap-2">
         <span className="text-2xl select-none">📊</span>
         <div>
-          <h3 className="text-sm font-black uppercase text-gray-800 tracking-tight font-sans">Ajustes del IVA y Tasas Base</h3>
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Define el nombre y valor base del impuesto nacional</p>
+          <h3 className="text-sm font-black uppercase text-gray-800 tracking-tight font-sans">
+            Ajustes del IVA y Tasas Base
+          </h3>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">
+            Define el nombre y valor base del impuesto nacional
+          </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-sans text-gray-700">
         <div className="space-y-1">
-          <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">Nombre del Impuesto</label>
+          <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">
+            Nombre del Impuesto
+          </label>
           <input
             type="text"
             required
@@ -75,7 +81,9 @@ export default function TaxesSettings({
         </div>
 
         <div className="space-y-1">
-          <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">Tasa de Impuesto General (%)</label>
+          <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">
+            Tasa de Impuesto General (%)
+          </label>
           <div className="relative">
             <input
               type="number"
@@ -91,7 +99,9 @@ export default function TaxesSettings({
         </div>
 
         <div className="md:col-span-2 space-y-1">
-          <label className="text-[10px] uppercase font-black text-gray-455 tracking-wider block mb-1">Cálculo de Precios en Almacén</label>
+          <label className="text-[10px] uppercase font-black text-gray-455 tracking-wider block mb-1">
+            Cálculo de Precios en Almacén
+          </label>
           <label className="flex items-center gap-2 bg-slate-50 border-2 border-slate-205 p-3 rounded-2xl cursor-pointer">
             <input
               type="checkbox"
@@ -100,8 +110,12 @@ export default function TaxesSettings({
               className="rounded text-amber-500 focus:ring-amber-500 h-4 w-4 border-gray-300 cursor-pointer"
             />
             <div className="select-none text-left">
-              <span className="text-[10px] font-black text-slate-700 uppercase block">Las tarifas expuestas ya incluyen impuestos (Precio Neto)</span>
-              <span className="text-[9px] text-gray-400 font-bold block lowercase">Habilita esta casilla para que el POS no añada el porcentaje al total al facturar.</span>
+              <span className="text-[10px] font-black text-slate-700 uppercase block">
+                Las tarifas expuestas ya incluyen impuestos (Precio Neto)
+              </span>
+              <span className="text-[9px] text-gray-400 font-bold block lowercase">
+                Habilita esta casilla para que el POS no añada el porcentaje al total al facturar.
+              </span>
             </div>
           </label>
         </div>
@@ -155,7 +169,9 @@ export default function TaxesSettings({
         {/* Override cards list */}
         <div className="bg-slate-50 border rounded-2xl p-4 space-y-2 text-xs">
           {categoryOverrides.length === 0 ? (
-            <p className="text-gray-400 font-bold italic text-center py-2">No se han registrado excepciones impositivas. Todos los productos tributan al {generalTaxRate}%.</p>
+            <p className="text-gray-400 font-bold italic text-center py-2">
+              No se han registrado excepciones impositivas. Todos los productos tributan al {generalTaxRate}%.
+            </p>
           ) : (
             <div className="divide-y divide-gray-150 text-left">
               {categoryOverrides.map((ov) => (

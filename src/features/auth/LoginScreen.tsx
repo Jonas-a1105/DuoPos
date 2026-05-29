@@ -35,11 +35,17 @@ const mapProfileToUser = (profile: any, selectedCharacter: string, role: string)
   unlockedSkins: profile.unlocked_skins || ['standard'],
   activeSkin: profile.active_skin || 'standard',
   unlockedBadges: profile.unlocked_badges || [],
-  completedMissionsToday: profile.completed_missions_today || []
+  completedMissionsToday: profile.completed_missions_today || [],
 });
 
 // Crear estructura de perfil por defecto
-const createDefaultProfileObj = (userId: string, userEmail: string, userName: string, avatar: string, role: string) => ({
+const createDefaultProfileObj = (
+  userId: string,
+  userEmail: string,
+  userName: string,
+  avatar: string,
+  role: string,
+) => ({
   id: userId,
   username: userName,
   email: userEmail,
@@ -55,7 +61,7 @@ const createDefaultProfileObj = (userId: string, userEmail: string, userName: st
   unlocked_skins: ['standard'],
   active_skin: 'standard',
   unlocked_badges: [],
-  completed_missions_today: []
+  completed_missions_today: [],
 });
 
 // Helper to translate Clerk errors to beautiful Spanish Duolingo style
@@ -104,7 +110,11 @@ const translateClerkError = (err: any): string => {
   if (msgLower.includes('compromised') || msgLower.includes('data breach') || msgLower.includes('breach')) {
     return '¡Ouch! 🦉 Esa contraseña es muy común en internet. ¡Por favor, inventa una diferente para proteger tus gemas!';
   }
-  if (msgLower.includes('at least 8 characters') || msgLower.includes('must be 8 characters') || msgLower.includes('too short')) {
+  if (
+    msgLower.includes('at least 8 characters') ||
+    msgLower.includes('must be 8 characters') ||
+    msgLower.includes('too short')
+  ) {
     return '¡Cuidado! 🦉 Tu contraseña debe tener al menos 8 caracteres para mantener a salvo tu racha de ventas.';
   }
   if (msgLower.includes('already exists') || msgLower.includes('already in use') || msgLower.includes('taken')) {
@@ -156,26 +166,26 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState<string>('duo');
   const [role, setRole] = useState<'admin' | 'supervisor' | 'cashier'>('admin');
-  
+
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [successAnimation, setSuccessAnimation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Flujo OTP de Clerk
   const [pendingVerification, setPendingVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
-  
+
   const [diagnosticLog, setDiagnosticLog] = useState<string[]>([]);
 
   const addLog = (msg: string) => {
-    setDiagnosticLog(prev => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
+    setDiagnosticLog((prev) => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
     console.log(`[AUTH CLERK] ${msg}`);
   };
 
   useEffect(() => {
-    addLog("🔌 Inicializando módulo Clerk + Supabase en producción...");
-    addLog("🌐 Conexión activa con el servidor de seguridad de Clerk.");
+    addLog('🔌 Inicializando módulo Clerk + Supabase en producción...');
+    addLog('🌐 Conexión activa con el servidor de seguridad de Clerk.');
   }, []);
 
   const characterKeys = Object.keys(DUO_CHARACTERS);
@@ -204,7 +214,7 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
     setErrorMessage('');
     setIsLoading(true);
-    addLog("----------------------------------------");
+    addLog('----------------------------------------');
     addLog(`Iniciando registro de Clerk para "${username.trim()}" (${email.trim()})...`);
 
     try {
@@ -212,16 +222,19 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
       await signUp.create({
         emailAddress: email.trim(),
         password: password,
-        username: username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '') // Nombre de usuario apto para Clerk (letras, números, guión bajo)
+        username: username
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9_]/g, ''), // Nombre de usuario apto para Clerk (letras, números, guión bajo)
       });
 
-      addLog("Cuenta creada en Clerk. Enviando código de verificación OTP de 6 dígitos...");
+      addLog('Cuenta creada en Clerk. Enviando código de verificación OTP de 6 dígitos...');
 
       // 2. Solicitar código de verificación por email
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-      
+
       setPendingVerification(true);
-      addLog("📧 Código enviado a tu Gmail. Esperando que lo ingreses en pantalla...");
+      addLog('📧 Código enviado a tu Gmail. Esperando que lo ingreses en pantalla...');
     } catch (err: any) {
       addLog(`❌ Error en registro: ${err.message || err}`);
       setErrorMessage(translateClerkError(err));
@@ -248,12 +261,12 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
     try {
       // 3. Validar el código en Clerk
       const completeSignUp = await signUp.attemptEmailAddressVerification({
-        code: verificationCode.trim()
+        code: verificationCode.trim(),
       });
 
       if (completeSignUp.status === 'complete') {
-        addLog("¡Código verificado con éxito en Clerk!");
-        
+        addLog('¡Código verificado con éxito en Clerk!');
+
         // 4. Activar la sesión en el cliente
         await setSignUpActive({ session: completeSignUp.createdSessionId });
 
@@ -261,7 +274,7 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
         const token = await window.Clerk.session.getToken({ template: 'supabase' });
         setSupabaseToken(token);
 
-        addLog("Sincronizando y guardando perfil en Supabase PostgreSQL...");
+        addLog('Sincronizando y guardando perfil en Supabase PostgreSQL...');
         const userId = completeSignUp.createdUserId || 'clerk-user';
         const defaultProfile = createDefaultProfileObj(userId, email.trim(), username.trim(), selectedCharacter, role);
 
@@ -280,7 +293,7 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
         const finalUserObj = mapProfileToUser(activeProfile, selectedCharacter, role);
         localStorage.setItem('duo_pos_active_user', JSON.stringify(finalUserObj));
 
-        addLog("¡Caja de Supabase inicializada! Redirigiendo...");
+        addLog('¡Caja de Supabase inicializada! Redirigiendo...');
         setSuccessAnimation(true);
         setTimeout(() => {
           onLoginSuccess(finalUserObj);
@@ -289,7 +302,9 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
         addLog(`⚠️ El registro de Clerk no se completó. Estado actual: ${completeSignUp.status}`);
         addLog(`⚠️ Campos requeridos faltantes: ${JSON.stringify(completeSignUp.missingFields || [])}`);
         addLog(`⚠️ Campos por verificar: ${JSON.stringify(completeSignUp.unverifiedFields || [])}`);
-        setErrorMessage(`Registro incompleto (${completeSignUp.status}). Campos faltantes: ${JSON.stringify(completeSignUp.missingFields || [])}. Revisa los requerimientos en tu panel de Clerk.`);
+        setErrorMessage(
+          `Registro incompleto (${completeSignUp.status}). Campos faltantes: ${JSON.stringify(completeSignUp.missingFields || [])}. Revisa los requerimientos en tu panel de Clerk.`,
+        );
         playSound('error');
       }
     } catch (err: any) {
@@ -319,19 +334,19 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
     setErrorMessage('');
     setIsLoading(true);
-    addLog("----------------------------------------");
+    addLog('----------------------------------------');
     addLog(`Buscando sesión de Clerk para "${username.trim()}"...`);
 
     try {
       // 1. Iniciar sesión en Clerk (soporta email o username directamente en 'identifier')
       const result = await signIn.create({
         identifier: username.trim().includes('@') ? username.trim() : username.trim().toLowerCase(),
-        password: password
+        password: password,
       });
 
       if (result.status === 'complete') {
-        addLog("¡Sesión validada exitosamente en Clerk!");
-        
+        addLog('¡Sesión validada exitosamente en Clerk!');
+
         // 2. Activar la sesión
         await setSignInActive({ session: result.createdSessionId });
 
@@ -339,9 +354,9 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
         const token = await window.Clerk.session.getToken({ template: 'supabase' });
         setSupabaseToken(token);
 
-        addLog("Cargando perfil comercial desde Supabase PostgreSQL...");
+        addLog('Cargando perfil comercial desde Supabase PostgreSQL...');
         const userId = (result as any).firstFactorImageAddress || result.createdSessionId; // ID del usuario de Clerk
-        
+
         // Buscar perfil en Supabase
         const { data: userProfile, error: fetchErr } = await supabase
           .from('profiles')
@@ -353,18 +368,18 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
         // Autocuración: si el perfil comercial no existe en Supabase, lo creamos
         if (!finalProfile) {
-          addLog("⚠️ El perfil comercial no existe en Supabase. Autocreando perfil...");
+          addLog('⚠️ El perfil comercial no existe en Supabase. Autocreando perfil...');
           const clerkUserObj = result.identifier;
           const defaultProfile = createDefaultProfileObj(
             result.createdSessionId, // Fallback ID
             username.trim().includes('@') ? username.trim() : `${username.trim()}@clerk.pos`,
             username.trim(),
             selectedCharacter,
-            role
+            role,
           );
 
           // Si Clerk nos permite sacar el id del usuario directamente
-          const currentClerkUser = (result as any).userData || {} as any;
+          const currentClerkUser = (result as any).userData || ({} as any);
           if (currentClerkUser.id) {
             (defaultProfile as any).id = currentClerkUser.id;
           }
@@ -381,7 +396,7 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
         const finalUserObj = mapProfileToUser(finalProfile, selectedCharacter, role);
         localStorage.setItem('duo_pos_active_user', JSON.stringify(finalUserObj));
 
-        addLog("¡Sesión iniciada con éxito! Redirigiendo...");
+        addLog('¡Sesión iniciada con éxito! Redirigiendo...');
         setSuccessAnimation(true);
         setTimeout(() => {
           onLoginSuccess(finalUserObj);
@@ -395,7 +410,7 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
       addLog(`❌ Error en inicio de sesión: ${err.message || err}`);
       const message = err.errors?.[0]?.message || err.message || '';
       if (message.toLowerCase().includes('already signed in') && window.Clerk) {
-        addLog("🚀 [AUTO-RECOVERY] Detectado inicio de sesión activo en Clerk. Auto-sincronizando perfil...");
+        addLog('🚀 [AUTO-RECOVERY] Detectado inicio de sesión activo en Clerk. Auto-sincronizando perfil...');
         try {
           const token = await window.Clerk.session?.getToken({ template: 'supabase' });
           if (token) {
@@ -412,13 +427,13 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
             let finalProfile = userProfile;
             if (!finalProfile) {
-              addLog("Creando perfil comercial faltante en Supabase...");
+              addLog('Creando perfil comercial faltante en Supabase...');
               const defaultProfile = createDefaultProfileObj(
                 clerkUserObj.id,
                 clerkUserObj.primaryEmailAddress?.emailAddress || '',
                 clerkUserObj.username || clerkUserObj.firstName || 'Cajero',
                 selectedCharacter,
-                role
+                role,
               );
               const { data: newProfile } = await supabase
                 .from('profiles')
@@ -430,7 +445,7 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
             const finalUserObj = mapProfileToUser(finalProfile, selectedCharacter, role);
             localStorage.setItem('duo_pos_active_user', JSON.stringify(finalUserObj));
-            addLog("¡Perfil sincronizado con éxito! Cargando aplicación...");
+            addLog('¡Perfil sincronizado con éxito! Cargando aplicación...');
             setSuccessAnimation(true);
             setTimeout(() => {
               onLoginSuccess(finalUserObj);
@@ -451,79 +466,42 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
   return (
     <div className="min-h-screen bg-[#f7f7f7] flex flex-col items-center justify-center p-4 relative overflow-y-auto py-8 font-sans">
       {/* Decorative floating grids */}
-      <div className="absolute top-10 left-10 text-6xl opacity-10 animate-pulse pointer-events-none">🦉</div>
+      <div className="absolute top-10 left-10 text-6xl opacity-10 animate-pulse pointer-events-none">⚡</div>
       <div className="absolute bottom-10 right-10 text-6xl opacity-10 animate-bounce pointer-events-none">✨</div>
       <div className="absolute top-1/4 right-16 text-5xl opacity-10 pointer-events-none">💰</div>
       <div className="absolute bottom-1/4 left-16 text-5xl opacity-10 pointer-events-none font-bold">XP</div>
 
       {successAnimation ? (
         <div className="max-w-md w-full bg-white border-2 border-[#e5e5e5] border-b-[8px] rounded-3xl p-8 text-center flex flex-col items-center justify-center space-y-6 shadow-xl animate-bounce">
-          <div className="text-8xl transform scale-125 transition-all duration-300">
-            {currentCharacter.avatar}
-          </div>
+          <div className="text-8xl transform scale-125 transition-all duration-300">🐦</div>
           <div className="space-y-2">
-            <h2 className="text-3xl font-extrabold text-[#58cc02] tracking-tight">¡Caja Activada!</h2>
+            <h2 className="text-3xl font-extrabold text-[#fb923c] tracking-tight">¡Caja Activada!</h2>
             <p className="text-gray-600 font-bold">Cargando tu racha de ventas y objetivos de hoy...</p>
           </div>
           <div className="w-full bg-[#e5e5e5] h-5 rounded-full overflow-hidden p-[2px]">
-            <div className="bg-[#58cc02] h-full rounded-full w-full" style={{
-              backgroundImage: 'linear-gradient(90deg, #58cc02 0%, #7dde12 50%, #58cc02 100%)',
-              backgroundSize: '200% 100%',
-              animation: 'shimmer 1s linear infinite'
-            }} />
+            <div
+              className="bg-[#fb923c] h-full rounded-full w-full"
+              style={{
+                backgroundImage: 'linear-gradient(90deg, #fb923c 0%, #f97316 50%, #fb923c 100%)',
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 1s linear infinite',
+              }}
+            />
           </div>
-          <p className="text-sm text-gray-400 italic font-medium">"{currentCharacter.saleQuote}"</p>
+          <p className="text-sm text-gray-400 italic font-medium">"¡Que la chispa del fénix guíe tus ventas de hoy!"</p>
         </div>
       ) : (
         <div className="max-w-xl w-full flex flex-col items-center space-y-6">
           <div className="flex items-center gap-3 transform hover:scale-105 transition-transform duration-200 cursor-pointer">
-            <div className="bg-[#58cc02] p-4 rounded-3xl border-b-6 border-[#46a302] shadow-md flex items-center justify-center">
-              <span className="text-4xl">🦉</span>
+            <div className="bg-orange-100 p-4 w-14 h-14 rounded-3xl border-b-6 border-orange-200 shadow-md flex items-center justify-center">
+              {/* Dejado en blanco para el logo definitivo */}
             </div>
             <div>
-              <h1 className="text-4xl font-black text-[#58cc02] tracking-wider flex items-center gap-1">
-                Duo<span className="text-[#3c3c3c]">POS</span>
+              <h1 className="text-4xl font-black text-[#fb923c] tracking-wider flex items-center gap-1">
+                Stock<span className="text-[#3c3c3c]">Master Pro</span>
               </h1>
-              <p className="text-xs font-black tracking-widest text-[#afafaf] uppercase">Punto de Venta Gamificado</p>
-            </div>
-          </div>
-
-          {/* Character Speech Bubble */}
-          <div className={`w-full flex items-start gap-3 bg-white border-2 border-b-[6px] rounded-2xl p-4 md:p-6 transition-all duration-300 ${
-            errorMessage ? 'border-[#ff7b7b] bg-[#fff8f8] animate-shake' : 'border-[#e5e5e5] bg-white'
-          }`}>
-            <div className="text-6xl select-none transform hover:rotate-12 duration-150">
-              {getCharacterAvatar(selectedCharacter, errorMessage ? 'sad' : 'normal')}
-            </div>
-            <div className={`flex-1 relative border rounded-2xl py-3 px-4 text-sm font-bold transition-all duration-300 ${
-              errorMessage 
-                ? 'bg-[#ffedf0] border-[#ff7b7b] text-[#ff4b4b]' 
-                : 'bg-gray-50 border-gray-200 text-gray-700'
-            }`}>
-              {/* Tooltip arrows matching the background color */}
-              {errorMessage ? (
-                <>
-                  <div className="absolute left-[-8px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-[#ffedf0] border-b-8 border-b-transparent transition-all" />
-                  <div className="absolute left-[-9px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-[#ff7b7b] border-b-8 border-b-transparent -z-10 transition-all" />
-                </>
-              ) : (
-                <>
-                  <div className="absolute left-[-8px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-gray-50 border-b-8 border-b-transparent transition-all" />
-                  <div className="absolute left-[-9px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-gray-200 border-b-8 border-b-transparent -z-10 transition-all" />
-                </>
-              )}
-              
-              <span className={`text-xs uppercase tracking-wider block mb-1 ${
-                errorMessage ? 'text-[#ff7b7b]' : 'text-gray-400'
-              }`}>
-                {currentCharacter.name} dice:
-              </span>
-              <p className="leading-snug">
-                {errorMessage 
-                  ? errorMessage 
-                  : (pendingVerification 
-                      ? "📧 ¡Te he enviado un código de 6 dígitos a tu Gmail! Ingrésalo abajo para activar tu cuenta comercial al instante."
-                      : (isRegistering ? currentCharacter.idleQuote : currentCharacter.loginQuote))}
+              <p className="text-xs font-black tracking-widest text-[#afafaf] uppercase">
+                Gestión de Ventas e Inventario
               </p>
             </div>
           </div>
@@ -535,7 +513,7 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 <button
                   type="button"
                   className={`pb-2 font-black text-lg transition-colors duration-150 relative ${
-                    !isRegistering ? 'text-[#58cc02]' : 'text-[#afafaf] hover:text-gray-500'
+                    !isRegistering ? 'text-[#fb923c]' : 'text-[#afafaf] hover:text-gray-500'
                   }`}
                   onClick={() => {
                     setIsRegistering(false);
@@ -545,13 +523,13 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 >
                   Inicia Sesión
                   {!isRegistering && (
-                    <div className="absolute bottom-[-18px] left-0 right-0 h-[4px] bg-[#58cc02] rounded-full" />
+                    <div className="absolute bottom-[-18px] left-0 right-0 h-[4px] bg-[#fb923c] rounded-full" />
                   )}
                 </button>
                 <button
                   type="button"
                   className={`pb-2 font-black text-lg transition-colors duration-150 relative ${
-                    isRegistering ? 'text-[#58cc02]' : 'text-[#afafaf] hover:text-gray-500'
+                    isRegistering ? 'text-[#fb923c]' : 'text-[#afafaf] hover:text-gray-500'
                   }`}
                   onClick={() => {
                     setIsRegistering(true);
@@ -561,7 +539,7 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 >
                   Crea una Cuenta
                   {isRegistering && (
-                    <div className="absolute bottom-[-18px] left-0 right-0 h-[4px] bg-[#58cc02] rounded-full" />
+                    <div className="absolute bottom-[-18px] left-0 right-0 h-[4px] bg-[#fb923c] rounded-full" />
                   )}
                 </button>
               </div>
@@ -600,14 +578,14 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                       setVerificationCode(e.target.value.replace(/[^0-9]/g, ''));
                       if (errorMessage) setErrorMessage('');
                     }}
-                    className="w-full text-center tracking-widest text-3xl font-black py-4 bg-gray-50 border-2 border-[#e5e5e5] rounded-2xl outline-none focus:border-[#58cc02] focus:bg-white transition-all text-gray-700"
+                    className="w-full text-center tracking-widest text-3xl font-black py-4 bg-gray-50 border-2 border-[#e5e5e5] rounded-2xl outline-none focus:border-[#fb923c] focus:bg-white transition-all text-gray-700"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-[#58cc02] text-white border-b-[6px] border-[#46a302] hover:bg-[#61e002] active:border-b-0 active:translate-y-[6px] font-black text-lg py-3.5 rounded-2xl transition-all duration-100 flex items-center justify-center gap-2 tracking-wide uppercase shadow-sm mt-8 cursor-pointer"
+                  className="w-full bg-[#fb923c] text-white border-b-[6px] border-[#ea580c] hover:bg-[#f97316] active:border-b-0 active:translate-y-[6px] font-black text-lg py-3.5 rounded-2xl transition-all duration-100 flex items-center justify-center gap-2 tracking-wide uppercase shadow-sm mt-8 cursor-pointer"
                 >
                   {isLoading ? (
                     <>
@@ -616,7 +594,7 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                     </>
                   ) : (
                     <>
-                      Confirmar y Activar Cajero 🦉
+                      Confirmar y Activar Cajero ⚡
                       <Check size={20} />
                     </>
                   )}
@@ -633,39 +611,6 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
             ) : (
               // FLUX 2: STANDARD REGISTRATION/LOGIN FORM
               <form onSubmit={isRegistering ? handleRegister : handleLogin} className="space-y-5">
-                {/* Avatar character switcher */}
-                <div className="space-y-2">
-                  <label className="text-sm font-black tracking-wide text-gray-500 block uppercase">
-                    Elige tu Cajero Compañero
-                  </label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {characterKeys.map(key => {
-                      const char = DUO_CHARACTERS[key];
-                      const isSelected = selectedCharacter === key;
-                      return (
-                        <button
-                          key={key}
-                          type="button"
-                          onClick={() => setSelectedCharacter(key)}
-                          className={`p-2 rounded-2xl border-2 transition-all duration-150 flex flex-col items-center justify-center ${
-                            isSelected
-                              ? 'border-[#58cc02] bg-[#f2ffd9] border-b-[6px]'
-                              : 'border-[#e5e5e5] border-b-4 hover:bg-gray-50 active:translate-y-1'
-                          }`}
-                        >
-                          <span className="text-3xl filter drop-shadow-sm">{char.avatar}</span>
-                          <span className={`text-[10px] font-black mt-1 ${isSelected ? 'text-[#58cc02]' : 'text-gray-400'}`}>
-                            {char.name}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="text-xs text-gray-400 italic font-semibold text-center mt-2 leading-relaxed">
-                    {currentCharacter.intro}
-                  </p>
-                </div>
-
                 {/* Input Username */}
                 <div className="space-y-1">
                   <label htmlFor="username" className="text-sm font-black tracking-wide text-gray-500 block uppercase">
@@ -679,13 +624,13 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                       id="username"
                       type="text"
                       required
-                      placeholder={isRegistering ? "Ej. Poetica" : "Ej. Poetica o jonas@gmail.com"}
+                      placeholder={isRegistering ? 'Ej. Poetica' : 'Ej. Poetica o jonas@gmail.com'}
                       value={username}
                       onChange={(e) => {
                         setUsername(e.target.value);
                         if (errorMessage) setErrorMessage('');
                       }}
-                      className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-[#e5e5e5] rounded-2xl font-bold text-gray-700 outline-none focus:border-[#58cc02] focus:bg-white transition-all text-sm"
+                      className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-[#e5e5e5] rounded-2xl font-bold text-gray-700 outline-none focus:border-[#fb923c] focus:bg-white transition-all text-sm"
                     />
                   </div>
                 </div>
@@ -710,7 +655,7 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                           setEmail(e.target.value);
                           if (errorMessage) setErrorMessage('');
                         }}
-                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-[#e5e5e5] rounded-2xl font-bold text-gray-700 outline-none focus:border-[#58cc02] focus:bg-white transition-all text-sm"
+                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-[#e5e5e5] rounded-2xl font-bold text-gray-700 outline-none focus:border-[#fb923c] focus:bg-white transition-all text-sm"
                       />
                     </div>
                   </div>
@@ -719,7 +664,10 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 {/* Input Password */}
                 <div className="space-y-1">
                   <div className="flex justify-between items-center">
-                    <label htmlFor="password" className="text-sm font-black tracking-wide text-gray-500 block uppercase">
+                    <label
+                      htmlFor="password"
+                      className="text-sm font-black tracking-wide text-gray-500 block uppercase"
+                    >
                       Contraseña Comercial
                     </label>
                     <span className="text-xs text-gray-400 font-bold">(Al menos 8 caracteres)</span>
@@ -730,7 +678,7 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                     </span>
                     <input
                       id="password"
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       required
                       placeholder="••••••"
                       value={password}
@@ -738,7 +686,7 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                         setPassword(e.target.value);
                         if (errorMessage) setErrorMessage('');
                       }}
-                      className="w-full pl-11 pr-12 py-3 bg-gray-50 border-2 border-[#e5e5e5] rounded-2xl font-bold text-gray-700 outline-none focus:border-[#58cc02] focus:bg-white transition-all text-sm"
+                      className="w-full pl-11 pr-12 py-3 bg-gray-50 border-2 border-[#e5e5e5] rounded-2xl font-bold text-gray-700 outline-none focus:border-[#fb923c] focus:bg-white transition-all text-sm"
                     />
                     <button
                       type="button"
@@ -754,14 +702,16 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 {isRegistering && (
                   <div className="bg-[#f7f7f7] border-2 border-[#e5e5e5] rounded-2xl p-4 space-y-2.5 mt-3 text-xs font-bold text-gray-600 transition-all duration-200 text-left">
                     <div className="text-[10px] font-black uppercase text-gray-400 tracking-wider mb-1 flex items-center gap-1">
-                      <span>⚡</span> Requisitos de cuenta Clerk
+                      <span>⚡</span> Requisitos de cuenta
                     </div>
-                    
+
                     {/* Username requirement */}
                     <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black text-white transition-colors duration-150 ${
-                        username.trim().length >= 4 ? 'bg-[#58cc02]' : 'bg-gray-300'
-                      }`}>
+                      <div
+                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black text-white transition-colors duration-150 ${
+                          username.trim().length >= 4 ? 'bg-[#fb923c]' : 'bg-gray-300'
+                        }`}
+                      >
                         {username.trim().length >= 4 ? '✓' : '•'}
                       </div>
                       <span className={username.trim().length >= 4 ? 'text-gray-700' : 'text-gray-400'}>
@@ -771,21 +721,29 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
                     {/* Email requirement */}
                     <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black text-white transition-colors duration-150 ${
-                        email.trim().includes('@') && email.trim().includes('.') ? 'bg-[#58cc02]' : 'bg-gray-300'
-                      }`}>
+                      <div
+                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black text-white transition-colors duration-150 ${
+                          email.trim().includes('@') && email.trim().includes('.') ? 'bg-[#fb923c]' : 'bg-gray-300'
+                        }`}
+                      >
                         {email.trim().includes('@') && email.trim().includes('.') ? '✓' : '•'}
                       </div>
-                      <span className={email.trim().includes('@') && email.trim().includes('.') ? 'text-gray-700' : 'text-gray-400'}>
+                      <span
+                        className={
+                          email.trim().includes('@') && email.trim().includes('.') ? 'text-gray-700' : 'text-gray-400'
+                        }
+                      >
                         Correo válido (ej. nombre@gmail.com)
                       </span>
                     </div>
 
                     {/* Password Length requirement */}
                     <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black text-white transition-colors duration-150 ${
-                        password.length >= 8 ? 'bg-[#58cc02]' : 'bg-gray-300'
-                      }`}>
+                      <div
+                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black text-white transition-colors duration-150 ${
+                          password.length >= 8 ? 'bg-[#fb923c]' : 'bg-gray-300'
+                        }`}
+                      >
                         {password.length >= 8 ? '✓' : '•'}
                       </div>
                       <span className={password.length >= 8 ? 'text-gray-700' : 'text-gray-400'}>
@@ -795,13 +753,17 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
                     {/* Password Complexity requirement */}
                     <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black text-white transition-colors duration-150 ${
-                        /[A-Z]/.test(password) && /[0-9]/.test(password) ? 'bg-[#58cc02]' : 'bg-gray-300'
-                      }`}>
+                      <div
+                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black text-white transition-colors duration-150 ${
+                          /[A-Z]/.test(password) && /[0-9]/.test(password) ? 'bg-[#fb923c]' : 'bg-gray-300'
+                        }`}
+                      >
                         {/[A-Z]/.test(password) && /[0-9]/.test(password) ? '✓' : '•'}
                       </div>
-                      <span className={/[A-Z]/.test(password) && /[0-9]/.test(password) ? 'text-gray-700' : 'text-gray-400'}>
-                        Seguridad: incluir mayúscula y número (ej. DuoPOS.2026)
+                      <span
+                        className={/[A-Z]/.test(password) && /[0-9]/.test(password) ? 'text-gray-700' : 'text-gray-400'}
+                      >
+                        Seguridad: incluir mayúscula y número
                       </span>
                     </div>
                   </div>
@@ -814,9 +776,24 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: 'admin', label: 'Admin 👑', desc: 'Control Total', theme: 'border-[#58cc02] bg-[#f2ffd9] border-b-[6px]' },
-                      { id: 'supervisor', label: 'Supervisor ⚡', desc: 'Inventario/CEDIS', theme: 'border-indigo-500 bg-indigo-50/50 border-b-[6px]' },
-                      { id: 'cashier', label: 'Cajero 💵', desc: 'Ventas y Caja', theme: 'border-amber-500 bg-amber-50/50 border-b-[6px]' },
+                      {
+                        id: 'admin',
+                        label: 'Admin 👑',
+                        desc: 'Control Total',
+                        theme: 'border-[#fb923c] bg-[#fff7ed] border-b-[6px]',
+                      },
+                      {
+                        id: 'supervisor',
+                        label: 'Supervisor ⚡',
+                        desc: 'Inventario/CEDIS',
+                        theme: 'border-indigo-500 bg-indigo-50/50 border-b-[6px]',
+                      },
+                      {
+                        id: 'cashier',
+                        label: 'Cajero 💵',
+                        desc: 'Ventas y Caja',
+                        theme: 'border-amber-500 bg-amber-50/50 border-b-[6px]',
+                      },
                     ].map((rOption) => {
                       const isSelected = role === rOption.id;
                       return (
@@ -830,8 +807,12 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                               : 'border-[#e5e5e5] border-b-4 hover:bg-gray-50 active:translate-y-1'
                           }`}
                         >
-                          <span className={`font-black text-xs ${isSelected ? 'text-gray-900' : 'text-gray-600'}`}>{rOption.label}</span>
-                          <span className="text-[10px] text-gray-400 font-bold block leading-tight mt-0.5">{rOption.desc}</span>
+                          <span className={`font-black text-xs ${isSelected ? 'text-gray-900' : 'text-gray-600'}`}>
+                            {rOption.label}
+                          </span>
+                          <span className="text-[10px] text-gray-400 font-bold block leading-tight mt-0.5">
+                            {rOption.desc}
+                          </span>
                         </button>
                       );
                     })}
@@ -842,7 +823,7 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-[#58cc02] text-white border-b-[6px] border-[#46a302] hover:bg-[#61e002] active:border-b-0 active:translate-y-[6px] font-black text-lg py-3.5 rounded-2xl transition-all duration-100 flex items-center justify-center gap-2 tracking-wide uppercase shadow-sm mt-8 cursor-pointer"
+                  className="w-full bg-[#fb923c] text-white border-b-[6px] border-[#ea580c] hover:bg-[#f97316] active:border-b-0 active:translate-y-[6px] font-black text-lg py-3.5 rounded-2xl transition-all duration-100 flex items-center justify-center gap-2 tracking-wide uppercase shadow-sm mt-8 cursor-pointer"
                 >
                   {isLoading ? (
                     <>
@@ -851,34 +832,17 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                     </>
                   ) : (
                     <>
-                      {isRegistering ? 'Crear Cajero & Iniciar' : 'Entrar a Trabajar'}
+                      {isRegistering ? 'Crear Cuenta & Iniciar' : 'Entrar a Trabajar'}
                       <ChevronRight size={20} />
                     </>
                   )}
                 </button>
-
-                {/* Live Diagnostic Console */}
-                {diagnosticLog.length > 0 && (
-                  <div className="mt-5 p-4 bg-slate-900 border border-slate-800 rounded-2xl text-left shadow-inner">
-                    <span className="text-[10px] font-black text-slate-400 tracking-wider uppercase flex items-center gap-1.5 font-mono mb-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block"></span>
-                      Diagnóstico de Conexión en Vivo
-                    </span>
-                    <div className="font-mono text-[10px] text-emerald-400 space-y-1 max-h-[140px] overflow-y-auto leading-relaxed scrollbar-thin">
-                      {diagnosticLog.map((log, index) => (
-                        <div key={index} className="flex gap-2">
-                          <span className="text-slate-600 select-none">&gt;</span>
-                          <span className="whitespace-pre-wrap">{log}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </form>
             )}
           </div>
-          <p className="text-center text-xs text-gray-400 font-bold">
-            💡 Consejo: Con Clerk, puedes usar tu nombre o tu correo electrónico indistintamente para entrar a tu caja registradora.
+          <p className="text-center text-xs text-gray-400 font-bold leading-relaxed max-w-md">
+            💡 Consejo: Mantén tu racha activa realizando al menos una venta diaria y cuadra tu caja al finalizar el
+            turno para conservar tus gemas de recompensa.
           </p>
         </div>
       )}
@@ -894,16 +858,16 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const [password, setPassword] = useState('123456');
   const [selectedCharacter, setSelectedCharacter] = useState<string>('duo');
   const [role, setRole] = useState<'admin' | 'supervisor' | 'cashier'>('admin');
-  
+
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [successAnimation, setSuccessAnimation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const [diagnosticLog, setDiagnosticLog] = useState<string[]>([]);
 
   const addLog = (msg: string) => {
-    setDiagnosticLog(prev => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
+    setDiagnosticLog((prev) => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
     console.log(`[AUTH LOCAL] ${msg}`);
   };
 
@@ -911,9 +875,9 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
     const isConfigured = isSupabaseConfigured();
     setDiagnosticLog([
       `${new Date().toLocaleTimeString()}: 🔌 Inicializando módulo de conexión comercial...`,
-      isConfigured 
+      isConfigured
         ? `${new Date().toLocaleTimeString()}: 🌐 Conexión disponible con el servidor principal de base de datos.`
-        : `${new Date().toLocaleTimeString()}: ⚠️ ATENCIÓN: Las credenciales de Supabase no están configuradas. La app operará únicamente en modo local offline.`
+        : `${new Date().toLocaleTimeString()}: ⚠️ ATENCIÓN: Las credenciales de Supabase no están configuradas. La app operará únicamente en modo local offline.`,
     ]);
   }, []);
 
@@ -935,25 +899,25 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
     setErrorMessage('');
     setIsLoading(true);
-    addLog("----------------------------------------");
-    addLog("Iniciando flujo de sesión local...");
-    
+    addLog('----------------------------------------');
+    addLog('Iniciando flujo de sesión local...');
+
     const userId = `local-${username.trim().toLowerCase()}`;
     const savedUsersRaw = localStorage.getItem('duo_pos_users');
     const users: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
-    const existingUser = users.find(u => u.id === userId);
+    const existingUser = users.find((u) => u.id === userId);
 
     let localUser: User;
 
     if (existingUser) {
-      addLog("¡Usuario existente encontrado! Recuperando tu racha, XP y nivel...");
+      addLog('¡Usuario existente encontrado! Recuperando tu racha, XP y nivel...');
       localUser = {
         ...existingUser,
         avatar: selectedCharacter, // allow changing avatar
-        role: role // allow changing role
+        role: role, // allow changing role
       };
     } else {
-      addLog("Creando un perfil nuevo de cajero local...");
+      addLog('Creando un perfil nuevo de cajero local...');
       localUser = {
         id: userId,
         username: username.trim(),
@@ -971,9 +935,9 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
         unlockedSkins: ['standard'],
         activeSkin: 'standard',
         unlockedBadges: [],
-        completedMissionsToday: []
+        completedMissionsToday: [],
       };
-      
+
       // Save new user in users array
       users.push(localUser);
       localStorage.setItem('duo_pos_users', JSON.stringify(users));
@@ -981,7 +945,7 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
     localStorage.setItem('duo_pos_active_user', JSON.stringify(localUser));
     setSuccessAnimation(true);
-    addLog("¡Sesión local iniciada con éxito!");
+    addLog('¡Sesión local iniciada con éxito!');
     setTimeout(() => onLoginSuccess(localUser), 1200);
   };
 
@@ -995,25 +959,25 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
     setErrorMessage('');
     setIsLoading(true);
-    addLog("----------------------------------------");
-    addLog("Registrando cajero local...");
+    addLog('----------------------------------------');
+    addLog('Registrando cajero local...');
 
     const userId = `local-${username.trim().toLowerCase()}`;
     const savedUsersRaw = localStorage.getItem('duo_pos_users');
     const users: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
-    const existingUser = users.find(u => u.id === userId);
+    const existingUser = users.find((u) => u.id === userId);
 
     let localUser: User;
 
     if (existingUser) {
-      addLog("Este cajero ya estaba registrado. Iniciando con perfil existente...");
+      addLog('Este cajero ya estaba registrado. Iniciando con perfil existente...');
       localUser = {
         ...existingUser,
         avatar: selectedCharacter,
-        role: role
+        role: role,
       };
     } else {
-      addLog("Creando perfil nuevo para cajero...");
+      addLog('Creando perfil nuevo para cajero...');
       localUser = {
         id: userId,
         username: username.trim(),
@@ -1031,89 +995,56 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
         unlockedSkins: ['standard'],
         activeSkin: 'standard',
         unlockedBadges: [],
-        completedMissionsToday: []
+        completedMissionsToday: [],
       };
-      
+
       users.push(localUser);
       localStorage.setItem('duo_pos_users', JSON.stringify(users));
     }
 
     localStorage.setItem('duo_pos_active_user', JSON.stringify(localUser));
     setSuccessAnimation(true);
-    addLog("¡Cajero registrado localmente!");
+    addLog('¡Cajero registrado localmente!');
     setTimeout(() => onLoginSuccess(localUser), 1200);
   };
 
   return (
     <div className="min-h-screen bg-[#f7f7f7] flex flex-col items-center justify-center p-4 relative overflow-y-auto py-8 font-sans">
-      <div className="absolute top-10 left-10 text-6xl opacity-10 animate-pulse pointer-events-none">🦉</div>
+      {/* Decorative floating grids */}
+      <div className="absolute top-10 left-10 text-6xl opacity-10 animate-pulse pointer-events-none">⚡</div>
       <div className="absolute bottom-10 right-10 text-6xl opacity-10 animate-bounce pointer-events-none">✨</div>
 
       {successAnimation ? (
         <div className="max-w-md w-full bg-white border-2 border-[#e5e5e5] border-b-[8px] rounded-3xl p-8 text-center flex flex-col items-center justify-center space-y-6 shadow-xl animate-bounce">
-          <div className="text-8xl transform scale-125 transition-all duration-300">
-            {currentCharacter.avatar}
-          </div>
+          <div className="text-8xl transform scale-125 transition-all duration-300">🐦</div>
           <div className="space-y-2">
-            <h2 className="text-3xl font-extrabold text-[#58cc02] tracking-tight">¡Caja Activada!</h2>
+            <h2 className="text-3xl font-extrabold text-[#fb923c] tracking-tight">¡Caja Activada!</h2>
             <p className="text-gray-600 font-bold">Cargando tu racha de ventas y objetivos de hoy...</p>
           </div>
           <div className="w-full bg-[#e5e5e5] h-5 rounded-full overflow-hidden p-[2px]">
-            <div className="bg-[#58cc02] h-full rounded-full w-full animate-shimmer" style={{
-              backgroundImage: 'linear-gradient(90deg, #58cc02 0%, #7dde12 50%, #58cc02 100%)',
-              backgroundSize: '200% 100%',
-              animation: 'shimmer 1s linear infinite'
-            }} />
+            <div
+              className="bg-[#fb923c] h-full rounded-full w-full animate-shimmer"
+              style={{
+                backgroundImage: 'linear-gradient(90deg, #fb923c 0%, #f97316 50%, #fb923c 100%)',
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 1s linear infinite',
+              }}
+            />
           </div>
-          <p className="text-sm text-gray-400 italic font-medium">"{currentCharacter.saleQuote}"</p>
+          <p className="text-sm text-gray-400 italic font-medium">"¡Que la chispa del fénix guíe tus ventas de hoy!"</p>
         </div>
       ) : (
         <div className="max-w-xl w-full flex flex-col items-center space-y-6">
           <div className="flex items-center gap-3 transform hover:scale-105 transition-transform duration-200 cursor-pointer">
-            <div className="bg-[#58cc02] p-4 rounded-3xl border-b-6 border-[#46a302] shadow-md flex items-center justify-center">
-              <span className="text-4xl">🦉</span>
+            <div className="bg-orange-100 p-4 w-14 h-14 rounded-3xl border-b-6 border-orange-200 shadow-md flex items-center justify-center">
+              {/* Dejado en blanco para el logo definitivo */}
             </div>
             <div>
-              <h1 className="text-4xl font-black text-[#58cc02] tracking-wider flex items-center gap-1">
-                Duo<span className="text-[#3c3c3c]">POS</span>
+              <h1 className="text-4xl font-black text-[#fb923c] tracking-wider flex items-center gap-1">
+                Stock<span className="text-[#3c3c3c]">Master Pro</span>
               </h1>
-              <p className="text-xs font-black tracking-widest text-[#afafaf] uppercase">Punto de Venta Gamificado</p>
-            </div>
-          </div>
-
-          <div className={`w-full flex items-start gap-3 bg-white border-2 border-b-[6px] rounded-2xl p-4 md:p-6 transition-all duration-300 ${
-            errorMessage ? 'border-[#ff7b7b] bg-[#fff8f8] animate-shake' : 'border-[#e5e5e5] bg-white'
-          }`}>
-            <div className="text-6xl select-none transform hover:rotate-12 duration-150">
-              {getCharacterAvatar(selectedCharacter, errorMessage ? 'sad' : 'normal')}
-            </div>
-            <div className={`flex-1 relative border rounded-2xl py-3 px-4 text-sm font-bold transition-all duration-300 ${
-              errorMessage 
-                ? 'bg-[#ffedf0] border-[#ff7b7b] text-[#ff4b4b]' 
-                : 'bg-gray-50 border-gray-200 text-gray-700'
-            }`}>
-              {/* Tooltip arrows matching the background color */}
-              {errorMessage ? (
-                <>
-                  <div className="absolute left-[-8px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-[#ffedf0] border-b-8 border-b-transparent transition-all" />
-                  <div className="absolute left-[-9px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-[#ff7b7b] border-b-8 border-b-transparent -z-10 transition-all" />
-                </>
-              ) : (
-                <>
-                  <div className="absolute left-[-8px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-gray-50 border-b-8 border-b-transparent transition-all" />
-                  <div className="absolute left-[-9px] top-6 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-gray-200 border-b-8 border-b-transparent -z-10 transition-all" />
-                </>
-              )}
-              
-              <span className={`text-xs uppercase tracking-wider block mb-1 ${
-                errorMessage ? 'text-[#ff7b7b]' : 'text-gray-400'
-              }`}>
-                {currentCharacter.name} dice:
-              </span>
-              <p className="leading-snug">
-                {errorMessage 
-                  ? errorMessage 
-                  : `${currentCharacter.loginQuote} (Modo Local Offline Activo)`}
+              <p className="text-xs font-black tracking-widest text-[#afafaf] uppercase">
+                Gestión de Ventas e Inventario
               </p>
             </div>
           </div>
@@ -1123,7 +1054,7 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
               <button
                 type="button"
                 className={`pb-2 font-black text-lg transition-colors duration-150 relative ${
-                  !isRegistering ? 'text-[#58cc02]' : 'text-[#afafaf] hover:text-gray-500'
+                  !isRegistering ? 'text-[#fb923c]' : 'text-[#afafaf] hover:text-gray-500'
                 }`}
                 onClick={() => {
                   setIsRegistering(false);
@@ -1133,13 +1064,13 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
               >
                 Inicia Sesión (Local)
                 {!isRegistering && (
-                  <div className="absolute bottom-[-18px] left-0 right-0 h-[4px] bg-[#58cc02] rounded-full" />
+                  <div className="absolute bottom-[-18px] left-0 right-0 h-[4px] bg-[#fb923c] rounded-full" />
                 )}
               </button>
               <button
                 type="button"
                 className={`pb-2 font-black text-lg transition-colors duration-150 relative ${
-                  isRegistering ? 'text-[#58cc02]' : 'text-[#afafaf] hover:text-gray-500'
+                  isRegistering ? 'text-[#fb923c]' : 'text-[#afafaf] hover:text-gray-500'
                 }`}
                 onClick={() => {
                   setIsRegistering(true);
@@ -1149,7 +1080,7 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
               >
                 Crea una Cuenta (Local)
                 {isRegistering && (
-                  <div className="absolute bottom-[-18px] left-0 right-0 h-[4px] bg-[#58cc02] rounded-full" />
+                  <div className="absolute bottom-[-18px] left-0 right-0 h-[4px] bg-[#fb923c] rounded-full" />
                 )}
               </button>
             </div>
@@ -1162,40 +1093,11 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
             )}
 
             <form onSubmit={isRegistering ? handleRegister : handleLogin} className="space-y-5">
-              <div className="space-y-2">
-                <label className="text-sm font-black tracking-wide text-gray-500 block uppercase">
-                  Elige tu Cajero Compañero
-                </label>
-                <div className="grid grid-cols-5 gap-2">
-                  {characterKeys.map(key => {
-                    const char = DUO_CHARACTERS[key];
-                    const isSelected = selectedCharacter === key;
-                    return (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => {
-                          setSelectedCharacter(key);
-                          if (errorMessage) setErrorMessage('');
-                        }}
-                        className={`p-2 rounded-2xl border-2 transition-all duration-150 flex flex-col items-center justify-center ${
-                          isSelected
-                            ? 'border-[#58cc02] bg-[#f2ffd9] border-b-[6px]'
-                            : 'border-[#e5e5e5] border-b-4 hover:bg-gray-50 active:translate-y-1'
-                        }`}
-                      >
-                        <span className="text-3xl filter drop-shadow-sm">{char.avatar}</span>
-                        <span className={`text-[10px] font-black mt-1 ${isSelected ? 'text-[#58cc02]' : 'text-gray-400'}`}>
-                          {char.name}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
               <div className="space-y-1">
-                <label htmlFor="local-username" className="text-sm font-black tracking-wide text-gray-500 block uppercase">
+                <label
+                  htmlFor="local-username"
+                  className="text-sm font-black tracking-wide text-gray-500 block uppercase"
+                >
                   Nombre de Cajero
                 </label>
                 <div className="relative">
@@ -1212,37 +1114,24 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
                       setUsername(e.target.value);
                       if (errorMessage) setErrorMessage('');
                     }}
-                    className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-[#e5e5e5] rounded-2xl font-bold text-gray-700 outline-none focus:border-[#58cc02] focus:bg-white transition-all text-sm"
+                    className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-[#e5e5e5] rounded-2xl font-bold text-gray-700 outline-none focus:border-[#fb923c] focus:bg-white transition-all text-sm"
                   />
                 </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-[#58cc02] text-white border-b-[6px] border-[#46a302] hover:bg-[#61e002] active:border-b-0 active:translate-y-[6px] font-black text-lg py-3.5 rounded-2xl transition-all duration-100 flex items-center justify-center gap-2 tracking-wide uppercase shadow-sm mt-8 cursor-pointer"
+                className="w-full bg-[#fb923c] text-white border-b-[6px] border-[#ea580c] hover:bg-[#f97316] active:border-b-0 active:translate-y-[6px] font-black text-lg py-3.5 rounded-2xl transition-all duration-100 flex items-center justify-center gap-2 tracking-wide uppercase shadow-sm mt-8 cursor-pointer"
               >
                 {isRegistering ? 'Crear Cajero Local' : 'Entrar a Trabajar (Local)'}
                 <ChevronRight size={20} />
               </button>
-
-              {diagnosticLog.length > 0 && (
-                <div className="mt-5 p-4 bg-slate-900 border border-slate-800 rounded-2xl text-left shadow-inner">
-                  <span className="text-[10px] font-black text-slate-400 tracking-wider uppercase flex items-center gap-1.5 font-mono mb-2">
-                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse inline-block"></span>
-                    Consola Local Offline
-                  </span>
-                  <div className="font-mono text-[10px] text-amber-400 space-y-1 max-h-[140px] overflow-y-auto leading-relaxed scrollbar-thin">
-                    {diagnosticLog.map((log, index) => (
-                      <div key={index} className="flex gap-2">
-                        <span className="text-slate-600 select-none">&gt;</span>
-                        <span className="whitespace-pre-wrap">{log}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </form>
           </div>
+          <p className="text-center text-xs text-gray-400 font-bold leading-relaxed max-w-md">
+            💡 Consejo: Mantén tu racha activa realizando al menos una venta diaria y cuadra tu caja al finalizar el
+            turno para conservar tus gemas de recompensa.
+          </p>
         </div>
       )}
     </div>

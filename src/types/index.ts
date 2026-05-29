@@ -10,7 +10,7 @@ export interface User {
   username: string;
   email: string;
   avatar: string; // emoji code or character key: 'duo', 'lily', 'zari', 'eddy', 'junior'
-  streak: number;  // sales streak in days
+  streak: number; // sales streak in days
   lastSaleDate?: string; // ISO string format YYYY-MM-DD
   xp: number; // Experience points
   level: number;
@@ -26,19 +26,19 @@ export interface User {
   completedMissionsToday?: string[]; // Mission keys completed today
   completedMissionsTimestamp?: string; // Timestamp day check YYYY-MM-DD
   dailyStreakSavedCount?: number; // Saved Streak Freeze count
-  
+
   // League System
   employeeLeague?: LeagueTier;
   weeklyXp?: number;
   weeklyXpResetDate?: string; // ISO Monday date
-  
+
   // Progression Map
   progressionClaimed?: string[]; // Node IDs claimed
-  
+
   // Owl Accessories
   unlockedAccessories?: string[];
   activeAccessory?: string;
-  
+
   // Season Pass
   seasonXp?: number;
   seasonRewardsClaimed?: number[]; // Tier numbers claimed
@@ -60,9 +60,9 @@ export interface WeeklyLeague {
   tier: LeagueTier;
   participants: LeagueParticipant[];
   weekStart: string; // ISO date string (Monday)
-  weekEnd: string;   // ISO date string (Sunday)
-  promotionZone: number;  // Top N get promoted
-  demotionZone: number;   // Bottom N get demoted
+  weekEnd: string; // ISO date string (Sunday)
+  promotionZone: number; // Top N get promoted
+  demotionZone: number; // Bottom N get demoted
 }
 
 // Progression Map (Saga Map)
@@ -90,7 +90,7 @@ export interface OwlAccessory {
   id: string;
   name: string;
   type: 'hat' | 'glasses' | 'outfit' | 'effect';
-  emoji: string;  // Visual representation
+  emoji: string; // Visual representation
   cost: number;
   rarity: 'comun' | 'raro' | 'epico' | 'legendario';
   levelRequired: number;
@@ -143,7 +143,7 @@ export interface Transaction {
     emoji: string;
     quantity: number;
     taxRateApplied?: number; // Advanced Tax details per item
-    notes?: string;           // F&B Modifier notes e.g. "Cold, Extra spicy"
+    notes?: string; // F&B Modifier notes e.g. "Cold, Extra spicy"
     addons?: { name: string; price: number }[]; // F&B additions
   }[];
   subtotal: number;
@@ -158,9 +158,9 @@ export interface Transaction {
   xpGained: number;
   customerId?: string;
   gemsGained?: number;
-  tableId?: string;           // F&B Table ID
-  tableName?: string;         // F&B Table Name (e.g. "Mesa 4")
-  waiterName?: string;        // Assigned Waiter NAME
+  tableId?: string; // F&B Table ID
+  tableName?: string; // F&B Table Name (e.g. "Mesa 4")
+  waiterName?: string; // Assigned Waiter NAME
   gemsRedeemed?: number;
   isInvoiceRequested?: boolean;
   branchId?: string;
@@ -168,7 +168,7 @@ export interface Transaction {
   cardPaymentDetails?: {
     terminalId: string;
     authCode: string;
-    brand: string;        // VISA, MASTERCARD, AMEX
+    brand: string; // VISA, MASTERCARD, AMEX
     last4: string;
     cardholderName: string;
     cardType: 'credit' | 'debit';
@@ -177,16 +177,16 @@ export interface Transaction {
     signatureBase64?: string; // Touchscreen signature
   };
   invoiceData?: {
-    uuid: string;              // Legal unique UUID for electronic billing (e.g. Standard CFDI / SAT / SEPA layout)
-    invoiceNo: string;         // Sequential number like "FAC-2026-0001"
-    fiscalName: string;        // Business or Client Legal Name
-    taxId: string;             // RFC / CIF / RUT / Document ID
-    regime: string;            // Legal Tax Regime Code
-    postalCode: string;        // Location zip
-    certifiedAt: string;       // Timestamp of stamp
-    satSignature?: string;     // Digital mock cryptographic seal
-    paymentForm: string;       // Form of payment based on catalogs (e.g. "01 - Efectivo")
-    useCFDI?: string;          // Intended use of certificate (e.g. "G03 - Gastos en general")
+    uuid: string; // Legal unique UUID for electronic billing (e.g. Standard CFDI / SAT / SEPA layout)
+    invoiceNo: string; // Sequential number like "FAC-2026-0001"
+    fiscalName: string; // Business or Client Legal Name
+    taxId: string; // RFC / CIF / RUT / Document ID
+    regime: string; // Legal Tax Regime Code
+    postalCode: string; // Location zip
+    certifiedAt: string; // Timestamp of stamp
+    satSignature?: string; // Digital mock cryptographic seal
+    paymentForm: string; // Form of payment based on catalogs (e.g. "01 - Efectivo")
+    useCFDI?: string; // Intended use of certificate (e.g. "G03 - Gastos en general")
   };
 }
 
@@ -210,7 +210,7 @@ export interface Customer {
 
   // Credit Line ("Fiado") details
   creditLimit?: number; // Authorized limit (0 or undefined = no credit allowed)
-  creditUsed?: number;  // Outstanding debt
+  creditUsed?: number; // Outstanding debt
   creditHistory?: {
     id: string;
     amount: number;
@@ -227,24 +227,24 @@ export interface TaxCategoryOverride {
 }
 
 export interface LegalBillingSettings {
-  taxName: string;                 // e.g. "IVA", "Sales Tax", "GST", "ISV"
-  generalTaxRate: number;          // e.g. 16 for IVA, 8 for border, etc.
+  taxName: string; // e.g. "IVA", "Sales Tax", "GST", "ISV"
+  generalTaxRate: number; // e.g. 16 for IVA, 8 for border, etc.
   categoryOverrides: TaxCategoryOverride[];
-  taxIncludedInPrice: boolean;     // Switch for Gross (inclusive) vs Net (exclusive) prices
-  
+  taxIncludedInPrice: boolean; // Switch for Gross (inclusive) vs Net (exclusive) prices
+
   // Issuing Business Credentials
-  companyName: string;             // Business Legal Name
-  companyTaxId: string;            // RFC / RUT / VAT ID
-  companyRegime: string;           // Régimen Fiscal (e.g. "601 - General de Ley Personas Morales")
-  companyPostalCode: string;       // Código Postal
-  companyAddress: string;          // Dirección Fiscal
-  
+  companyName: string; // Business Legal Name
+  companyTaxId: string; // RFC / RUT / VAT ID
+  companyRegime: string; // Régimen Fiscal (e.g. "601 - General de Ley Personas Morales")
+  companyPostalCode: string; // Código Postal
+  companyAddress: string; // Dirección Fiscal
+
   // Sequence configurations
-  invoicePrefix: string;           // Prefijo (e.g. "FAC-")
-  nextInvoiceNumber: number;       // Siguiente folio secuencial
+  invoicePrefix: string; // Prefijo (e.g. "FAC-")
+  nextInvoiceNumber: number; // Siguiente folio secuencial
   automaticMockInvoicing: boolean; // Emitir factura automáticamente al pagar si hay cliente
-  
-  certifyingAuthority: string;     // e.g. "Servicio de Administración Tributaria (SAT) Ficticio"
+
+  certifyingAuthority: string; // e.g. "Servicio de Administración Tributaria (SAT) Ficticio"
 
   // Extended Application Preferences
   businessProfile?: 'gastronomy' | 'market' | 'retail' | 'general';
@@ -365,8 +365,6 @@ export interface PurchaseOrder {
   carrier: string;
 }
 
-
-
 export interface ExpressEvent {
   id: string;
   type: 'happy_hour' | 'scan_challenge' | 'loyalty_challenge';
@@ -382,4 +380,3 @@ export interface ExpressEvent {
 
 export type { LicenseDetails } from '../services/licensing';
 export type { HardwareDeviceSettings } from '../services/printService';
-

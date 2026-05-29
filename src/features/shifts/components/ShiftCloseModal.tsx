@@ -38,13 +38,23 @@ export default function ShiftCloseModal({
   onClose,
   computedExpectedCash,
   onCloseShift,
-  user
+  user,
 }: ShiftCloseModalProps) {
   const [closeNotes, setCloseNotes] = useState('');
   const [manualCountedCash, setManualCountedCash] = useState('');
   const [isCalcOpen, setIsCalcOpen] = useState(false);
   const [calcCounts, setCalcCounts] = useState<Record<number, number>>({
-    1000: 0, 500: 0, 200: 0, 100: 0, 50: 0, 20: 0, 10: 0, 5: 0, 2: 0, 1: 0, 0.5: 0
+    1000: 0,
+    500: 0,
+    200: 0,
+    100: 0,
+    50: 0,
+    20: 0,
+    10: 0,
+    5: 0,
+    2: 0,
+    1: 0,
+    0.5: 0,
   });
 
   useEffect(() => {
@@ -53,7 +63,17 @@ export default function ShiftCloseModal({
       setManualCountedCash('');
       setIsCalcOpen(false);
       setCalcCounts({
-        1000: 0, 500: 0, 200: 0, 100: 0, 50: 0, 20: 0, 10: 0, 5: 0, 2: 0, 1: 0, 0.5: 0
+        1000: 0,
+        500: 0,
+        200: 0,
+        100: 0,
+        50: 0,
+        20: 0,
+        10: 0,
+        5: 0,
+        2: 0,
+        1: 0,
+        0.5: 0,
       });
     }
   }, [isOpen]);
@@ -78,7 +98,17 @@ export default function ShiftCloseModal({
 
   const resetDenominationCalculator = () => {
     const fresh: Record<number, number> = {
-      1000: 0, 500: 0, 200: 0, 100: 0, 50: 0, 20: 0, 10: 0, 5: 0, 2: 0, 1: 0, 0.5: 0
+      1000: 0,
+      500: 0,
+      200: 0,
+      100: 0,
+      50: 0,
+      20: 0,
+      10: 0,
+      5: 0,
+      2: 0,
+      1: 0,
+      0.5: 0,
     };
     setCalcCounts(fresh);
     playSound('swoosh');
@@ -113,8 +143,11 @@ export default function ShiftCloseModal({
               Se espera: ${computedExpectedCash.toFixed(2)} USD / VES en efectivo.
             </span>
           </div>
-          <button 
-            onClick={() => { onClose(); playSound('click'); }}
+          <button
+            onClick={() => {
+              onClose();
+              playSound('click');
+            }}
             className="text-[#9c9c9c] hover:text-gray-500 text-lg font-black p-1 cursor-pointer font-sans"
           >
             ✕
@@ -122,33 +155,42 @@ export default function ShiftCloseModal({
         </div>
 
         <div className="space-y-4">
-          
           {/* Dynamic Warning of variance */}
-          <div className={`p-3 rounded-2xl border text-xs flex gap-2.5 items-start text-left ${
-            !manualCountedCash 
-              ? 'bg-blue-50 border-blue-200 text-blue-700'
-              : hasVariance 
-                ? 'bg-amber-50 border-amber-250 text-amber-850' 
-                : 'bg-emerald-50 border-emerald-250 text-[#3c9e01]'
-          }`}>
-            <div className="text-xl">
-              {!manualCountedCash ? 'ℹ️' : hasVariance ? '⚠️' : '✅'}
-            </div>
+          <div
+            className={`p-3 rounded-2xl border text-xs flex gap-2.5 items-start text-left ${
+              !manualCountedCash
+                ? 'bg-blue-50 border-blue-200 text-blue-700'
+                : hasVariance
+                  ? 'bg-amber-50 border-amber-250 text-amber-850'
+                  : 'bg-emerald-50 border-emerald-250 text-[#3c9e01]'
+            }`}
+          >
+            <div className="text-xl">{!manualCountedCash ? 'ℹ️' : hasVariance ? '⚠️' : '✅'}</div>
             <div>
               {!manualCountedCash ? (
                 <div>
-                  <strong className="font-extrabold uppercase text-[10px] block mb-0.5 text-blue-800">Instrucción de Arqueo</strong>
-                  Coloque la cantidad de efectivo físico real que tiene actualmente en su cajón. Puede usar la **Calculadora de Billetes** de abajo para mayor comodidad.
+                  <strong className="font-extrabold uppercase text-[10px] block mb-0.5 text-blue-800">
+                    Instrucción de Arqueo
+                  </strong>
+                  Coloque la cantidad de efectivo físico real que tiene actualmente en su cajón. Puede usar la
+                  **Calculadora de Billetes** de abajo para mayor comodidad.
                 </div>
               ) : hasVariance ? (
                 <div>
-                  <strong className="font-extrabold uppercase text-[10px] block mb-0.5 text-amber-800">Descuadre Detectado</strong>
-                  Se detectó un descuadre comercial de <strong className="font-sans font-black underline">${difference.toFixed(2)}</strong>. Recuerde justificarlo en la caja de comentarios inferiores.
+                  <strong className="font-extrabold uppercase text-[10px] block mb-0.5 text-amber-800">
+                    Descuadre Detectado
+                  </strong>
+                  Se detectó un descuadre comercial de{' '}
+                  <strong className="font-sans font-black underline">${difference.toFixed(2)}</strong>. Recuerde
+                  justificarlo en la caja de comentarios inferiores.
                 </div>
               ) : (
                 <div>
-                  <strong className="font-extrabold uppercase text-[10px] block mb-0.5 text-[#3c9e01]">¡Caja Cuadrada Perfectamente!</strong>
-                  ¡Excelente! El efectivo reportado coincide exactamente con las proyecciones teóricas del sistema de StockMaster Pro. Recibirá un bono de XP.
+                  <strong className="font-extrabold uppercase text-[10px] block mb-0.5 text-[#3c9e01]">
+                    ¡Caja Cuadrada Perfectamente!
+                  </strong>
+                  ¡Excelente! El efectivo reportado coincide exactamente con las proyecciones teóricas del sistema de
+                  StockMaster Pro. Recibirá un bono de XP.
                 </div>
               )}
             </div>
@@ -161,9 +203,7 @@ export default function ShiftCloseModal({
                 Sueldo Físico Final Contado ($)
               </label>
               <div className="relative">
-                <span className="absolute left-3.5 top-2.5 font-extrabold text-[#58cc02] text-sm leading-none">
-                  $
-                </span>
+                <span className="absolute left-3.5 top-2.5 font-extrabold text-[#58cc02] text-sm leading-none">$</span>
                 <input
                   type="number"
                   step="0.01"
@@ -177,7 +217,10 @@ export default function ShiftCloseModal({
 
             <button
               type="button"
-              onClick={() => { setIsCalcOpen(!isCalcOpen); playSound('click'); }}
+              onClick={() => {
+                setIsCalcOpen(!isCalcOpen);
+                playSound('click');
+              }}
               className="w-full md:w-auto bg-[#1cb0f6] text-white border-b-4 border-sky-700 hover:bg-sky-400 py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1 cursor-pointer shrink-0"
             >
               <Calculator size={15} /> Calculadora de Caja {isCalcOpen ? '▲' : '▼'}
@@ -190,7 +233,9 @@ export default function ShiftCloseModal({
               <div className="flex justify-between items-center pb-2 border-b">
                 <div>
                   <span className="text-[10px] uppercase font-black text-gray-405">Arqueo por Denominaciones</span>
-                  <p className="text-[10px] font-black text-indigo-700">Subtotal Contado: ${calcTotalAmount.toFixed(2)}</p>
+                  <p className="text-[10px] font-black text-indigo-700">
+                    Subtotal Contado: ${calcTotalAmount.toFixed(2)}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -205,7 +250,10 @@ export default function ShiftCloseModal({
                 {DENOMINATIONS.map((denom) => {
                   const count = calcCounts[denom.value] || 0;
                   return (
-                    <div key={denom.value} className="flex items-center justify-between text-xs font-bold text-gray-650 bg-white p-2 rounded-xl border border-gray-200">
+                    <div
+                      key={denom.value}
+                      className="flex items-center justify-between text-xs font-bold text-gray-650 bg-white p-2 rounded-xl border border-gray-200"
+                    >
                       <span className="font-mono text-gray-700 flex items-center gap-1">
                         <span>{denom.type === 'bill' ? '💵' : '🪙'}</span>
                         <span>{denom.label}</span>
@@ -214,7 +262,7 @@ export default function ShiftCloseModal({
                         <button
                           type="button"
                           onClick={() => {
-                            setCalcCounts(curr => ({ ...curr, [denom.value]: Math.max(0, count - 1) }));
+                            setCalcCounts((curr) => ({ ...curr, [denom.value]: Math.max(0, count - 1) }));
                             playSound('click');
                           }}
                           className="w-5 h-5 flex items-center justify-center rounded bg-gray-100 hover:bg-gray-200 border text-gray-600 cursor-pointer"
@@ -225,7 +273,7 @@ export default function ShiftCloseModal({
                         <button
                           type="button"
                           onClick={() => {
-                            setCalcCounts(curr => ({ ...curr, [denom.value]: count + 1 }));
+                            setCalcCounts((curr) => ({ ...curr, [denom.value]: count + 1 }));
                             playSound('click');
                           }}
                           className="w-5 h-5 flex items-center justify-center rounded bg-gray-100 hover:bg-gray-200 border text-gray-600 cursor-pointer"
@@ -264,9 +312,18 @@ export default function ShiftCloseModal({
 
           {/* Solver suggestions with Mascot */}
           <div className="bg-amber-50 border border-amber-200 p-3 rounded-2xl flex gap-3 text-xs text-amber-900 text-left items-center">
-            <div className="shrink-0"><AeroMascot size={32} activeAccessory={user.activeAccessory} mood="neutral" level={user.level} animate={false} /></div>
+            <div className="shrink-0">
+              <AeroMascot
+                size={32}
+                activeAccessory={user.activeAccessory}
+                mood="neutral"
+                level={user.level}
+                animate={false}
+              />
+            </div>
             <p className="font-extrabold leading-normal">
-              Aero dice: "Recuerda contar billetes y monedas por separado. Un arqueo impecable mantiene sana tu racha financiera y ¡tu liga feliz! 🛡️"
+              Aero dice: "Recuerda contar billetes y monedas por separado. Un arqueo impecable mantiene sana tu racha
+              financiera y ¡tu liga feliz! 🛡️"
             </p>
           </div>
 
@@ -277,15 +334,14 @@ export default function ShiftCloseModal({
               onClick={handleCloseLocalShift}
               disabled={!manualCountedCash}
               className={`w-full py-4 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                manualCountedCash 
-                  ? 'bg-[#58cc02] text-white border-b-4 border-[#3c9e01] hover:bg-[#61e002]' 
+                manualCountedCash
+                  ? 'bg-[#58cc02] text-white border-b-4 border-[#3c9e01] hover:bg-[#61e002]'
                   : 'bg-gray-300 text-gray-500 border-none cursor-not-allowed'
               }`}
             >
               Confirmar Arqueo & Trabar Caja Registradora 🏁
             </button>
           </div>
-
         </div>
       </div>
     </div>

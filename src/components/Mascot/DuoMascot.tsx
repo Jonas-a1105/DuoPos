@@ -21,17 +21,20 @@ const DuoMascot: React.FC<DuoMascotProps> = ({
   mood = 'neutral',
   animate = true,
   showSparkles = false,
-  className = ''
+  className = '',
 }) => {
   const [isBlinking, setIsBlinking] = useState(false);
 
   // Parpadeo periódico para neutral mood
   useEffect(() => {
     if (mood !== 'neutral' || !animate) return;
-    const interval = setInterval(() => {
-      setIsBlinking(true);
-      setTimeout(() => setIsBlinking(false), 180);
-    }, 3500 + Math.random() * 2000);
+    const interval = setInterval(
+      () => {
+        setIsBlinking(true);
+        setTimeout(() => setIsBlinking(false), 180);
+      },
+      3500 + Math.random() * 2000,
+    );
     return () => clearInterval(interval);
   }, [mood, animate]);
 
@@ -78,9 +81,15 @@ const DuoMascot: React.FC<DuoMascotProps> = ({
           <path d="M31 56 Q40 60 49 56" fill="none" stroke="#1a1a1a" strokeWidth="3" strokeLinecap="round" />
           <path d="M71 56 Q80 60 89 56" fill="none" stroke="#1a1a1a" strokeWidth="3" strokeLinecap="round" />
           {/* Zzz flotantes */}
-          <text className="duo-zzz duo-zzz-1" x="95" y="35" fontSize="11" fontWeight="900" fill="#7c3aed" opacity="0.8">Z</text>
-          <text className="duo-zzz duo-zzz-2" x="102" y="22" fontSize="9" fontWeight="900" fill="#a78bfa" opacity="0.6">z</text>
-          <text className="duo-zzz duo-zzz-3" x="108" y="12" fontSize="7" fontWeight="900" fill="#c4b5fd" opacity="0.4">z</text>
+          <text className="duo-zzz duo-zzz-1" x="95" y="35" fontSize="11" fontWeight="900" fill="#7c3aed" opacity="0.8">
+            Z
+          </text>
+          <text className="duo-zzz duo-zzz-2" x="102" y="22" fontSize="9" fontWeight="900" fill="#a78bfa" opacity="0.6">
+            z
+          </text>
+          <text className="duo-zzz duo-zzz-3" x="108" y="12" fontSize="7" fontWeight="900" fill="#c4b5fd" opacity="0.4">
+            z
+          </text>
         </g>
       );
     }
@@ -130,9 +139,7 @@ const DuoMascot: React.FC<DuoMascotProps> = ({
       );
     }
     // Neutral / Sleepy
-    return (
-      <path d="M53 67 L60 76 L67 67" fill="#ff9500" stroke="#e07b00" strokeWidth="1.2" strokeLinejoin="round" />
-    );
+    return <path d="M53 67 L60 76 L67 67" fill="#ff9500" stroke="#e07b00" strokeWidth="1.2" strokeLinejoin="round" />;
   };
 
   // ─── Capa de accesorios ───
@@ -176,7 +183,13 @@ const DuoMascot: React.FC<DuoMascotProps> = ({
         return (
           <g className="duo-accessory-corona">
             {/* Base de la corona */}
-            <path d="M30 22 L35 6 L45 16 L55 0 L65 16 L75 6 L80 22 Z" fill="#fbbf24" stroke="#d97706" strokeWidth="1.5" strokeLinejoin="round" />
+            <path
+              d="M30 22 L35 6 L45 16 L55 0 L65 16 L75 6 L80 22 Z"
+              fill="#fbbf24"
+              stroke="#d97706"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+            />
             {/* Base band */}
             <rect x="30" y="20" width="50" height="5" rx="1" fill="#f59e0b" stroke="#d97706" strokeWidth="1" />
             {/* Gemas */}
@@ -198,7 +211,12 @@ const DuoMascot: React.FC<DuoMascotProps> = ({
             <path d="M42 80 L46 82 L48 95 L42 90 Z" fill="#1e293b" stroke="#0f172a" strokeWidth="0.8" />
             <path d="M78 80 L74 82 L72 95 L78 90 Z" fill="#1e293b" stroke="#0f172a" strokeWidth="0.8" />
             {/* Corbata roja */}
-            <path d="M57 82 L60 84 L63 82 L61 100 L60 102 L59 100 Z" fill="#dc2626" stroke="#991b1b" strokeWidth="0.5" />
+            <path
+              d="M57 82 L60 84 L63 82 L61 100 L60 102 L59 100 Z"
+              fill="#dc2626"
+              stroke="#991b1b"
+              strokeWidth="0.5"
+            />
             {/* Nudo de corbata */}
             <polygon points="58,82 62,82 61,85 59,85" fill="#b91c1c" />
             {/* Botones */}
@@ -249,7 +267,13 @@ const DuoMascot: React.FC<DuoMascotProps> = ({
   return (
     <div
       className={wrapperClass}
-      style={{ width: size, height: size * (140 / 120), display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+      style={{
+        width: size,
+        height: size * (140 / 120),
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
     >
       <svg
         viewBox={vb}
@@ -303,9 +327,23 @@ const DuoMascot: React.FC<DuoMascotProps> = ({
           {/* Patas */}
           <g className="duo-feet">
             {/* Pata izquierda */}
-            <path d="M42 118 L38 128 L32 130 M38 128 L38 132 M38 128 L44 130" fill="none" stroke="#ff9500" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M42 118 L38 128 L32 130 M38 128 L38 132 M38 128 L44 130"
+              fill="none"
+              stroke="#ff9500"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
             {/* Pata derecha */}
-            <path d="M78 118 L82 128 L88 130 M82 128 L82 132 M82 128 L76 130" fill="none" stroke="#ff9500" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M78 118 L82 128 L88 130 M82 128 L82 132 M82 128 L76 130"
+              fill="none"
+              stroke="#ff9500"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </g>
         </g>
 

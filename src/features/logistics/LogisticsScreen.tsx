@@ -8,10 +8,26 @@ import { Product, Branch, CashRegister, StockTransfer, CashShift, Transaction, U
 import { playSound } from '../../services/sounds';
 import { syncInsert, syncSaveStockTransfer, generateUUID } from '../../services/supabaseSync';
 import { LicenseDetails, PLANS } from '../../services/licensing';
-import { 
-  Building2, Monitor, ArrowLeftRight, Check, X, Plus, Edit2, 
-  MapPin, ClipboardList, RefreshCw, Sparkles, Send, Download, 
-  AlertCircle, ShieldCheck, ChevronRight, CheckCircle2, TrendingUp, Store
+import {
+  Building2,
+  Monitor,
+  ArrowLeftRight,
+  Check,
+  X,
+  Plus,
+  Edit2,
+  MapPin,
+  ClipboardList,
+  RefreshCw,
+  Sparkles,
+  Send,
+  Download,
+  AlertCircle,
+  ShieldCheck,
+  ChevronRight,
+  CheckCircle2,
+  TrendingUp,
+  Store,
 } from 'lucide-react';
 
 // Import modular subcomponents
@@ -59,33 +75,32 @@ export default function LogisticsScreen({
   stockTransfers,
   setStockTransfers,
   currentUser,
-  licenseDetails
+  licenseDetails,
 }: LogisticsScreenProps) {
-  
   const [activeSubTab, setActiveSubTab] = useState<'branches' | 'registers' | 'transfers' | 'central'>('branches');
-  
+
   // Modals Visibility States (shared with subcomponents)
   const [showBranchForm, setShowBranchForm] = useState(false);
   const [showRegisterForm, setShowRegisterForm] = useState(false);
 
   // active branch object
   const activeBranch = useMemo(() => {
-    return branches.find(b => b.id === activeBranchId) || branches[0];
+    return branches.find((b) => b.id === activeBranchId) || branches[0];
   }, [branches, activeBranchId]);
 
   // filtered registers of current branch
   const activeBranchRegisters = useMemo(() => {
-    return registers.filter(r => r.branchId === activeBranchId);
+    return registers.filter((r) => r.branchId === activeBranchId);
   }, [registers, activeBranchId]);
 
   // Compute stats per branch based on transactions
   const branchesStats = useMemo(() => {
     const stats: Record<string, { totalSales: number; count: number }> = {};
-    branches.forEach(b => {
+    branches.forEach((b) => {
       stats[b.id] = { totalSales: 0, count: 0 };
     });
 
-    transactions.forEach(t => {
+    transactions.forEach((t) => {
       const bId = t.branchId || 'branch-centro';
       if (stats[bId]) {
         stats[bId].totalSales += t.total;
@@ -99,14 +114,16 @@ export default function LogisticsScreen({
   // Switch Active Branch safely with active shift check
   const handleSelectBranch = (id: string) => {
     if (activeShift) {
-      alert('⚠️ No puedes cambiar de sucursal mientras tengas un turno o corte de caja abierto. Cierra tu turno actual en la pestaña de Caja primero.');
+      alert(
+        '⚠️ No puedes cambiar de sucursal mientras tengas un turno o corte de caja abierto. Cierra tu turno actual en la pestaña de Caja primero.',
+      );
       return;
     }
     setActiveBranchId(id);
     localStorage.setItem('duo_pos_active_branch_id', id);
 
     // Auto-select the first register in that branch
-    const matches = registers.filter(r => r.branchId === id);
+    const matches = registers.filter((r) => r.branchId === id);
     if (matches.length > 0) {
       setActiveRegisterId(matches[0].id);
       localStorage.setItem('duo_pos_active_register_id', matches[0].id);
@@ -127,31 +144,41 @@ export default function LogisticsScreen({
 
   // Suggested Restocks from CEDIS
   const suggestedRestocksList = useMemo(() => {
-    const suggestions: { branchId: string; branchName: string; productId: string; name: string; emoji: string; currentStock: number; missing: number }[] = [];
-    
-    branches.filter(b => b.type === 'branch').forEach(br => {
-      products.forEach(p => {
-        const currentStock = p.branchesStock?.[br.id] ?? (br.id === 'branch-centro' ? p.stock : 0);
-        const limit = p.minStock || 5;
-        if (currentStock <= limit) {
-          const ideal = 25;
-          const missing = ideal - currentStock;
-          const cedisStock = p.branchesStock?.['branch-central'] ?? 0;
-          
-          if (missing > 0 && cedisStock >= missing) {
-            suggestions.push({
-              branchId: br.id,
-              branchName: br.name,
-              productId: p.id,
-              name: p.name,
-              emoji: p.emoji || '📦',
-              currentStock,
-              missing
-            });
+    const suggestions: {
+      branchId: string;
+      branchName: string;
+      productId: string;
+      name: string;
+      emoji: string;
+      currentStock: number;
+      missing: number;
+    }[] = [];
+
+    branches
+      .filter((b) => b.type === 'branch')
+      .forEach((br) => {
+        products.forEach((p) => {
+          const currentStock = p.branchesStock?.[br.id] ?? (br.id === 'branch-centro' ? p.stock : 0);
+          const limit = p.minStock || 5;
+          if (currentStock <= limit) {
+            const ideal = 25;
+            const missing = ideal - currentStock;
+            const cedisStock = p.branchesStock?.['branch-central'] ?? 0;
+
+            if (missing > 0 && cedisStock >= missing) {
+              suggestions.push({
+                branchId: br.id,
+                branchName: br.name,
+                productId: p.id,
+                name: p.name,
+                emoji: p.emoji || '📦',
+                currentStock,
+                missing,
+              });
+            }
           }
-        }
+        });
       });
-    });
 
     return suggestions;
   }, [branches, products]);
@@ -161,7 +188,7 @@ export default function LogisticsScreen({
     if (suggestedRestocksList.length === 0) return;
 
     const groupedDestinations: Record<string, typeof suggestedRestocksList> = {};
-    suggestedRestocksList.forEach(s => {
+    suggestedRestocksList.forEach((s) => {
       if (!groupedDestinations[s.branchId]) {
         groupedDestinations[s.branchId] = [];
       }
@@ -173,20 +200,20 @@ export default function LogisticsScreen({
     const newlyCreatedTransfers: StockTransfer[] = [];
 
     Object.entries(groupedDestinations).forEach(([destId, list]) => {
-      const destB = branches.find(b => b.id === destId)!;
-      
-      const trItemsList = list.map(s => {
-        const p = products.find(prod => prod.id === s.productId)!;
+      const destB = branches.find((b) => b.id === destId)!;
+
+      const trItemsList = list.map((s) => {
+        const p = products.find((prod) => prod.id === s.productId)!;
         const stocks = { ...(p.branchesStock || {}) };
         stocks['branch-central'] = Math.max(0, (stocks['branch-central'] ?? 0) - s.missing);
-        
+
         onUpdateProduct({ ...p, branchesStock: stocks });
 
         return {
           productId: s.productId,
           name: s.name,
           emoji: s.emoji,
-          quantity: s.missing
+          quantity: s.missing,
         };
       });
 
@@ -201,7 +228,7 @@ export default function LogisticsScreen({
         createdAt: new Date().toISOString(),
         shippedAt: new Date().toISOString(),
         notes: 'Surtido automatizado de Alarma de Stock Crítico.',
-        carrier: 'Mensajería Express DuoExpress 🦉'
+        carrier: 'Mensajería Express DuoExpress 🦉',
       };
 
       newTransfersList.unshift(newT);
@@ -210,19 +237,20 @@ export default function LogisticsScreen({
     });
 
     setStockTransfers(newTransfersList);
-    
+
     for (const newT of newlyCreatedTransfers) {
       await syncSaveStockTransfer(newT, newTransfersList);
     }
 
     onGrantXp(80);
     playSound('success');
-    alert(`🎉 ¡ÉXITO! Se crearon y embarcaron ${countTransfers} Traspasos Express hacia las sucursales deficitarias. CEDIS ha despachado los insumos.`);
+    alert(
+      `🎉 ¡ÉXITO! Se crearon y embarcaron ${countTransfers} Traspasos Express hacia las sucursales deficitarias. CEDIS ha despachado los insumos.`,
+    );
   };
 
   return (
     <div className="space-y-6 animate-fadeIn font-sans p-1 md:p-3 relative pb-12 w-full text-gray-800 text-left font-sans">
-      
       {/* Visual Header Banner */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -233,13 +261,15 @@ export default function LogisticsScreen({
             Control comercial corporativo: distribuye inventarios desde Almacén Central y monitorea cajas.
           </p>
         </div>
-        
+
         <div className="flex flex-wrap gap-2">
           <button
             id="btn-add-branch"
             onClick={() => {
               if (currentUser.role !== 'admin') {
-                alert('🔒 Acceso Denegado: Solo el Administrador Corporativo puede crear o dar de alta nuevas sucursales físicas.');
+                alert(
+                  '🔒 Acceso Denegado: Solo el Administrador Corporativo puede crear o dar de alta nuevas sucursales físicas.',
+                );
               } else {
                 setShowBranchForm(true);
                 playSound('click');
@@ -274,7 +304,7 @@ export default function LogisticsScreen({
           <span className="text-3xl bg-teal-50 border border-teal-150 p-2 rounded-2xl select-none">🔄</span>
           <div>
             <span className="text-2xl font-black text-teal-600 block leading-none">
-              {stockTransfers.filter(tr => tr.status === 'pending' || tr.status === 'shipped').length}
+              {stockTransfers.filter((tr) => tr.status === 'pending' || tr.status === 'shipped').length}
             </span>
             <span className="text-[10px] font-black uppercase text-gray-400">Traspasos en Tránsito</span>
           </div>
@@ -284,9 +314,11 @@ export default function LogisticsScreen({
           <span className="text-3xl select-none">🏢</span>
           <div className="overflow-hidden">
             <span className="text-xs font-black text-amber-800 block truncate leading-none font-sans">
-              {branches.find(b => b.id === activeBranchId)?.name || 'Sin sucursal'}
+              {branches.find((b) => b.id === activeBranchId)?.name || 'Sin sucursal'}
             </span>
-            <span className="text-[10px] font-black uppercase text-amber-600 leading-tight">Canal Comercial Activo</span>
+            <span className="text-[10px] font-black uppercase text-amber-600 leading-tight">
+              Canal Comercial Activo
+            </span>
           </div>
         </div>
       </div>
@@ -296,12 +328,20 @@ export default function LogisticsScreen({
         {[
           { id: 'branches', label: '🏪 Sucursales & Almacenes', count: branches.length },
           { id: 'registers', label: '🖥️ Cajas del Canal', count: activeBranchRegisters.length },
-          { id: 'central', label: '🏢 CEDIS (Central Hub)', count: suggestedRestocksList.length, badgeColor: 'bg-red-500 text-white animate-pulse' },
-          { id: 'transfers', label: '🚚 Bitácora de Traspaso', count: stockTransfers.length }
-        ].map(tab => (
+          {
+            id: 'central',
+            label: '🏢 CEDIS (Central Hub)',
+            count: suggestedRestocksList.length,
+            badgeColor: 'bg-red-500 text-white animate-pulse',
+          },
+          { id: 'transfers', label: '🚚 Bitácora de Traspaso', count: stockTransfers.length },
+        ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => { setActiveSubTab(tab.id as any); playSound('click'); }}
+            onClick={() => {
+              setActiveSubTab(tab.id as any);
+              playSound('click');
+            }}
             className={`pb-3 px-3 text-xs md:text-sm font-black uppercase tracking-wider border-b-4 transition-all cursor-pointer flex items-center gap-1.5 font-sans ${
               activeSubTab === tab.id
                 ? 'border-b-[#58cc02] border-b-4 text-[#58cc02]'
@@ -310,7 +350,9 @@ export default function LogisticsScreen({
           >
             <span>{tab.label}</span>
             {tab.count !== undefined && tab.count > 0 && (
-              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${tab.badgeColor || 'bg-gray-100 text-gray-500'}`}>
+              <span
+                className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${tab.badgeColor || 'bg-gray-100 text-gray-500'}`}
+              >
                 {tab.count}
               </span>
             )}
@@ -379,7 +421,6 @@ export default function LogisticsScreen({
           onGrantXp={onGrantXp}
         />
       )}
-
     </div>
   );
 }

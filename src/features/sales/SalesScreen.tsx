@@ -4,7 +4,16 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Product, CartItem, Transaction, User, CashShift, Customer, LegalBillingSettings, ExpressEvent } from '../../types/index';
+import {
+  Product,
+  CartItem,
+  Transaction,
+  User,
+  CashShift,
+  Customer,
+  LegalBillingSettings,
+  ExpressEvent,
+} from '../../types/index';
 import { CATEGORIES, DUO_CHARACTERS, Character } from '../../initialData';
 import { Search, Barcode } from 'lucide-react';
 import { playSound } from '../../services/sounds';
@@ -18,7 +27,7 @@ import {
   KitchenOrder,
   ModifierModal,
   SplitBillModal,
-  KitchenDisplaySimulator
+  KitchenDisplaySimulator,
 } from './HospitalityAddon';
 
 // Subcomponents modularized
@@ -54,11 +63,11 @@ interface SalesScreenProps {
   onTriggerEventProgress?: (type: 'scan' | 'loyalty' | 'sale') => void;
 }
 
-export default function SalesScreen({ 
-  products, 
-  user, 
-  onGrantXp, 
-  onAddTransaction, 
+export default function SalesScreen({
+  products,
+  user,
+  onGrantXp,
+  onAddTransaction,
   onDecreaseStock,
   activeShift,
   shiftHistory,
@@ -72,9 +81,9 @@ export default function SalesScreen({
   onUpdateCustomer,
   exchangeRate = 53.05,
   activeRateType = 'oficial',
-  exchangeRates = { oficial: 53.05, paralelo: 57.10 },
+  exchangeRates = { oficial: 53.05, paralelo: 57.1 },
   activeEvent,
-  onTriggerEventProgress
+  onTriggerEventProgress,
 }: SalesScreenProps) {
   const activeChar: Character = DUO_CHARACTERS[user.avatar] || DUO_CHARACTERS.duo;
 
@@ -83,7 +92,7 @@ export default function SalesScreen({
   const [selectedCategory, setSelectedCategory] = useState('Todos');
 
   // Promocode States
-  const [discountPercent, setDiscountPercent] = useState(0); 
+  const [discountPercent, setDiscountPercent] = useState(0);
   const [promoMessage, setPromoMessage] = useState('');
 
   // Modals & Navigation triggers
@@ -94,7 +103,8 @@ export default function SalesScreen({
   const [isTerminalModalOpen, setIsTerminalModalOpen] = useState(false);
 
   // Hospitality F&B states
-  const isHospitalityActive = billingSettings?.businessProfile === 'gastronomy' || billingSettings?.businessProfile === undefined;
+  const isHospitalityActive =
+    billingSettings?.businessProfile === 'gastronomy' || billingSettings?.businessProfile === undefined;
   const [tables, setTables] = useState<TableState[]>(() => {
     try {
       const saved = localStorage.getItem('duo_pos_tables');
@@ -145,15 +155,17 @@ export default function SalesScreen({
   const [svcPrice, setSvcPrice] = useState('');
 
   // Held tickets (Tickets en Espera) States
-  const [suspendedTickets, setSuspendedTickets] = useState<{
-    id: string;
-    alias: string;
-    cart: CartItem[];
-    customer: Customer | null;
-    discountPercent: number;
-    useGemsDiscount: boolean;
-    savedAt: string;
-  }[]>(() => {
+  const [suspendedTickets, setSuspendedTickets] = useState<
+    {
+      id: string;
+      alias: string;
+      cart: CartItem[];
+      customer: Customer | null;
+      discountPercent: number;
+      useGemsDiscount: boolean;
+      savedAt: string;
+    }[]
+  >(() => {
     try {
       const saved = localStorage.getItem('duo_pos_suspended_tickets');
       return saved ? JSON.parse(saved) : [];
@@ -215,13 +227,13 @@ export default function SalesScreen({
 
       if (e.key === 'Enter') {
         if (rawBuffer.length >= 4) {
-          const found = products.find(p => p.barcode === rawBuffer || p.id === rawBuffer);
+          const found = products.find((p) => p.barcode === rawBuffer || p.id === rawBuffer);
           if (found) {
             e.preventDefault();
-            const inCartQty = cart.find(it => it.product.id === found.id)?.quantity || 0;
+            const inCartQty = cart.find((it) => it.product.id === found.id)?.quantity || 0;
             if (found.stock > inCartQty) {
-              setCart(currCart => {
-                const existingIndex = currCart.findIndex(it => it.product.id === found.id);
+              setCart((currCart) => {
+                const existingIndex = currCart.findIndex((it) => it.product.id === found.id);
                 if (existingIndex >= 0) {
                   const updated = [...currCart];
                   updated[existingIndex].quantity += 1;
@@ -232,9 +244,11 @@ export default function SalesScreen({
               });
               playSound('success');
               setIsMobileCartOpen(true);
-              toast.success(`Código de barras escaneado: ${found.emoji} ${found.name}`, { title: 'Escáner Inteligente 🔍' });
+              toast.success(`Código de barras escaneado: ${found.emoji} ${found.name}`, {
+                title: 'Escáner Inteligente 🔍',
+              });
               if (onTriggerEventProgress) onTriggerEventProgress('scan');
-              
+
               setPromoMessage(`⚡ ¡Escaneado: ${found.name} (EAN-${rawBuffer})!`);
               setTimeout(() => setPromoMessage(''), 3000);
             } else {
@@ -261,7 +275,7 @@ export default function SalesScreen({
 
   // Trigger scanning feedback manually
   const simulateBarcodeScan = (product: Product) => {
-    const inCartQty = cart.find(it => it.product.id === product.id)?.quantity || 0;
+    const inCartQty = cart.find((it) => it.product.id === product.id)?.quantity || 0;
     if (product.stock > inCartQty) {
       addToCart(product);
       playSound('success');
@@ -281,12 +295,15 @@ export default function SalesScreen({
       return;
     }
 
-    const existingIndex = cart.findIndex(it => it.product.id === prod.id);
+    const existingIndex = cart.findIndex((it) => it.product.id === prod.id);
     const existingQty = existingIndex >= 0 ? cart[existingIndex].quantity : 0;
 
     if (existingQty >= prod.stock) {
       playSound('error');
-      toast.error(`Lo sentimos, no puedes agregar más de este producto. El stock total disponible es de ${prod.stock} unidades.`, { title: 'Stock Insuficiente' });
+      toast.error(
+        `Lo sentimos, no puedes agregar más de este producto. El stock total disponible es de ${prod.stock} unidades.`,
+        { title: 'Stock Insuficiente' },
+      );
       return;
     }
 
@@ -295,16 +312,22 @@ export default function SalesScreen({
       const updated = [...cart];
       updated[existingIndex].quantity += 1;
       setCart(updated);
-      toast.success(`Incrementado ${prod.emoji} ${prod.name} en el carrito.`, { title: 'Carrito de Compras 🛒', duration: 1500 });
+      toast.success(`Incrementado ${prod.emoji} ${prod.name} en el carrito.`, {
+        title: 'Carrito de Compras 🛒',
+        duration: 1500,
+      });
     } else {
       setCart([...cart, { product: prod, quantity: 1 }]);
-      toast.success(`Agregado ${prod.emoji} ${prod.name} al carrito.`, { title: 'Carrito de Compras 🛒', duration: 1500 });
+      toast.success(`Agregado ${prod.emoji} ${prod.name} al carrito.`, {
+        title: 'Carrito de Compras 🛒',
+        duration: 1500,
+      });
     }
     setIsMobileCartOpen(true);
   };
 
   const removeFromCart = (prodId: string) => {
-    const existingIndex = cart.findIndex(it => it.product.id === prodId);
+    const existingIndex = cart.findIndex((it) => it.product.id === prodId);
     if (existingIndex < 0) return;
 
     playSound('click');
@@ -313,20 +336,29 @@ export default function SalesScreen({
     if (updated[existingIndex].quantity > 1) {
       updated[existingIndex].quantity -= 1;
       setCart(updated);
-      toast.info(`Reducido ${prod.emoji} ${prod.name} del carrito.`, { title: 'Carrito de Compras 🛒', duration: 1500 });
+      toast.info(`Reducido ${prod.emoji} ${prod.name} del carrito.`, {
+        title: 'Carrito de Compras 🛒',
+        duration: 1500,
+      });
     } else {
       updated.splice(existingIndex, 1);
       setCart(updated);
-      toast.warning(`Removido ${prod.emoji} ${prod.name} del carrito.`, { title: 'Carrito de Compras 🛒', duration: 1500 });
+      toast.warning(`Removido ${prod.emoji} ${prod.name} del carrito.`, {
+        title: 'Carrito de Compras 🛒',
+        duration: 1500,
+      });
     }
   };
 
   const removeAllFromCart = (prodId: string) => {
     playSound('swoosh');
-    const prod = cart.find(it => it.product.id === prodId)?.product;
-    setCart(cart.filter(it => it.product.id !== prodId));
+    const prod = cart.find((it) => it.product.id === prodId)?.product;
+    setCart(cart.filter((it) => it.product.id !== prodId));
     if (prod) {
-      toast.warning(`Removido ${prod.emoji} ${prod.name} por completo.`, { title: 'Carrito de Compras 🛒', duration: 1500 });
+      toast.warning(`Removido ${prod.emoji} ${prod.name} por completo.`, {
+        title: 'Carrito de Compras 🛒',
+        duration: 1500,
+      });
     }
   };
 
@@ -343,9 +375,7 @@ export default function SalesScreen({
 
   const getTaxRateForCategory = (category: string) => {
     if (!billingSettings) return 16;
-    const override = billingSettings.categoryOverrides.find(
-      o => o.category.toLowerCase() === category.toLowerCase()
-    );
+    const override = billingSettings.categoryOverrides.find((o) => o.category.toLowerCase() === category.toLowerCase());
     return override ? override.rate : billingSettings.generalTaxRate;
   };
 
@@ -357,7 +387,7 @@ export default function SalesScreen({
     const itemLevelDiscount = curr.discountPercent ? (itemBaseTotal * curr.discountPercent) / 100 : 0;
     return acc + (itemBaseTotal - itemLevelDiscount);
   }, 0);
-  
+
   const basePromoDiscount = (subtotal * discountPercent) / 100;
   const remainingValueForGems = Math.max(0, subtotal - basePromoDiscount);
 
@@ -365,22 +395,19 @@ export default function SalesScreen({
   let gemsDiscount = 0;
 
   if (selectedCustomer && useGemsDiscount) {
-    const maxRedeemableUnits = Math.min(
-      Math.floor(selectedCustomer.gems / 10), 
-      Math.floor(remainingValueForGems)       
-    );
+    const maxRedeemableUnits = Math.min(Math.floor(selectedCustomer.gems / 10), Math.floor(remainingValueForGems));
     gemsToRedeem = maxRedeemableUnits * 10;
-    gemsDiscount = maxRedeemableUnits * 1.00;
+    gemsDiscount = maxRedeemableUnits * 1.0;
   }
 
   const discountAmount = basePromoDiscount + gemsDiscount;
   const netBeforeTaxCalculation = Math.max(0, subtotal - discountAmount);
-  const discountRatio = subtotal > 0 ? (discountAmount / subtotal) : 0;
+  const discountRatio = subtotal > 0 ? discountAmount / subtotal : 0;
 
   let computedTaxSum = 0;
   let computedSubtotalSum = 0;
 
-  cart.forEach(item => {
+  cart.forEach((item) => {
     const addonsTotal = item.addons ? item.addons.reduce((sum, add) => sum + add.price, 0) : 0;
     const priceToUse = item.customPrice !== undefined ? item.customPrice : item.product.price;
     const itemPriceWithAddons = priceToUse + addonsTotal;
@@ -392,7 +419,7 @@ export default function SalesScreen({
     const itemTaxRate = getTaxRateForCategory(item.product.category);
 
     if (billingSettings.taxIncludedInPrice) {
-      const netVal = itemRemaining / (1 + (itemTaxRate / 100));
+      const netVal = itemRemaining / (1 + itemTaxRate / 100);
       const taxVal = itemRemaining - netVal;
       computedSubtotalSum += netVal;
       computedTaxSum += taxVal;
@@ -406,9 +433,9 @@ export default function SalesScreen({
 
   const taxAmount = computedTaxSum;
   const subtotalDesglosado = computedSubtotalSum;
-  const totalAmount = billingSettings.taxIncludedInPrice 
-    ? netBeforeTaxCalculation 
-    : (netBeforeTaxCalculation + taxAmount);
+  const totalAmount = billingSettings.taxIncludedInPrice
+    ? netBeforeTaxCalculation
+    : netBeforeTaxCalculation + taxAmount;
 
   const cashNum = Number(cashReceived) || 0;
   const changeDue = Math.max(0, cashNum - totalAmount);
@@ -423,12 +450,13 @@ export default function SalesScreen({
   useEffect(() => {
     const handleCashierHotkeys = (e: KeyboardEvent) => {
       const activeEl = document.activeElement;
-      if (activeEl && (
-        activeEl.tagName === 'INPUT' || 
-        activeEl.tagName === 'TEXTAREA' || 
-        activeEl.getAttribute('contenteditable') === 'true'
-      )) {
-        return; 
+      if (
+        activeEl &&
+        (activeEl.tagName === 'INPUT' ||
+          activeEl.tagName === 'TEXTAREA' ||
+          activeEl.getAttribute('contenteditable') === 'true')
+      ) {
+        return;
       }
 
       if (e.key === 'f' || e.key === 'F') {
@@ -442,7 +470,7 @@ export default function SalesScreen({
       } else if (e.key === 'x' || e.key === 'X') {
         e.preventDefault();
         if (cart.length > 0) {
-          const confirmClear = confirm("¿Deseas vaciar por completo el carrito actual?");
+          const confirmClear = confirm('¿Deseas vaciar por completo el carrito actual?');
           if (confirmClear) {
             setCart([]);
             setSelectedCustomer(null);
@@ -467,27 +495,31 @@ export default function SalesScreen({
 
   const handleSaveModifiers = (notes: string, addons: { name: string; price: number }[]) => {
     if (!modifierTargetItem) return;
-    setCart(curr => curr.map(item => {
-      if (item.product.id === modifierTargetItem.product.id) {
-        return { ...item, notes, addons };
-      }
-      return item;
-    }));
-    if (activeTableId) {
-      setTables(curr => curr.map(t => {
-        if (t.id === activeTableId) {
-          return {
-            ...t,
-            cart: t.cart.map(item => {
-              if (item.product.id === modifierTargetItem.product.id) {
-                return { ...item, notes, addons };
-              }
-              return item;
-            })
-          };
+    setCart((curr) =>
+      curr.map((item) => {
+        if (item.product.id === modifierTargetItem.product.id) {
+          return { ...item, notes, addons };
         }
-        return t;
-      }));
+        return item;
+      }),
+    );
+    if (activeTableId) {
+      setTables((curr) =>
+        curr.map((t) => {
+          if (t.id === activeTableId) {
+            return {
+              ...t,
+              cart: t.cart.map((item) => {
+                if (item.product.id === modifierTargetItem.product.id) {
+                  return { ...item, notes, addons };
+                }
+                return item;
+              }),
+            };
+          }
+          return t;
+        }),
+      );
     }
     setModifierTargetItem(null);
   };
@@ -496,46 +528,52 @@ export default function SalesScreen({
     const splitTxn: Transaction = {
       id: `TXN-SPLIT-${Math.floor(1000 + Math.random() * 9000)}`,
       date: new Date().toISOString(),
-      items: (updatedCart ? cart.filter(it => !updatedCart.some(u => u.product.id === it.product.id)) : cart).map(it => ({
-        productId: it.product.id,
-        name: `${it.product.name} (Modo Split)`,
-        price: it.product.price,
-        emoji: it.product.emoji,
-        quantity: it.quantity,
-        taxRateApplied: getTaxRateForCategory(it.product.category),
-        notes: it.notes,
-        addons: it.addons
-      })),
+      items: (updatedCart ? cart.filter((it) => !updatedCart.some((u) => u.product.id === it.product.id)) : cart).map(
+        (it) => ({
+          productId: it.product.id,
+          name: `${it.product.name} (Modo Split)`,
+          price: it.product.price,
+          emoji: it.product.emoji,
+          quantity: it.quantity,
+          taxRateApplied: getTaxRateForCategory(it.product.category),
+          notes: it.notes,
+          addons: it.addons,
+        }),
+      ),
       subtotal: paidTotal * 0.92,
       tax: paidTotal * 0.08,
       discount: 0,
       total: paidTotal,
-      paymentMethod: 'card', 
+      paymentMethod: 'card',
       employeeName: user.username,
       xpGained: 5,
       tableId: activeTableId || undefined,
-      tableName: activeTableId ? tables.find(t => t.id === activeTableId)?.name : undefined,
-      waiterName: activeWaiterName || undefined
+      tableName: activeTableId ? tables.find((t) => t.id === activeTableId)?.name : undefined,
+      waiterName: activeWaiterName || undefined,
     };
 
     onAddTransaction(splitTxn);
     onGrantXp(5);
-    toast.success(`Cobro split recibido: $${paidTotal.toFixed(2)} USD. ¡Ganaste +5 XP! 💳`, { title: 'Cobro de Cuenta 💔' });
+    toast.success(`Cobro split recibido: $${paidTotal.toFixed(2)} USD. ¡Ganaste +5 XP! 💳`, {
+      title: 'Cobro de Cuenta 💔',
+    });
 
     if (updatedCart) {
       setCart(updatedCart);
       if (activeTableId) {
-        setTables(prev => prev.map(t => {
-          if (t.id === activeTableId) {
-            return {
-              ...t,
-              cart: updatedCart,
-              status: updatedCart.length > 0 ? 'occupied' : 'free',
-              occupiedSince: updatedCart.length > 0 ? t.occupiedSince : undefined
-            };
-          }
-          return t;
-        }));
+        setTables((prev) =>
+          prev.map((t) => {
+            if (t.id === activeTableId) {
+              return {
+                ...t,
+                cart: updatedCart,
+                status: updatedCart.length > 0 ? 'occupied' : 'free',
+                occupiedSince: updatedCart.length > 0 ? t.occupiedSince : undefined,
+              };
+            }
+            return t;
+          }),
+        );
       }
     } else {
       toast.info(`Cobrado Split Equitativo: $${paidTotal.toFixed(2)} USD.`, { title: 'Cobro de Cuenta 💳' });
@@ -545,7 +583,7 @@ export default function SalesScreen({
   };
 
   const handleDispatchKitchenOrder = (orderId: string) => {
-    setKitchenOrders(prev => prev.filter(o => o.id !== orderId));
+    setKitchenOrders((prev) => prev.filter((o) => o.id !== orderId));
   };
 
   const handleOpenCheckout = () => {
@@ -558,34 +596,49 @@ export default function SalesScreen({
     if (isMixedPayment) {
       const cashPart = Number(mixedCashAmount) || 0;
       if (cashPart < 0) {
-        toast.error("El monto en efectivo del pago mixto no puede ser negativo.", { title: 'Error de Pago Mixto' });
+        toast.error('El monto en efectivo del pago mixto no puede ser negativo.', { title: 'Error de Pago Mixto' });
         return;
       }
       if (cashPart > totalAmount) {
-        toast.error(`El monto en efectivo ($${cashPart.toFixed(2)}) supera el total de la compra ($${totalAmount.toFixed(2)}). Desactiva "Pago Mixto" y usa la pestaña estándar de "Efectivo".`, { title: 'Error de Pago Mixto' });
+        toast.error(
+          `El monto en efectivo ($${cashPart.toFixed(2)}) supera el total de la compra ($${totalAmount.toFixed(2)}). Desactiva "Pago Mixto" y usa la pestaña estándar de "Efectivo".`,
+          { title: 'Error de Pago Mixto' },
+        );
         return;
       }
     } else {
       if (paymentMethod === 'cash' && cashNum < totalAmount) {
-        toast.error(`El efectivo recibido ($${cashNum}) es insuficiente para saldar el total de $${totalAmount.toFixed(2)}.`, { title: 'Efectivo Insuficiente' });
+        toast.error(
+          `El efectivo recibido ($${cashNum}) es insuficiente para saldar el total de $${totalAmount.toFixed(2)}.`,
+          { title: 'Efectivo Insuficiente' },
+        );
         return;
       }
 
       if (paymentMethod === 'credit') {
         if (!selectedCustomer) {
-          toast.error('Para cobrar bajo la línea de crédito ("Fiado"), primero debes asociar un cliente en la barra del carrito.', { title: 'Crédito no disponible' });
+          toast.error(
+            'Para cobrar bajo la línea de crédito ("Fiado"), primero debes asociar un cliente en la barra del carrito.',
+            { title: 'Crédito no disponible' },
+          );
           return;
         }
         const limit = selectedCustomer.creditLimit || 0;
         const used = selectedCustomer.creditUsed || 0;
         const available = limit - used;
-        
+
         if (limit === 0) {
-          toast.error(`El cliente ${selectedCustomer.name} no cuenta con línea de crédito activa ("Fiado"). Puedes autorizarla ingresando un límite en la pestaña Clientes.`, { title: 'Sin Línea de Crédito' });
+          toast.error(
+            `El cliente ${selectedCustomer.name} no cuenta con línea de crédito activa ("Fiado"). Puedes autorizarla ingresando un límite en la pestaña Clientes.`,
+            { title: 'Sin Línea de Crédito' },
+          );
           return;
         }
         if (totalAmount > available) {
-          toast.error(`Límite de crédito disponible superado. Disponible: $${available.toFixed(2)}. Total: $${totalAmount.toFixed(2)}.`, { title: 'Crédito Insuficiente' });
+          toast.error(
+            `Límite de crédito disponible superado. Disponible: $${available.toFixed(2)}. Total: $${totalAmount.toFixed(2)}.`,
+            { title: 'Crédito Insuficiente' },
+          );
           return;
         }
       }
@@ -600,12 +653,27 @@ export default function SalesScreen({
 
     let xpGranted = Math.max(10, Math.round(totalAmount / 4));
     const newTxnId = `TXN-${Math.floor(1000 + Math.random() * 9000)}`;
-    
+
     let calculatedInvoice = undefined;
     if (requestLegalInvoice && invoiceFiscalName && invoiceTaxId) {
-      const mockUuid = 'DUO00000-' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.floor(1000 + Math.random()*9000) + '-4FFF-ACCB-' + Math.random().toString(36).substring(2, 14).toUpperCase();
-      const nextNo = billingSettings ? `${billingSettings.invoicePrefix}${billingSettings.nextInvoiceNumber}` : `DUO-FAC-${Math.floor(10000 + Math.random()*90000)}`;
-      const duoSeal = 'SelloSAT|' + activeChar.avatar + '|' + Math.random().toString(36).substring(2, 15).toUpperCase() + '==' + '|' + user.username.toUpperCase();
+      const mockUuid =
+        'DUO00000-' +
+        Math.random().toString(36).substring(2, 6).toUpperCase() +
+        '-' +
+        Math.floor(1000 + Math.random() * 9000) +
+        '-4FFF-ACCB-' +
+        Math.random().toString(36).substring(2, 14).toUpperCase();
+      const nextNo = billingSettings
+        ? `${billingSettings.invoicePrefix}${billingSettings.nextInvoiceNumber}`
+        : `DUO-FAC-${Math.floor(10000 + Math.random() * 90000)}`;
+      const duoSeal =
+        'SelloSAT|' +
+        activeChar.avatar +
+        '|' +
+        Math.random().toString(36).substring(2, 15).toUpperCase() +
+        '==' +
+        '|' +
+        user.username.toUpperCase();
 
       calculatedInvoice = {
         uuid: mockUuid,
@@ -617,18 +685,20 @@ export default function SalesScreen({
         certifiedAt: new Date().toISOString(),
         satSignature: duoSeal,
         paymentForm: isMixedPayment ? '99 - Por definir (Pago Mixto)' : invoicePaymentForm,
-        useCFDI: invoiceUseCFDI
+        useCFDI: invoiceUseCFDI,
       };
     }
 
     const newTransaction: Transaction = {
       id: newTxnId,
       date: new Date().toISOString(),
-      items: cart.map(it => {
+      items: cart.map((it) => {
         const itemAddonsPrice = it.addons ? it.addons.reduce((sum, a) => sum + a.price, 0) : 0;
         const itemUnitPrice = it.customPrice !== undefined ? it.customPrice : it.product.price;
         const baseItemTotal = itemUnitPrice + itemAddonsPrice;
-        const finalCalculatedItemPrice = it.discountPercent ? baseItemTotal * (1 - it.discountPercent / 100) : baseItemTotal;
+        const finalCalculatedItemPrice = it.discountPercent
+          ? baseItemTotal * (1 - it.discountPercent / 100)
+          : baseItemTotal;
         return {
           productId: it.product.id,
           name: it.discountPercent ? `${it.product.name} (-${it.discountPercent}% desc)` : it.product.name,
@@ -637,7 +707,7 @@ export default function SalesScreen({
           quantity: it.quantity,
           taxRateApplied: getTaxRateForCategory(it.product.category),
           notes: it.notes,
-          addons: it.addons
+          addons: it.addons,
         };
       }),
       subtotal: subtotalDesglosado,
@@ -646,7 +716,7 @@ export default function SalesScreen({
       total: totalAmount,
       paymentMethod: isMixedPayment ? 'cash' : paymentMethod,
       isMixedPayment: isMixedPayment || undefined,
-      mixedCashAmount: isMixedPayment ? (Number(mixedCashAmount) || 0) : undefined,
+      mixedCashAmount: isMixedPayment ? Number(mixedCashAmount) || 0 : undefined,
       mixedCardAmount: isMixedPayment ? Math.max(0, totalAmount - (Number(mixedCashAmount) || 0)) : undefined,
       employeeName: user.username,
       xpGained: xpGranted,
@@ -654,43 +724,48 @@ export default function SalesScreen({
       gemsGained: selectedCustomer ? Math.max(1, Math.floor(totalAmount)) : undefined,
       gemsRedeemed: gemsToRedeem > 0 ? gemsToRedeem : undefined,
       tableId: activeTableId || undefined,
-      tableName: activeTableId ? tables.find(t => t.id === activeTableId)?.name : undefined,
+      tableName: activeTableId ? tables.find((t) => t.id === activeTableId)?.name : undefined,
       waiterName: activeWaiterName || undefined,
       isInvoiceRequested: requestLegalInvoice,
       invoiceData: calculatedInvoice,
-      cardPaymentDetails: cardDetailsFromTerminal || undefined
+      cardPaymentDetails: cardDetailsFromTerminal || undefined,
     };
 
-    cart.forEach(item => {
+    cart.forEach((item) => {
       onDecreaseStock(item.product.id, item.quantity);
     });
 
     onAddTransaction(newTransaction);
     onGrantXp(xpGranted);
-    
-    toast.achievement(`Venta de $${newTransaction.total.toFixed(2)} USD procesada correctamente. ¡Ganaste +${xpGranted} XP! 💎`, { title: 'Ticket Terminado 🎉' });
+
+    toast.achievement(
+      `Venta de $${newTransaction.total.toFixed(2)} USD procesada correctamente. ¡Ganaste +${xpGranted} XP! 💎`,
+      { title: 'Ticket Terminado 🎉' },
+    );
 
     if (activeTableId) {
-      setTables(prev => prev.map(t => {
-        if (t.id === activeTableId) {
-          return {
-            ...t,
-            status: 'free',
-            waiterName: '',
-            cart: [],
-            customer: null,
-            occupiedSince: undefined
-          };
-        }
-        return t;
-      }));
+      setTables((prev) =>
+        prev.map((t) => {
+          if (t.id === activeTableId) {
+            return {
+              ...t,
+              status: 'free',
+              waiterName: '',
+              cart: [],
+              customer: null,
+              occupiedSince: undefined,
+            };
+          }
+          return t;
+        }),
+      );
       setActiveTableId(null);
       setActiveWaiterName('');
     }
 
     setCelebrateTxn(newTransaction);
     setIsCheckoutOpen(false);
-    
+
     // Clear cart
     setCart([]);
     setDiscountPercent(0);
@@ -698,16 +773,17 @@ export default function SalesScreen({
     setUseGemsDiscount(false);
   };
 
-  const filteredProducts = products.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          p.category.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch =
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.category.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCat = selectedCategory === 'Todos' || p.category === selectedCategory;
     return matchesSearch && matchesCat;
   });
 
   return (
     <div className="space-y-6 animate-fadeIn font-sans p-1 md:p-3 pb-12">
-      <CashDrawer 
+      <CashDrawer
         user={user}
         activeShift={activeShift}
         shiftHistory={shiftHistory}
@@ -720,7 +796,7 @@ export default function SalesScreen({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* LEFT TWO COLUMNS: Simulators, Search & Grid */}
           <div className="lg:col-span-2 space-y-4">
-            <HospitalityFloorPlan 
+            <HospitalityFloorPlan
               isHospitalityActive={isHospitalityActive}
               tables={tables}
               activeTableId={activeTableId}
@@ -735,7 +811,7 @@ export default function SalesScreen({
               setIsKdsOpen={setIsKdsOpen}
             />
 
-            <RetailControlDeck 
+            <RetailControlDeck
               isHospitalityActive={isHospitalityActive}
               billingSettings={billingSettings}
               rawBarInput={rawBarInput}
@@ -744,7 +820,7 @@ export default function SalesScreen({
               simulateBarcodeScan={simulateBarcodeScan}
             />
 
-            <ServiceControlDeck 
+            <ServiceControlDeck
               isHospitalityActive={isHospitalityActive}
               billingSettings={billingSettings}
               svcName={svcName}
@@ -763,7 +839,9 @@ export default function SalesScreen({
                     🛒
                   </span>
                   <div className="text-left">
-                    <h4 className="font-extrabold text-xs uppercase text-gray-800 leading-none">Modo Abastos & Minimarket</h4>
+                    <h4 className="font-extrabold text-xs uppercase text-gray-800 leading-none">
+                      Modo Abastos & Minimarket
+                    </h4>
                     <p className="text-[10px] text-indigo-700 font-bold uppercase mt-1 leading-normal tracking-wider">
                       Venta Directa de Catálogo Activa (Sin Módulos Extra de Servicio o Mesas)
                     </p>
@@ -794,7 +872,10 @@ export default function SalesScreen({
 
                 <button
                   type="button"
-                  onClick={() => { setIsScannerOpen(true); playSound('click'); }}
+                  onClick={() => {
+                    setIsScannerOpen(true);
+                    playSound('click');
+                  }}
                   className="bg-[#1cb0f6] text-white border-b-4 border-[#128bd0] hover:bg-[#34beff] active:translate-y-[2px] active:border-b-0 py-2 px-3 rounded-xl font-black text-xs uppercase flex items-center justify-center gap-1.5 cursor-pointer select-none"
                   title="Escanear Código de Barras (Cámara y Manual)"
                 >
@@ -805,7 +886,7 @@ export default function SalesScreen({
 
               {/* Speedy Category buttons slider */}
               <div className="flex gap-1 overflow-x-auto w-full md:w-auto py-1 scrollbar-thin">
-                {CATEGORIES.map(cat => (
+                {CATEGORIES.map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
@@ -823,8 +904,8 @@ export default function SalesScreen({
 
             {/* Product Items Selection Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {filteredProducts.map(prod => {
-                const inCartQty = cart.find(it => it.product.id === prod.id)?.quantity || 0;
+              {filteredProducts.map((prod) => {
+                const inCartQty = cart.find((it) => it.product.id === prod.id)?.quantity || 0;
                 const hasAvailableStock = prod.stock > inCartQty;
                 const isOutOfStockAll = prod.stock === 0;
 
@@ -839,13 +920,15 @@ export default function SalesScreen({
                         : 'border-[#e5e5e5] border-b-[6px] hover:border-[#58cc02] active:translate-y-[4px] active:border-b-0'
                     }`}
                   >
-                    <span className={`absolute top-2 right-2 text-[9px] px-1.5 py-0.5 rounded-md font-black ${
-                      isOutOfStockAll
-                        ? 'bg-red-150 text-red-600 border border-red-200'
-                        : prod.stock - inCartQty <= 3
-                        ? 'bg-orange-100 text-orange-600 border border-orange-200'
-                        : 'bg-gray-100 text-gray-500'
-                    }`}>
+                    <span
+                      className={`absolute top-2 right-2 text-[9px] px-1.5 py-0.5 rounded-md font-black ${
+                        isOutOfStockAll
+                          ? 'bg-red-150 text-red-600 border border-red-200'
+                          : prod.stock - inCartQty <= 3
+                            ? 'bg-orange-100 text-orange-600 border border-orange-200'
+                            : 'bg-gray-100 text-gray-500'
+                      }`}
+                    >
                       Stock: {prod.stock - inCartQty}
                     </span>
 
@@ -857,15 +940,17 @@ export default function SalesScreen({
                       <h5 className="font-extrabold text-xs text-gray-800 line-clamp-1 truncate leading-tight">
                         {prod.name}
                       </h5>
-                      <p className="text-[10px] text-gray-400 font-extrabold pb-1">
-                        {prod.category}
-                      </p>
+                      <p className="text-[10px] text-gray-400 font-extrabold pb-1">{prod.category}</p>
                       <div className="flex flex-col bg-green-50/50 py-1 px-1 rounded-lg border border-green-150 w-full select-none">
                         <span className="text-xs font-black text-[#58cc02] block leading-tight">
                           ${prod.price.toFixed(2)}
                         </span>
                         <span className="text-[9px] font-bold text-gray-400 block leading-tight mt-0.5">
-                          {(prod.price * exchangeRate).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.
+                          {(prod.price * exchangeRate).toLocaleString('es-VE', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}{' '}
+                          Bs.
                         </span>
                       </div>
                     </div>
@@ -888,7 +973,7 @@ export default function SalesScreen({
           </div>
 
           {/* RIGHT ONE COLUMN: Cart Panel & Slide drawers */}
-          <ProductBasket 
+          <ProductBasket
             cart={cart}
             setCart={setCart}
             selectedCustomer={selectedCustomer}
@@ -939,7 +1024,7 @@ export default function SalesScreen({
         </div>
       )}
 
-      <CheckoutWizard 
+      <CheckoutWizard
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
         user={user}
@@ -976,7 +1061,7 @@ export default function SalesScreen({
         gemsDiscount={gemsDiscount}
       />
 
-      <TransactionSuccessSplash 
+      <TransactionSuccessSplash
         celebrateTxn={celebrateTxn}
         setCelebrateTxn={setCelebrateTxn}
         user={user}
@@ -988,7 +1073,7 @@ export default function SalesScreen({
         setPromoMessage={setPromoMessage}
       />
 
-      <BarcodeScannerModal 
+      <BarcodeScannerModal
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
         products={products}

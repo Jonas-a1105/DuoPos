@@ -43,11 +43,14 @@ export function useInventory() {
       let changedItem: Product | null = null;
       const updated = products.map((p) => {
         if (p.id === prod.id) {
-          const bStock = prod.branchesStock ? { ...prod.branchesStock } : (p.branchesStock ? { ...p.branchesStock } : {});
+          const bStock = prod.branchesStock ? { ...prod.branchesStock } : p.branchesStock ? { ...p.branchesStock } : {};
           if (!prod.branchesStock) {
             bStock[activeBranchId] = prod.stock;
           }
-          const mainStock = activeBranchId === 'branch-centro' ? (bStock['branch-centro'] ?? prod.stock) : (bStock['branch-centro'] ?? p.stock);
+          const mainStock =
+            activeBranchId === 'branch-centro'
+              ? (bStock['branch-centro'] ?? prod.stock)
+              : (bStock['branch-centro'] ?? p.stock);
           changedItem = { ...prod, branchesStock: bStock, stock: mainStock };
           return changedItem;
         }
@@ -82,10 +85,7 @@ export function useInventory() {
           const branchStock = p.branchesStock ? { ...p.branchesStock } : {};
           const currentBranchStock = branchStock[activeBranchId] ?? p.stock;
           branchStock[activeBranchId] = Math.max(0, currentBranchStock - qty);
-          const mainStock =
-            activeBranchId === 'branch-centro'
-              ? Math.max(0, currentBranchStock - qty)
-              : p.stock;
+          const mainStock = activeBranchId === 'branch-centro' ? Math.max(0, currentBranchStock - qty) : p.stock;
           return { ...p, branchesStock: branchStock, stock: mainStock };
         }
         return p;
@@ -127,7 +127,9 @@ export function useInventory() {
       const updated = suppliers.filter((s) => s.id !== id);
       setSuppliers(updated);
       await syncDelete('suppliers', 'duo_pos_suppliers', updated, id);
-      toast.warning(`Proveedor ${deletedName ? `"${deletedName}"` : ''} eliminado.`, { title: 'Gestión de Proveedores 🚚' });
+      toast.warning(`Proveedor ${deletedName ? `"${deletedName}"` : ''} eliminado.`, {
+        title: 'Gestión de Proveedores 🚚',
+      });
     },
     [suppliers, setSuppliers],
   );
@@ -163,7 +165,7 @@ export function useInventory() {
     async (id: string) => {
       const order = purchaseOrders.find((p) => p.id === id);
       if (!order) return;
-      
+
       const updatedOrder: PurchaseOrder = {
         ...order,
         status: 'received',
@@ -177,12 +179,9 @@ export function useInventory() {
           const bStock = p.branchesStock ? { ...p.branchesStock } : {};
           const currentBStock = bStock[activeBranchId] ?? p.stock;
           bStock[activeBranchId] = currentBStock + orderItem.quantity;
-          
+
           // If active branch is Centro, also update general stock
-          const mainStock =
-            activeBranchId === 'branch-centro'
-              ? currentBStock + orderItem.quantity
-              : p.stock;
+          const mainStock = activeBranchId === 'branch-centro' ? currentBStock + orderItem.quantity : p.stock;
 
           return {
             ...p,
@@ -195,7 +194,7 @@ export function useInventory() {
 
       // Update state
       setProducts(updatedProducts);
-      
+
       // Save changes to IndexedDB / Supabase for each updated product
       for (const item of order.items) {
         const matchingProd = updatedProducts.find((p) => p.id === item.productId);

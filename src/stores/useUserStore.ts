@@ -4,7 +4,6 @@ import { playSound } from '../services/sounds';
 import { toast } from '../components/Modal/FlashNotifications';
 import { supabase } from '../config/supabaseClient';
 
-
 interface UserState {
   user: User | null;
   users: User[];
@@ -47,9 +46,8 @@ const DEFAULT_LICENSE_DETAILS: LicenseDetails = {
   currentSalesCount: 0,
   offlineActivationSeed: 'FREE-SEED',
   activatedAt: new Date().toISOString(),
-  companyName: 'StockMaster Pro Trial Client'
+  companyName: 'StockMaster Pro Trial Client',
 };
-
 
 export const useUserStore = create<UserState>((set, get) => ({
   user: null,
@@ -85,7 +83,7 @@ export const useUserStore = create<UserState>((set, get) => ({
     // Also update in registered list index
     const savedUsersRaw = localStorage.getItem('duo_pos_users');
     const users: User[] = savedUsersRaw ? JSON.parse(savedUsersRaw) : [];
-    const idx = users.findIndex(u => u.id === updatedUser.id);
+    const idx = users.findIndex((u) => u.id === updatedUser.id);
     if (idx >= 0) {
       users[idx] = updatedUser;
     } else {
@@ -114,7 +112,7 @@ export const useUserStore = create<UserState>((set, get) => ({
             unlocked_skins: updatedUser.unlockedSkins,
             active_skin: updatedUser.activeSkin,
             unlocked_badges: updatedUser.unlockedBadges,
-            completed_missions_today: updatedUser.completedMissionsToday
+            completed_missions_today: updatedUser.completedMissionsToday,
           })
           .eq('id', updatedUser.id);
       } catch (err) {
@@ -139,7 +137,9 @@ export const useUserStore = create<UserState>((set, get) => ({
       chargesNum = chargesNum - 1;
       set({ xpBoosterCharges: chargesNum });
       localStorage.setItem('duo_pos_xp_booster_charges', String(chargesNum));
-      toast.achievement(`🧪 ¡Poción de Doble XP Activa! Ganaste el doble: +${xpGained} XP`, { title: 'Booster de Fila 🧪' });
+      toast.achievement(`🧪 ¡Poción de Doble XP Activa! Ganaste el doble: +${xpGained} XP`, {
+        title: 'Booster de Fila 🧪',
+      });
     }
 
     if (isHappyHourActive) {
@@ -169,7 +169,7 @@ export const useUserStore = create<UserState>((set, get) => ({
         'Experto en Finanzas 🥇',
         'Maestro de Inventario 👑',
         'Defensor del Fénix ⚡',
-        'Socio de Élite de StockMaster 💎'
+        'Socio de Élite de StockMaster 💎',
       ];
       title = titles[Math.min(currentLevel - 1, titles.length - 1)];
 
@@ -177,20 +177,20 @@ export const useUserStore = create<UserState>((set, get) => ({
         levelUpAchieved: {
           oldLevel: user.level,
           newLevel: currentLevel,
-          title: title
-        }
+          title: title,
+        },
       });
 
       playSound('levelup');
-      
-      toast.achievement(`¡Subiste al nivel ${currentLevel}! Título: ${title}`, { 
-        title: '¡NIVEL ALCANZADO! 🎉', 
-        duration: 8000 
+
+      toast.achievement(`¡Subiste al nivel ${currentLevel}! Título: ${title}`, {
+        title: '¡NIVEL ALCANZADO! 🎉',
+        duration: 8000,
       });
     } else {
-      toast.info(`¡Ganaste +${xpGained} XP! Sigue así ⚡`, { 
-        title: 'XP Reincorporado', 
-        duration: 2500 
+      toast.info(`¡Ganaste +${xpGained} XP! Sigue así ⚡`, {
+        title: 'XP Reincorporado',
+        duration: 2500,
       });
     }
 
@@ -200,9 +200,9 @@ export const useUserStore = create<UserState>((set, get) => ({
       level: currentLevel,
       levelTitle: title,
       weeklyXp: (user.weeklyXp ?? 0) + xpGained,
-      seasonXp: (user.seasonXp ?? 0) + xpGained
+      seasonXp: (user.seasonXp ?? 0) + xpGained,
     };
 
     await get().updateUser(updatedUser);
-  }
+  },
 }));

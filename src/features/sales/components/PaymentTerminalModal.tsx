@@ -8,7 +8,6 @@ import { CreditCard, Wifi, ShieldCheck, HelpCircle, Activity, Delete, Key, Check
 import { HardwareDeviceSettings } from '../../../services/printService';
 import { playSound } from '../../../services/sounds';
 
-
 interface PaymentTerminalModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -34,23 +33,25 @@ export default function PaymentTerminalModal({
   totalAmount,
   hardwareSettings,
   onSuccess,
-  onGrantXp
+  onGrantXp,
 }: PaymentTerminalModalProps) {
   if (!isOpen) return null;
 
   const terminalSettings = hardwareSettings.paymentTerminal;
 
-  // Connection & Transaction states: 
+  // Connection & Transaction states:
   // 'idle' | 'connecting' | 'waiting_card' | 'entering_pin' | 'signing' | 'processing' | 'approved' | 'declined' | 'timeout'
-  const [step, setStep] = useState<'connecting' | 'waiting_card' | 'entering_pin' | 'signing' | 'processing' | 'approved' | 'declined' | 'timeout'>('connecting');
+  const [step, setStep] = useState<
+    'connecting' | 'waiting_card' | 'entering_pin' | 'signing' | 'processing' | 'approved' | 'declined' | 'timeout'
+  >('connecting');
   const [logs, setLogs] = useState<string[]>([]);
   const [pin, setPin] = useState<string>('');
-  
+
   // Simulated Card Info
   const [selectedBrand, setSelectedBrand] = useState<'VISA' | 'MASTERCARD' | 'AMEX'>('VISA');
   const [cardHolder, setCardHolder] = useState<string>('');
   const [cardNumber, setCardNumber] = useState<string>('4152319041285038');
-  
+
   // Signature Canvas states
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -59,7 +60,7 @@ export default function PaymentTerminalModal({
   // Connection logs timing simulation
   const addLog = (msg: string) => {
     const timestamp = new Date().toLocaleTimeString();
-    setLogs(prev => [...prev, `[${timestamp}] ${msg}`]);
+    setLogs((prev) => [...prev, `[${timestamp}] ${msg}`]);
   };
 
   useEffect(() => {
@@ -68,7 +69,9 @@ export default function PaymentTerminalModal({
       addLog(`[INTEGRACION POS] Inicializando modulo para terminal ID: ${terminalSettings.terminalId}`);
       addLog(`[CONEXION] Canal configurado: ${terminalSettings.connectionType.toUpperCase()}`);
       if (terminalSettings.connectionType === 'tcp_ip') {
-        addLog(`[RED] Intentando handshake con socket TCP en ${terminalSettings.ipAddress}:${terminalSettings.port}...`);
+        addLog(
+          `[RED] Intentando handshake con socket TCP en ${terminalSettings.ipAddress}:${terminalSettings.port}...`,
+        );
       } else {
         addLog(`[CONEXION] Buscando terminal Bluetooth de baja energía (BLE)...`);
       }
@@ -80,11 +83,13 @@ export default function PaymentTerminalModal({
           playSound('error');
           return;
         }
-        
+
         playSound('levelup');
         setStep('waiting_card');
         addLog(`[CONEXION] ¡Conexión establecida con éxito!`);
-        addLog(`[API POS] Envío de cobro TX: <STX>0100|${terminalSettings.terminalId}|USD${totalAmount.toFixed(2)}<ETX>`);
+        addLog(
+          `[API POS] Envío de cobro TX: <STX>0100|${terminalSettings.terminalId}|USD${totalAmount.toFixed(2)}<ETX>`,
+        );
         addLog(`[API POS] Respuesta RX: <STX>ACK|WAITING_CARD<ETX>`);
         addLog(`[SMARTPOS] Esperando lectura de chip / tarjeta NFC...`);
       }, 1500);
@@ -108,11 +113,11 @@ export default function PaymentTerminalModal({
       setCardHolder('AMEX CORPORATE RACHA');
       setCardNumber('375981208310002');
     }
-    
+
     addLog(`[READER] Tarjeta ${brand} leída por inducción electromagnética (NFC Clásico)`);
     addLog(`[EMV ISO-7816] Extrayendo datos Track 2...`);
     addLog(`[EMV ISO-7816] Cardholder Name: ${cardHolder || 'CUSTOMER NAME'}`);
-    
+
     // Jump to PIN verification
     setStep('entering_pin');
     addLog(`[SMARTPOS] Tarjeta detectada. Solicitando autenticación NIP/PIN del cliente...`);
@@ -128,7 +133,7 @@ export default function PaymentTerminalModal({
     playSound('levelup');
     addLog(`[SECURITY] PIN capturado de forma encriptada bajo llave DUKPT.`);
     addLog(`[EMV ISO-7816] Generando criptograma ARQC para validación bancaria...`);
-    
+
     if (terminalSettings.requireSignature) {
       setStep('signing');
       addLog(`[SIGNATURE] Solicitada firma manuscrita digital por política de emisor.`);
@@ -140,7 +145,9 @@ export default function PaymentTerminalModal({
   const triggerHostAuth = () => {
     setStep('processing');
     addLog(`[HOST ONLINE] Enviando autorización bancaria...`);
-    addLog(`[API] Payload XML: <AuthReq><Amt>${totalAmount}</Amt><Card>${cardNumber.substring(0,6)}******${cardNumber.substring(cardNumber.length-4)}</Card></AuthReq>`);
+    addLog(
+      `[API] Payload XML: <AuthReq><Amt>${totalAmount}</Amt><Card>${cardNumber.substring(0, 6)}******${cardNumber.substring(cardNumber.length - 4)}</Card></AuthReq>`,
+    );
 
     setTimeout(() => {
       const code = terminalSettings.mockResponseCode;
@@ -228,9 +235,14 @@ export default function PaymentTerminalModal({
   const handleFinishTransaction = () => {
     const canvas = canvasRef.current;
     const signatureBase64 = canvas ? canvas.toDataURL('image/png') : '';
-    
+
     const randomAuthCode = Math.floor(Math.random() * 899999 + 100000).toString();
-    const mockAID = selectedBrand === 'VISA' ? 'A0000000031010' : selectedBrand === 'MASTERCARD' ? 'A0000000041010' : 'A0000000251010';
+    const mockAID =
+      selectedBrand === 'VISA'
+        ? 'A0000000031010'
+        : selectedBrand === 'MASTERCARD'
+          ? 'A0000000041010'
+          : 'A0000000251010';
     const mockARQC = Math.random().toString(16).substring(2, 12).toUpperCase();
 
     // Call success handler
@@ -243,7 +255,7 @@ export default function PaymentTerminalModal({
       cardType: selectedBrand === 'AMEX' ? 'credit' : 'debit',
       aid: mockAID,
       arqc: mockARQC,
-      signatureBase64
+      signatureBase64,
     });
 
     onGrantXp(15);
@@ -253,10 +265,8 @@ export default function PaymentTerminalModal({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm animate-fadeIn">
       <div className="bg-white rounded-3xl w-full max-w-4xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
-        
         {/* Left column: Simulated POS Machine */}
         <div className="bg-[#121214] p-6 text-white flex flex-col justify-between border-r border-slate-800">
-          
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div className="flex items-center gap-2">
               <span className="p-1.5 bg-[#58cc02] rounded-lg">
@@ -264,7 +274,9 @@ export default function PaymentTerminalModal({
               </span>
               <div>
                 <h4 className="font-extrabold text-[#58cc02] text-xs uppercase leading-none">POS TERMINAL</h4>
-                <span className="text-[9px] text-gray-500 font-mono font-black">{terminalSettings.provider.toUpperCase()} v4.1</span>
+                <span className="text-[9px] text-gray-500 font-mono font-black">
+                  {terminalSettings.provider.toUpperCase()} v4.1
+                </span>
               </div>
             </div>
 
@@ -310,7 +322,9 @@ export default function PaymentTerminalModal({
                 <p className="text-amber-400 text-[10px] font-black uppercase">TARJETA VERIFICADA CHIP</p>
                 <p className="text-xs uppercase text-emerald-200">INTRODUCE TU NIP/PIN EN TECLADO:</p>
                 <div className="bg-[#0f1d15] py-2 rounded border border-emerald-900 tracking-widest text-xl text-emerald-400 font-black">
-                  {pin.replace(/./g, '●') || <span className="text-xs text-emerald-700 animate-pulse">ESPERANDO PIN</span>}
+                  {pin.replace(/./g, '●') || (
+                    <span className="text-xs text-emerald-700 animate-pulse">ESPERANDO PIN</span>
+                  )}
                 </div>
                 <p className="text-[8px] text-emerald-500">Protegido por Keypad Criptográfico PCI-PTS</p>
               </div>
@@ -320,7 +334,9 @@ export default function PaymentTerminalModal({
               <div className="text-center py-4 space-y-1.5">
                 <ShieldCheck size={20} className="mx-auto text-yellow-400" />
                 <p className="text-white text-xs font-black">REQUIERE FIRMA CLIENTECART</p>
-                <p className="text-[9px] text-emerald-300 leading-tight">Por favor, firma en el lienzo interactivo del tablet contiguo para autorizar.</p>
+                <p className="text-[9px] text-emerald-300 leading-tight">
+                  Por favor, firma en el lienzo interactivo del tablet contiguo para autorizar.
+                </p>
               </div>
             )}
 
@@ -337,7 +353,9 @@ export default function PaymentTerminalModal({
                 <div className="w-8 h-8 bg-green-900 rounded-full flex items-center justify-center mx-auto border-2 border-emerald-400">
                   <Check size={16} className="text-emerald-400" />
                 </div>
-                <p className="text-xs font-extrabold uppercase text-[#58cc02] tracking-wider animate-bounce">APROBADA 00</p>
+                <p className="text-xs font-extrabold uppercase text-[#58cc02] tracking-wider animate-bounce">
+                  APROBADA 00
+                </p>
                 <p className="text-[9px] text-emerald-400 font-bold leading-normal">
                   Transacción registrada de forma exitosa.
                 </p>
@@ -349,7 +367,9 @@ export default function PaymentTerminalModal({
                 <div className="w-8 h-8 bg-red-950 rounded-full flex items-center justify-center mx-auto border-2 border-red-500">
                   <X size={16} className="text-red-400" />
                 </div>
-                <p className="text-xs font-extrabold uppercase tracking-wider">RECHAZADA {terminalSettings.mockResponseCode}</p>
+                <p className="text-xs font-extrabold uppercase tracking-wider">
+                  RECHAZADA {terminalSettings.mockResponseCode}
+                </p>
                 <p className="text-[9px] text-red-305 leading-normal font-sans">
                   El banco emisor declinó la venta. Intenta con otra forma de pago.
                 </p>
@@ -375,14 +395,14 @@ export default function PaymentTerminalModal({
 
           {/* Core Hardware PIN Keys */}
           <div className="bg-[#1e1e24] p-3 rounded-2xl border border-slate-800 grid grid-cols-3 gap-2">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-              <button 
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+              <button
                 key={num}
                 type="button"
                 disabled={step !== 'entering_pin' || pin.length >= 6}
                 onClick={() => {
                   playSound('click');
-                  setPin(p => p + num);
+                  setPin((p) => p + num);
                 }}
                 className={`py-2 rounded-xl text-sm font-black transition-all ${
                   step === 'entering_pin'
@@ -393,8 +413,8 @@ export default function PaymentTerminalModal({
                 {num}
               </button>
             ))}
-            
-            <button 
+
+            <button
               type="button"
               disabled={step !== 'entering_pin'}
               onClick={() => {
@@ -403,43 +423,47 @@ export default function PaymentTerminalModal({
                 addLog(`[READER] Entrada de PIN borrada por usuario`);
               }}
               className={`py-2 rounded-xl text-[9px] font-black uppercase transition-all ${
-                step === 'entering_pin' ? 'bg-yellow-600 hover:bg-yellow-500 hover:scale-105 cursor-pointer text-yellow-950' : 'bg-slate-850/30 text-gray-600 cursor-not-allowed'
+                step === 'entering_pin'
+                  ? 'bg-yellow-600 hover:bg-yellow-500 hover:scale-105 cursor-pointer text-yellow-950'
+                  : 'bg-slate-850/30 text-gray-600 cursor-not-allowed'
               }`}
             >
               Borrar
             </button>
 
-            <button 
+            <button
               type="button"
               disabled={step !== 'entering_pin'}
               onClick={() => {
                 playSound('click');
-                setPin(p => p + '0');
+                setPin((p) => p + '0');
               }}
               className={`py-2 rounded-xl text-sm font-black transition-all ${
-                step === 'entering_pin' ? 'bg-slate-800 hover:bg-slate-700 cursor-pointer text-white' : 'bg-slate-850/30 text-gray-600 cursor-not-allowed'
+                step === 'entering_pin'
+                  ? 'bg-slate-800 hover:bg-slate-700 cursor-pointer text-white'
+                  : 'bg-slate-850/30 text-gray-600 cursor-not-allowed'
               }`}
             >
               0
             </button>
 
-            <button 
+            <button
               type="button"
               disabled={step !== 'entering_pin'}
               onClick={handlePinSubmit}
               className={`py-2 rounded-xl text-[9px] font-black uppercase transition-all ${
-                step === 'entering_pin' ? 'bg-[#58cc02] hover:bg-[#61e002] text-white hover:scale-105 cursor-pointer border-b-2 border-green-800' : 'bg-slate-850/30 text-gray-600 cursor-not-allowed'
+                step === 'entering_pin'
+                  ? 'bg-[#58cc02] hover:bg-[#61e002] text-white hover:scale-105 cursor-pointer border-b-2 border-green-800'
+                  : 'bg-slate-850/30 text-gray-600 cursor-not-allowed'
               }`}
             >
               Confirmar
             </button>
           </div>
-
         </div>
 
         {/* Right column: Cashier Control panel */}
         <div className="p-6 bg-slate-50 flex flex-col justify-between h-full space-y-4">
-          
           <div className="flex justify-between items-start">
             <div>
               <h3 className="text-lg font-black text-gray-800 flex items-center gap-1.5 leading-none">
@@ -449,7 +473,7 @@ export default function PaymentTerminalModal({
                 Pasarela de Pago Segura e Interactiva
               </p>
             </div>
-            <button 
+            <button
               type="button"
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-150 rounded-lg cursor-pointer"
@@ -460,7 +484,6 @@ export default function PaymentTerminalModal({
 
           {/* Interactive Steps instructions for the Cashier */}
           <div className="bg-white border rounded-2xl p-4 space-y-3 shadow-sm text-left">
-            
             {step === 'waiting_card' && (
               <div className="space-y-3">
                 <div className="flex items-center gap-1.5 text-[#58cc02] font-black text-xs uppercase">
@@ -468,7 +491,8 @@ export default function PaymentTerminalModal({
                   <span>Lectura de Tarjeta Física</span>
                 </div>
                 <p className="text-[10.5px] text-gray-600 leading-normal font-medium">
-                  El cliente debe aproximar su tarjeta de crédito o débito a la zona inductiva NFC para la lectura iso-estándar de la pasarela. Selecciona un banco de prueba abajo para simular:
+                  El cliente debe aproximar su tarjeta de crédito o débito a la zona inductiva NFC para la lectura
+                  iso-estándar de la pasarela. Selecciona un banco de prueba abajo para simular:
                 </p>
 
                 <div className="grid grid-cols-3 gap-2 pt-1">
@@ -507,7 +531,9 @@ export default function PaymentTerminalModal({
                   <span>Captura de PIN del Cliente</span>
                 </div>
                 <p className="text-[10.5px] text-gray-600 leading-normal font-medium">
-                  Por seguridad, el cliente debe ingresar su clave secreta (PIN de 4 dígitos) para firmar con su chip EMV. Haz clic en las teclas numéricas del controlador físico de la izquierda de forma interactiva y luego presiona <strong className="text-gray-800">Confirmar</strong>.
+                  Por seguridad, el cliente debe ingresar su clave secreta (PIN de 4 dígitos) para firmar con su chip
+                  EMV. Haz clic en las teclas numéricas del controlador físico de la izquierda de forma interactiva y
+                  luego presiona <strong className="text-gray-800">Confirmar</strong>.
                 </p>
                 <p className="text-[9px] text-gray-400 bg-gray-50 border p-1.5 rounded italic">
                   PIN de simulación recomendado: <strong>1234</strong> o cualquier combinación de 4 dígitos.
@@ -521,7 +547,7 @@ export default function PaymentTerminalModal({
                   <span className="text-slate-800 font-black text-xs uppercase flex items-center gap-1">
                     ✍️ FIRMA DIGITAL AUTORIZADA
                   </span>
-                  <button 
+                  <button
                     type="button"
                     onClick={clearCanvas}
                     className="text-[9px] font-black bg-blue-50 text-blue-600 hover:bg-blue-100 px-2 py-0.5 border border-blue-200 rounded-md cursor-pointer"
@@ -575,15 +601,18 @@ export default function PaymentTerminalModal({
                   <Activity size={12} />
                   <span>Resultado del Enlace Fiscal Bancario</span>
                 </div>
-                
+
                 {step === 'processing' && (
-                  <p className="text-[10.5px] text-gray-600">Simulando el switch financiero interbancario de la red PROSA.</p>
+                  <p className="text-[10.5px] text-gray-600">
+                    Simulando el switch financiero interbancario de la red PROSA.
+                  </p>
                 )}
 
                 {step === 'approved' && (
                   <div className="space-y-4">
                     <p className="text-[10.5px] text-green-700 font-bold">
-                      💳 ¡Cobro procesado con éxito! El emisor autorizó el cargo a la racha y se ha guardado el criptograma ARQC correspondiente.
+                      💳 ¡Cobro procesado con éxito! El emisor autorizó el cargo a la racha y se ha guardado el
+                      criptograma ARQC correspondiente.
                     </p>
                     <button
                       type="button"
@@ -598,7 +627,8 @@ export default function PaymentTerminalModal({
                 {step === 'declined' && (
                   <div className="space-y-3">
                     <p className="text-[10.5px] text-red-600 font-bold">
-                      La terminal rechazó la tarjeta. Puedes reintentar con otra forma de pago, comprobar el estatus de racha del cliente o cambiar la configuración del emulador en la pestaña "Guardado".
+                      La terminal rechazó la tarjeta. Puedes reintentar con otra forma de pago, comprobar el estatus de
+                      racha del cliente o cambiar la configuración del emulador en la pestaña "Guardado".
                     </p>
                     <button
                       type="button"
@@ -613,7 +643,8 @@ export default function PaymentTerminalModal({
                 {step === 'timeout' && (
                   <div className="space-y-3">
                     <p className="text-[10.5px] text-amber-700 font-bold">
-                      Ocurrió un error de espera en la respuesta del Bus IoT local de periféricos. Verifica el puerto COM o IP de la terminal conectada.
+                      Ocurrió un error de espera en la respuesta del Bus IoT local de periféricos. Verifica el puerto
+                      COM o IP de la terminal conectada.
                     </p>
                     <button
                       type="button"
@@ -626,7 +657,6 @@ export default function PaymentTerminalModal({
                 )}
               </div>
             )}
-
           </div>
 
           {/* Real-time connection raw byte logger stream list */}
@@ -645,9 +675,7 @@ export default function PaymentTerminalModal({
               )}
             </div>
           </div>
-
         </div>
-
       </div>
     </div>
   );

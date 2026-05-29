@@ -18,7 +18,7 @@ export default function DebtPaymentModal({
   activeShift,
   onUpdateCustomer,
   onAddShiftMovement,
-  onGrantXp
+  onGrantXp,
 }: DebtPaymentModalProps) {
   const [payAmount, setPayAmount] = useState('');
   const [payNotes, setPayNotes] = useState('');
@@ -43,7 +43,9 @@ export default function DebtPaymentModal({
       return;
     }
     if (amountToPay > currentDebt) {
-      toast.warning(`⚠️ No puedes abonar un monto ($${amountToPay.toFixed(2)}) superior a la deuda actual del cliente ($${currentDebt.toFixed(2)}).`);
+      toast.warning(
+        `⚠️ No puedes abonar un monto ($${amountToPay.toFixed(2)}) superior a la deuda actual del cliente ($${currentDebt.toFixed(2)}).`,
+      );
       return;
     }
 
@@ -51,17 +53,17 @@ export default function DebtPaymentModal({
     const formattedNotes = payNotes.trim() ? payNotes.trim() : 'Abono registrado en módulo Clientes';
 
     const newHistoryRecord = {
-      id: `chhist-${Date.now()}-${Math.floor(Math.random()*1000)}`,
+      id: `chhist-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       amount: amountToPay,
       type: 'pay' as const,
       date: new Date().toISOString(),
-      notes: formattedNotes
+      notes: formattedNotes,
     };
 
     const updatedCustomer: Customer = {
       ...customer,
       creditUsed: updatedUsed,
-      creditHistory: [newHistoryRecord, ...(customer.creditHistory || [])]
+      creditHistory: [newHistoryRecord, ...(customer.creditHistory || [])],
     };
 
     // Update customer in parent app context
@@ -82,7 +84,10 @@ export default function DebtPaymentModal({
       <div className="bg-white border-2 border-gray-200 border-b-8 rounded-3xl max-w-sm w-full p-6 space-y-4 relative shadow-2xl">
         <button
           type="button"
-          onClick={() => { onClose(); playSound('click'); }}
+          onClick={() => {
+            onClose();
+            playSound('click');
+          }}
           className="absolute right-4 top-4 text-gray-400 hover:text-gray-650 rounded-full hover:bg-gray-100 p-1 bg-gray-50 border cursor-pointer font-black text-xs h-7 w-7 flex items-center justify-center select-none"
         >
           ✕
@@ -90,9 +95,7 @@ export default function DebtPaymentModal({
 
         <div className="text-center space-y-1">
           <span className="text-4xl block leading-none select-none">💰</span>
-          <h3 className="text-base font-black text-gray-850 uppercase leading-tight mt-1">
-            Registrar Abono a Deuda
-          </h3>
+          <h3 className="text-base font-black text-gray-850 uppercase leading-tight mt-1">Registrar Abono a Deuda</h3>
           <p className="text-[9px] text-[#58cc02] font-extrabold uppercase tracking-widest">
             Disminución de saldo para {customer.name}
           </p>
@@ -105,7 +108,8 @@ export default function DebtPaymentModal({
               <span>🟢</span> Turno de Caja Activo Detectado
             </p>
             <p className="text-[9px] text-green-700 leading-normal font-bold mt-0.5">
-              El dinero de este abono ingresará automáticamente al fondo registrado de la cajera <strong>{activeShift.employeeName}</strong>.
+              El dinero de este abono ingresará automáticamente al fondo registrado de la cajera{' '}
+              <strong>{activeShift.employeeName}</strong>.
             </p>
           </div>
         ) : (
@@ -114,7 +118,8 @@ export default function DebtPaymentModal({
               <span>⚠️</span> Bolsa de Caja Actualmente Cerrada
             </p>
             <p className="text-[9px] text-yellow-700 leading-normal font-medium mt-0.5">
-              El abono se asentará de manera digital en el saldo del cliente, pero recuerda abrir turno de caja para procesar arqueos físicos de efectivo.
+              El abono se asentará de manera digital en el saldo del cliente, pero recuerda abrir turno de caja para
+              procesar arqueos físicos de efectivo.
             </p>
           </div>
         )}
@@ -149,12 +154,18 @@ export default function DebtPaymentModal({
               {[
                 { label: 'Pago Completo', pct: 1 },
                 { label: 'Mitad (50%)', pct: 0.5 },
-                { label: 'Un Tercio', pct: 0.33 }
+                { label: 'Un Tercio', pct: 0.33 },
               ].map((tip, idx) => (
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => setPayAmount((Number((customer.creditUsed || 0) * tip.pct).toFixed(2)).toString())}
+                  onClick={() =>
+                    setPayAmount(
+                      Number((customer.creditUsed || 0) * tip.pct)
+                        .toFixed(2)
+                        .toString(),
+                    )
+                  }
                   className="py-1 px-2.5 bg-gray-50 border rounded-lg text-[9px] text-gray-500 font-extrabold hover:bg-gray-100 cursor-pointer"
                 >
                   {tip.label}
@@ -185,7 +196,10 @@ export default function DebtPaymentModal({
             </button>
             <button
               type="button"
-              onClick={() => { onClose(); playSound('click'); }}
+              onClick={() => {
+                onClose();
+                playSound('click');
+              }}
               className="bg-gray-150 text-gray-700 rounded-xl font-bold text-xs uppercase cursor-pointer"
             >
               Cancelar

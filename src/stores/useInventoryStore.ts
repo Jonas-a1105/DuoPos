@@ -26,11 +26,11 @@ export const useInventoryStore = create<InventoryState>((set) => ({
   lowStockCount: 0,
 
   setProducts: (products) => {
-    const lowStockCount = products.filter(p => p.stock <= 5).length;
+    const lowStockCount = products.filter((p) => p.stock <= 5).length;
     set({ products, lowStockCount });
   },
   setSuppliers: (suppliers) => set({ suppliers }),
   setPurchaseOrders: (purchaseOrders) => set({ purchaseOrders }),
   setStockTransfers: (stockTransfers) => set({ stockTransfers }),
-  setActiveEvent: (activeEvent) => set({ activeEvent })
+  setActiveEvent: (activeEvent) => set({ activeEvent }),
 }));

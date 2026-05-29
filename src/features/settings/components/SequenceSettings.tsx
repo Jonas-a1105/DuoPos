@@ -33,23 +33,28 @@ export default function SequenceSettings({
   csdFileName,
   setCsdFileName,
   csdPass,
-  setCsdPass
+  setCsdPass,
 }: SequenceSettingsProps) {
   return (
     <div className="space-y-6 animate-fadeIn text-left">
       <div className="border-b pb-3 flex items-center gap-2">
         <span className="text-2xl select-none">🧾</span>
         <div>
-          <h3 className="text-sm font-black uppercase text-gray-800 tracking-tight font-sans">Folios y Certificados Digitales (CSD)</h3>
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Administra la serie numérica de tus comprobantes y firmas fiscales</p>
+          <h3 className="text-sm font-black uppercase text-gray-800 tracking-tight font-sans">
+            Folios y Certificados Digitales (CSD)
+          </h3>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">
+            Administra la serie numérica de tus comprobantes y firmas fiscales
+          </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-sans text-gray-700">
-        
         {/* Serie / Prefijo de Folio */}
         <div className="space-y-1">
-          <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">Serie / Prefijo del Ticket</label>
+          <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">
+            Serie / Prefijo del Ticket
+          </label>
           <input
             type="text"
             required
@@ -62,7 +67,9 @@ export default function SequenceSettings({
 
         {/* Siguiente Folio */}
         <div className="space-y-1">
-          <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">Siguiente Número de Folio</label>
+          <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">
+            Siguiente Número de Folio
+          </label>
           <input
             type="number"
             required
@@ -75,7 +82,9 @@ export default function SequenceSettings({
 
         {/* PAC Certificador */}
         <div className="space-y-1">
-          <label className="text-[10px] uppercase font-black text-gray-455 tracking-wider block">Proveedor Autorizado de Certificación (PAC Mock)</label>
+          <label className="text-[10px] uppercase font-black text-gray-455 tracking-wider block">
+            Proveedor Autorizado de Certificación (PAC Mock)
+          </label>
           <select
             value={certifyingAuthority}
             onChange={(e) => setCertifyingAuthority(e.target.value)}
@@ -90,15 +99,22 @@ export default function SequenceSettings({
 
         {/* Timbrado Automático */}
         <div className="space-y-1 flex flex-col justify-end">
-          <label className="text-[10px] uppercase font-black text-gray-400 block mb-1">Automatización del Timbrado</label>
+          <label className="text-[10px] uppercase font-black text-gray-400 block mb-1">
+            Automatización del Timbrado
+          </label>
           <label className="flex items-center gap-2 bg-slate-50 border-2 border-slate-200 p-2.5 rounded-xl cursor-pointer">
             <input
               type="checkbox"
               checked={automaticMockInvoicing}
-              onChange={(e) => { setAutomaticMockInvoicing(e.target.checked); playSound('click'); }}
+              onChange={(e) => {
+                setAutomaticMockInvoicing(e.target.checked);
+                playSound('click');
+              }}
               className="rounded text-amber-500 focus:ring-amber-500 h-4 w-4 border-gray-300 cursor-pointer"
             />
-            <span className="text-[10px] font-black text-slate-705 uppercase select-none">Timbrado CFDI Automático al Cobrar</span>
+            <span className="text-[10px] font-black text-slate-705 uppercase select-none">
+              Timbrado CFDI Automático al Cobrar
+            </span>
           </label>
         </div>
       </div>
@@ -110,10 +126,15 @@ export default function SequenceSettings({
             <FileText size={18} />
           </div>
           <div className="space-y-1">
-            <h4 className="text-xs font-black text-slate-800 uppercase">Certificados de Sello Digital (CSD / FIEL SAT Mock)</h4>
-            <p className="text-[9.5px] text-gray-400 font-extrabold uppercase leading-none">Necesario para firmar criptográficamente los tickets del POS</p>
+            <h4 className="text-xs font-black text-slate-800 uppercase">
+              Certificados de Sello Digital (CSD / FIEL SAT Mock)
+            </h4>
+            <p className="text-[9.5px] text-gray-400 font-extrabold uppercase leading-none">
+              Necesario para firmar criptográficamente los tickets del POS
+            </p>
             <p className="text-xs text-gray-550 leading-relaxed font-bold lowercase">
-              Para simular facturas y timbrados fiscales del SAT CFDI 4.0 reales, DuoPOS requiere un mockup de llave privada (.key) y certificado (.cer) con tu contraseña de racha digital.
+              Para simular facturas y timbrados fiscales del SAT CFDI 4.0 reales, DuoPOS requiere un mockup de llave
+              privada (.key) y certificado (.cer) con tu contraseña de racha digital.
             </p>
           </div>
         </div>
@@ -123,7 +144,9 @@ export default function SequenceSettings({
             <label className="text-[9px] uppercase font-black text-gray-400">Archivo Certificado (.cer / .key)</label>
             <div className="flex items-center gap-2 bg-white border border-gray-300 p-2 rounded-xl">
               <span className="text-sm select-none">🔑</span>
-              <span className="font-mono text-[10.5px] font-black text-slate-700 select-all truncate">{csdFileName}</span>
+              <span className="font-mono text-[10.5px] font-black text-slate-700 select-all truncate">
+                {csdFileName}
+              </span>
             </div>
           </div>
 

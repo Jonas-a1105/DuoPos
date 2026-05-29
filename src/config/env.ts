@@ -1,7 +1,10 @@
 import { z } from 'zod';
 
 const envSchema = z.object({
-  VITE_SUPABASE_URL: z.union([z.string().url(), z.literal('')]).optional().default(''),
+  VITE_SUPABASE_URL: z
+    .union([z.string().url(), z.literal('')])
+    .optional()
+    .default(''),
   VITE_SUPABASE_ANON_KEY: z.string().optional().default(''),
   VITE_CLERK_PUBLISHABLE_KEY: z.string().optional().default(''),
   GEMINI_API_KEY: z.string().optional().default(''),

@@ -111,7 +111,14 @@ export function useCustomers() {
   );
 
   const processCustomerLoyalty = useCallback(
-    async (txn: { customerId?: string; total: number; gemsGained?: number; gemsRedeemed?: number; paymentMethod?: string; id: string }) => {
+    async (txn: {
+      customerId?: string;
+      total: number;
+      gemsGained?: number;
+      gemsRedeemed?: number;
+      paymentMethod?: string;
+      id: string;
+    }) => {
       if (!txn.customerId) return;
 
       const updatedCustList = customers.map((c) => {

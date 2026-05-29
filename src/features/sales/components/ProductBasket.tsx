@@ -25,7 +25,7 @@ interface ProductBasketProps {
   setIsMobileCartOpen: (open: boolean) => void;
   isCheckoutOpen: boolean;
   setIsCheckoutOpen: (open: boolean) => void;
-  
+
   // Math values
   totalAmount: number;
   subtotal: number;
@@ -136,10 +136,12 @@ export default function ProductBasket({
 
   const suspendCurrentTicket = () => {
     if (cart.length === 0) return;
-    const alias = prompt("Ingresa una referencia o nombre para identificar este ticket (ej. 'Cliente Fila #2', 'Señor de gorra'):");
+    const alias = prompt(
+      "Ingresa una referencia o nombre para identificar este ticket (ej. 'Cliente Fila #2', 'Señor de gorra'):",
+    );
     if (alias === null) return;
     const finalAlias = alias.trim() || `Ticket #${suspendedTickets.length + 1}`;
-    
+
     const newSuspended = {
       id: `SUSP-${Date.now()}`,
       alias: finalAlias,
@@ -147,10 +149,10 @@ export default function ProductBasket({
       customer: selectedCustomer,
       discountPercent,
       useGemsDiscount,
-      savedAt: new Date().toISOString()
+      savedAt: new Date().toISOString(),
     };
 
-    setSuspendedTickets(prev => [...prev, newSuspended]);
+    setSuspendedTickets((prev) => [...prev, newSuspended]);
     setCart([]);
     setSelectedCustomer(null);
     setDiscountPercent(0);
@@ -162,11 +164,13 @@ export default function ProductBasket({
   };
 
   const restoreSuspendedTicket = (ticketId: string) => {
-    const ticket = suspendedTickets.find(t => t.id === ticketId);
+    const ticket = suspendedTickets.find((t) => t.id === ticketId);
     if (!ticket) return;
-    
+
     if (cart.length > 0) {
-      const confirmOverwrite = confirm("Ya tienes artículos en el carrito. ¿Deseas reemplazar el carrito actual con el ticket en espera?");
+      const confirmOverwrite = confirm(
+        'Ya tienes artículos en el carrito. ¿Deseas reemplazar el carrito actual con el ticket en espera?',
+      );
       if (!confirmOverwrite) return;
     }
 
@@ -174,15 +178,15 @@ export default function ProductBasket({
     setSelectedCustomer(ticket.customer);
     setDiscountPercent(ticket.discountPercent);
     setUseGemsDiscount(ticket.useGemsDiscount);
-    setSuspendedTickets(prev => prev.filter(t => t.id !== ticketId));
+    setSuspendedTickets((prev) => prev.filter((t) => t.id !== ticketId));
     playSound('success');
     setPromoMessage(`✅ Ticket "${ticket.alias}" restaurado.`);
     setTimeout(() => setPromoMessage(''), 3000);
   };
 
   const deleteSuspendedTicket = (ticketId: string) => {
-    if (!confirm("¿Deseas eliminar este ticket en espera de forma permanente?")) return;
-    setSuspendedTickets(prev => prev.filter(t => t.id !== ticketId));
+    if (!confirm('¿Deseas eliminar este ticket en espera de forma permanente?')) return;
+    setSuspendedTickets((prev) => prev.filter((t) => t.id !== ticketId));
     playSound('error');
   };
 
@@ -203,19 +207,21 @@ export default function ProductBasket({
     const notes = editCartItemNotes.trim();
 
     if (qty > editingCartItem.product.stock) {
-      toast.error(`Lo sentimos, el stock disponible es de solo ${editingCartItem.product.stock} unidades.`, { title: 'Stock Insuficiente' });
+      toast.error(`Lo sentimos, el stock disponible es de solo ${editingCartItem.product.stock} unidades.`, {
+        title: 'Stock Insuficiente',
+      });
       return;
     }
 
-    setCart(currCart => {
-      return currCart.map(item => {
+    setCart((currCart) => {
+      return currCart.map((item) => {
         if (item.product.id === editingCartItem.product.id) {
           return {
             ...item,
             quantity: qty,
             customPrice: price === editingCartItem.product.price ? undefined : price,
             discountPercent: discount > 0 ? discount : undefined,
-            notes: notes || undefined
+            notes: notes || undefined,
           };
         }
         return item;
@@ -323,28 +329,46 @@ export default function ProductBasket({
                 <span className="text-5xl block animate-bounce select-none">🛒</span>
                 <h4 className="font-black text-gray-500 text-lg">Carrito vacío</h4>
                 <p className="text-xs text-gray-400 font-bold max-w-xs mx-auto px-5 leading-normal">
-                  Selecciona productos de la grilla izquierda para sumarlos y comenzar a facturar. ¡A Duo le encantan las facturas llenas!
+                  Selecciona productos de la grilla izquierda para sumarlos y comenzar a facturar. ¡A Duo le encantan
+                  las facturas llenas!
                 </p>
               </div>
             ) : (
               <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1 py-3 border-b border-gray-100">
-                {cart.map(it => (
-                  <div key={it.product.id} className="flex justify-between items-center text-xs font-bold text-gray-750">
+                {cart.map((it) => (
+                  <div
+                    key={it.product.id}
+                    className="flex justify-between items-center text-xs font-bold text-gray-750"
+                  >
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-2xl select-none flex-shrink-0">{it.product.emoji}</span>
                       <div className="min-w-0 text-left">
-                        <p className="font-extrabold text-[#3c3c3c] truncate text-xs leading-none mb-0.5">{it.product.name}</p>
+                        <p className="font-extrabold text-[#3c3c3c] truncate text-xs leading-none mb-0.5">
+                          {it.product.name}
+                        </p>
                         <div className="flex items-center flex-wrap gap-1">
                           {it.customPrice !== undefined ? (
                             <>
-                              <span className="text-[9px] line-through text-gray-300 font-bold">${it.product.price.toFixed(2)}</span>
-                              <span className="text-[10px] text-blue-600 font-black">${it.customPrice.toFixed(2)} c/u</span>
+                              <span className="text-[9px] line-through text-gray-300 font-bold">
+                                ${it.product.price.toFixed(2)}
+                              </span>
+                              <span className="text-[10px] text-blue-600 font-black">
+                                ${it.customPrice.toFixed(2)} c/u
+                              </span>
                             </>
                           ) : (
-                            <span className="text-[10px] text-[#58cc02] font-black">${it.product.price.toFixed(2)} c/u</span>
+                            <span className="text-[10px] text-[#58cc02] font-black">
+                              ${it.product.price.toFixed(2)} c/u
+                            </span>
                           )}
-                          <span className="text-[10px] text-gray-400 font-extrabold bg-[#f1fcf0] border border-green-100 px-1 rounded-md" title="Monto equivalente en Bolívares">
-                            {( (it.customPrice !== undefined ? it.customPrice : it.product.price) * exchangeRate).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.
+                          <span
+                            className="text-[10px] text-gray-400 font-extrabold bg-[#f1fcf0] border border-green-100 px-1 rounded-md"
+                            title="Monto equivalente en Bolívares"
+                          >
+                            {(
+                              (it.customPrice !== undefined ? it.customPrice : it.product.price) * exchangeRate
+                            ).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
+                            Bs.
                           </span>
                           {it.discountPercent && (
                             <span className="text-[8px] bg-red-100 text-red-700 px-1 py-0.2 rounded font-black border border-red-150 animate-pulse">
@@ -353,14 +377,20 @@ export default function ProductBasket({
                           )}
                         </div>
                         {it.notes && (
-                          <p className="text-[9px] text-indigo-650 bg-indigo-50 px-1.5 py-0.5 rounded inline-block font-black mt-1 leading-normal text-left truncate max-w-[130px]" title={it.notes}>
+                          <p
+                            className="text-[9px] text-indigo-650 bg-indigo-50 px-1.5 py-0.5 rounded inline-block font-black mt-1 leading-normal text-left truncate max-w-[130px]"
+                            title={it.notes}
+                          >
                             📝 {it.notes}
                           </p>
                         )}
                         {it.addons && it.addons.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1 text-left">
                             {it.addons.map((add, addIdx) => (
-                              <span key={addIdx} className="text-[8px] text-[#2c7a02] bg-[#f2ffd4] font-black px-1 py-0.5 rounded border border-[#ccd9ad]">
+                              <span
+                                key={addIdx}
+                                className="text-[8px] text-[#2c7a02] bg-[#f2ffd4] font-black px-1 py-0.5 rounded border border-[#ccd9ad]"
+                              >
                                 +{add.name} (+${add.price.toFixed(2)})
                               </span>
                             ))}
@@ -377,12 +407,15 @@ export default function ProductBasket({
                             const currWeight = hardwareSettings.weighingScale.mockWeightOverride;
                             if (currWeight <= 0) {
                               playSound('error');
-                              toast.error("La báscula marca 0.000 kg. Abre el panel 'Bus IoT' en la barra superior para definir el peso de simulación.", { title: 'Báscula sin peso' });
+                              toast.error(
+                                "La báscula marca 0.000 kg. Abre el panel 'Bus IoT' en la barra superior para definir el peso de simulación.",
+                                { title: 'Báscula sin peso' },
+                              );
                               return;
                             }
                             playSound('levelup');
-                            setCart(currCart => {
-                              return currCart.map(item => {
+                            setCart((currCart) => {
+                              return currCart.map((item) => {
                                 if (item.product.id === it.product.id) {
                                   return { ...item, quantity: parseFloat(currWeight.toFixed(3)) };
                                 }
@@ -404,9 +437,7 @@ export default function ProductBasket({
                         >
                           <Minus size={11} strokeWidth={3} />
                         </button>
-                        <span className="px-2 font-black text-gray-800 font-mono">
-                          {it.quantity}
-                        </span>
+                        <span className="px-2 font-black text-gray-800 font-mono">{it.quantity}</span>
                         <button
                           disabled={it.quantity >= it.product.stock}
                           onClick={() => addToCart(it.product)}
@@ -465,7 +496,8 @@ export default function ProductBasket({
                         {selectedCustomer.name}
                       </p>
                       <p className="text-[9px] text-gray-400 font-extrabold uppercase tracking-wide flex items-center gap-0.5">
-                        <span>Liga {selectedCustomer.league}</span> • <span className="text-[#58cc02]">💎 {selectedCustomer.gems} G</span>
+                        <span>Liga {selectedCustomer.league}</span> •{' '}
+                        <span className="text-[#58cc02]">💎 {selectedCustomer.gems} G</span>
                       </p>
                     </div>
                   ) : (
@@ -492,7 +524,7 @@ export default function ProductBasket({
                   <select
                     value=""
                     onChange={(e) => {
-                      const cust = customers.find(c => c.id === e.target.value);
+                      const cust = customers.find((c) => c.id === e.target.value);
                       if (cust) {
                         setSelectedCustomer(cust);
                         playSound('success');
@@ -502,7 +534,7 @@ export default function ProductBasket({
                     className="text-[#1cb0f6] border border-sky-150 bg-sky-50 rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wider outline-none cursor-pointer max-w-[110px]"
                   >
                     <option value="">+ Asociar</option>
-                    {customers.map(c => (
+                    {customers.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name} (💎{c.gems})
                       </option>
@@ -533,7 +565,9 @@ export default function ProductBasket({
 
                   {useGemsDiscount && (
                     <div className="text-[10px] text-gray-400 font-bold leading-normal pt-1.5 border-t border-dashed">
-                      Canjeando <span className="text-[#58cc02] font-black">{gemsToRedeem} gemas</span> por un descuento directo de <span className="text-gray-800 font-black">${gemsDiscount.toFixed(2)} USD</span> (10 Gemas = $1.00 desc).
+                      Canjeando <span className="text-[#58cc02] font-black">{gemsToRedeem} gemas</span> por un descuento
+                      directo de <span className="text-gray-800 font-black">${gemsDiscount.toFixed(2)} USD</span> (10
+                      Gemas = $1.00 desc).
                     </div>
                   )}
                 </div>
@@ -566,7 +600,9 @@ export default function ProductBasket({
                   </button>
                 </form>
                 {promoMessage && (
-                  <p className={`text-[10px] font-extrabold italic ${promoMessage.includes('⛔') ? 'text-red-500' : 'text-[#58cc02]'}`}>
+                  <p
+                    className={`text-[10px] font-extrabold italic ${promoMessage.includes('⛔') ? 'text-red-500' : 'text-[#58cc02]'}`}
+                  >
                     {promoMessage}
                   </p>
                 )}
@@ -578,16 +614,25 @@ export default function ProductBasket({
                 <span>Subtotal:</span>
                 <div className="text-right">
                   <span className="text-[#3c3c3c] font-black">${subtotal.toFixed(2)} USD</span>
-                  <span className="block text-[10px] text-gray-400 font-bold">{subtotalVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.</span>
+                  <span className="block text-[10px] text-gray-400 font-bold">
+                    {subtotalVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.
+                  </span>
                 </div>
               </div>
-              
+
               {discountAmount > 0 && (
                 <div className="flex justify-between items-center text-red-500">
                   <span>Descuento aplicado:</span>
                   <div className="text-right">
                     <span className="font-black">-${discountAmount.toFixed(2)} USD</span>
-                    <span className="block text-[10px] text-red-400 font-bold">-{discountAmountVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.</span>
+                    <span className="block text-[10px] text-red-400 font-bold">
+                      -
+                      {discountAmountVES.toLocaleString('es-VE', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}{' '}
+                      Bs.
+                    </span>
                   </div>
                 </div>
               )}
@@ -596,16 +641,16 @@ export default function ProductBasket({
                 <span>Recargo por Impuesto:</span>
                 <div className="text-right">
                   <span className="text-[#3c3c3c] font-black">${taxAmount.toFixed(2)} USD</span>
-                  <span className="block text-[10px] text-gray-400 font-bold">{taxAmountVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.</span>
+                  <span className="block text-[10px] text-gray-400 font-bold">
+                    {taxAmountVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.
+                  </span>
                 </div>
               </div>
 
               <div className="flex justify-between items-center text-base font-black text-gray-800 border-t border-gray-100 pt-2.5">
                 <span>Total a Cobrar:</span>
                 <div className="text-right">
-                  <span className="text-xl font-black text-[#58cc02]">
-                    ${totalAmount.toFixed(2)} USD
-                  </span>
+                  <span className="text-xl font-black text-[#58cc02]">${totalAmount.toFixed(2)} USD</span>
                   <span className="block text-xs font-black text-indigo-650 animate-pulse mt-0.5">
                     {totalAmountVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.
                   </span>
@@ -621,24 +666,31 @@ export default function ProductBasket({
                   onClick={() => {
                     if (!activeTableId) {
                       playSound('error');
-                      toast.error("Selecciona una Mesa en el mapa superior primero para guardar la comanda.", { title: 'Mesa no seleccionada' });
+                      toast.error('Selecciona una Mesa en el mapa superior primero para guardar la comanda.', {
+                        title: 'Mesa no seleccionada',
+                      });
                       return;
                     }
                     playSound('success');
-                    setTables(prev => prev.map(t => {
-                      if (t.id === activeTableId) {
-                        return {
-                          ...t,
-                          status: 'occupied',
-                          waiterName: activeWaiterName || 'Personal General',
-                          cart: cart,
-                          customer: selectedCustomer,
-                          occupiedSince: t.occupiedSince || new Date().toISOString()
-                        };
-                      }
-                      return t;
-                    }));
-                    toast.info(`Comanda retenida para "${tables.find(t => t.id === activeTableId)?.name}". Puedes atender otra venta.`, { title: 'Comanda Guardada 💾', duration: 4000 });
+                    setTables((prev) =>
+                      prev.map((t) => {
+                        if (t.id === activeTableId) {
+                          return {
+                            ...t,
+                            status: 'occupied',
+                            waiterName: activeWaiterName || 'Personal General',
+                            cart: cart,
+                            customer: selectedCustomer,
+                            occupiedSince: t.occupiedSince || new Date().toISOString(),
+                          };
+                        }
+                        return t;
+                      }),
+                    );
+                    toast.info(
+                      `Comanda retenida para "${tables.find((t) => t.id === activeTableId)?.name}". Puedes atender otra venta.`,
+                      { title: 'Comanda Guardada 💾', duration: 4000 },
+                    );
                     setCart([]);
                     setActiveTableId(null);
                     setActiveWaiterName('');
@@ -654,50 +706,58 @@ export default function ProductBasket({
                   type="button"
                   onClick={() => {
                     playSound('click');
-                    const activeTable = tables.find(t => t.id === activeTableId);
+                    const activeTable = tables.find((t) => t.id === activeTableId);
                     const tableName = activeTable ? activeTable.name : 'Venta de Mostrador';
-                    
+
                     const newOrder: KitchenOrder = {
                       id: `KITCHEN-${Math.floor(1000 + Math.random() * 9000).toString()}`,
                       tableId: activeTableId || 'walk-in',
                       tableName: tableName,
                       waiterName: activeWaiterName || 'Personal General',
                       sentAt: new Date().toISOString(),
-                      items: cart.map(it => ({
+                      items: cart.map((it) => ({
                         name: it.product.name,
                         emoji: it.product.emoji,
                         quantity: it.quantity,
                         notes: it.notes,
-                        addons: it.addons
+                        addons: it.addons,
                       })),
-                      status: 'pending'
+                      status: 'pending',
                     };
-                    
-                    setKitchenOrders(prev => [newOrder, ...prev]);
+
+                    setKitchenOrders((prev) => [newOrder, ...prev]);
                     setPromoMessage(`🛎️ [KDS] Comanda enviada a cocina con éxito para la ${tableName}`);
                     setTimeout(() => setPromoMessage(''), 3500);
 
                     if (activeTableId) {
-                      setTables(prev => prev.map(t => {
-                        if (t.id === activeTableId) {
-                          return {
-                            ...t,
-                            status: 'occupied',
-                            waiterName: activeWaiterName || 'Personal General',
-                            cart: cart,
-                            customer: selectedCustomer,
-                            occupiedSince: t.occupiedSince || new Date().toISOString()
-                          };
-                        }
-                        return t;
-                      }));
-                      toast.info(`Comida enviada a cocina para la "${tableName}".`, { title: 'KDS - Cocina 🛎️', duration: 4000 });
+                      setTables((prev) =>
+                        prev.map((t) => {
+                          if (t.id === activeTableId) {
+                            return {
+                              ...t,
+                              status: 'occupied',
+                              waiterName: activeWaiterName || 'Personal General',
+                              cart: cart,
+                              customer: selectedCustomer,
+                              occupiedSince: t.occupiedSince || new Date().toISOString(),
+                            };
+                          }
+                          return t;
+                        }),
+                      );
+                      toast.info(`Comida enviada a cocina para la "${tableName}".`, {
+                        title: 'KDS - Cocina 🛎️',
+                        duration: 4000,
+                      });
                       setCart([]);
                       setActiveTableId(null);
                       setActiveWaiterName('');
                       setSelectedCustomer(null);
                     } else {
-                      toast.info(`Comanda de mostrador enviada al KDS rápido.`, { title: 'KDS - Cocina 🛎️', duration: 4000 });
+                      toast.info(`Comanda de mostrador enviada al KDS rápido.`, {
+                        title: 'KDS - Cocina 🛎️',
+                        duration: 4000,
+                      });
                     }
                   }}
                   className="py-2 px-1 bg-amber-50 hover:bg-amber-100 text-amber-700 active:translate-y-0.5 border border-amber-200 rounded-xl text-[9px] uppercase font-black cursor-pointer text-center flex flex-col items-center justify-center gap-1"
@@ -736,9 +796,24 @@ export default function ProductBasket({
             {/* Keyboard cashier shortcuts strip */}
             <div className="pt-3.5 text-[9px] text-gray-400 font-bold flex justify-center items-center flex-wrap gap-x-2.5 gap-y-1 border-t border-gray-100 select-none leading-none mt-1 animate-fadeIn">
               <span className="uppercase font-black tracking-widest text-[8px] text-gray-300">Atajos:</span>
-              <span className="flex items-center gap-1"><kbd className="px-1 py-0.2 bg-gray-50 border border-gray-200 rounded text-gray-500 font-mono text-[8.5px] font-black shadow-xs">F</kbd> Buscar</span>
-              <span className="flex items-center gap-1"><kbd className="px-1 py-0.2 bg-gray-50 border border-gray-200 rounded text-gray-500 font-mono text-[8.5px] font-black shadow-xs">V</kbd> Art. Rápido</span>
-              <span className="flex items-center gap-1"><kbd className="px-1 py-0.2 bg-emerald-50 border border-emerald-200 rounded text-emerald-600 font-mono text-[8.5px] font-black shadow-xs">P</kbd> Cobrar</span>
+              <span className="flex items-center gap-1">
+                <kbd className="px-1 py-0.2 bg-gray-50 border border-gray-200 rounded text-gray-500 font-mono text-[8.5px] font-black shadow-xs">
+                  F
+                </kbd>{' '}
+                Buscar
+              </span>
+              <span className="flex items-center gap-1">
+                <kbd className="px-1 py-0.2 bg-gray-50 border border-gray-200 rounded text-gray-500 font-mono text-[8.5px] font-black shadow-xs">
+                  V
+                </kbd>{' '}
+                Art. Rápido
+              </span>
+              <span className="flex items-center gap-1">
+                <kbd className="px-1 py-0.2 bg-emerald-50 border border-emerald-200 rounded text-emerald-600 font-mono text-[8.5px] font-black shadow-xs">
+                  P
+                </kbd>{' '}
+                Cobrar
+              </span>
             </div>
           </div>
         </div>
@@ -754,26 +829,28 @@ export default function ProductBasket({
                 Fila Abierta
               </span>
             </div>
-            
+
             <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
-              {suspendedTickets.map(ticket => {
+              {suspendedTickets.map((ticket) => {
                 const itemsCount = ticket.cart.reduce((sum: number, item: CartItem) => sum + item.quantity, 0);
                 const ticketTotal = ticket.cart.reduce((acc: number, curr: CartItem) => {
                   const addonsTotal = curr.addons ? curr.addons.reduce((sum, add) => sum + add.price, 0) : 0;
-                  return acc + ((curr.product.price + addonsTotal) * curr.quantity);
+                  return acc + (curr.product.price + addonsTotal) * curr.quantity;
                 }, 0);
 
                 return (
-                  <div key={ticket.id} className="bg-white border border-amber-150 p-2.5 rounded-xl flex items-center justify-between text-xs gap-2">
+                  <div
+                    key={ticket.id}
+                    className="bg-white border border-amber-150 p-2.5 rounded-xl flex items-center justify-between text-xs gap-2"
+                  >
                     <div className="min-w-0">
-                      <p className="font-extrabold text-gray-800 truncate leading-snug">
-                        {ticket.alias}
-                      </p>
+                      <p className="font-extrabold text-gray-800 truncate leading-snug">{ticket.alias}</p>
                       <p className="text-[9px] text-amber-700 font-extrabold uppercase mt-0.5">
-                        {itemsCount} {itemsCount === 1 ? 'artículo' : 'artículos'} • <span className="font-mono">${ticketTotal.toFixed(2)}</span>
+                        {itemsCount} {itemsCount === 1 ? 'artículo' : 'artículos'} •{' '}
+                        <span className="font-mono">${ticketTotal.toFixed(2)}</span>
                       </p>
                     </div>
-                    
+
                     <div className="flex items-center gap-1.5 shrink-0">
                       <button
                         type="button"
@@ -819,8 +896,12 @@ export default function ProductBasket({
             </span>
             <span className="flex items-center gap-2">
               <span className="flex flex-col items-end leading-tight text-right pr-1">
-                <span className="text-[10px] font-bold">Total: <strong className="font-mono font-black text-sm">${totalAmount.toFixed(2)} USD</strong></span>
-                <span className="text-[9px] font-black text-white/90">{totalAmountVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.</span>
+                <span className="text-[10px] font-bold">
+                  Total: <strong className="font-mono font-black text-sm">${totalAmount.toFixed(2)} USD</strong>
+                </span>
+                <span className="text-[9px] font-black text-white/90">
+                  {totalAmountVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.
+                </span>
               </span>
               <span className="text-lg">👉</span>
             </span>
@@ -832,34 +913,35 @@ export default function ProductBasket({
       {isMobileCartOpen && (
         <div className="lg:hidden fixed inset-0 z-50 text-gray-805">
           {/* Backdrop */}
-          <div 
+          <div
             className="absolute inset-0 bg-[#141414]/60 backdrop-blur-xs transition-opacity duration-300"
             onClick={() => {
               setIsMobileCartOpen(false);
               playSound('click');
             }}
           />
-          
+
           {/* Main Sheet Container */}
           <div className="absolute bottom-0 left-0 right-0 max-h-[85vh] bg-white border-t-2 border-[#e5e5e5] rounded-t-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-slideUp">
             {/* Sliding sheet visual handler bar */}
-            <div className="w-full py-2 flex justify-center items-center cursor-pointer select-none border-b border-gray-100/50"
-                 onClick={() => {
-                   setIsMobileCartOpen(false);
-                   playSound('click');
-                 }}>
+            <div
+              className="w-full py-2 flex justify-center items-center cursor-pointer select-none border-b border-gray-100/50"
+              onClick={() => {
+                setIsMobileCartOpen(false);
+                playSound('click');
+              }}
+            >
               <div className="w-12 h-1.5 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors" />
             </div>
 
             {/* Scrollable Content wrapper */}
             <div className="flex-1 overflow-y-auto p-5 pb-8 space-y-4">
-              
               {/* Header inside sheet */}
               <div className="flex justify-between items-center pb-2.5 border-b border-gray-150">
                 <span className="font-black text-gray-800 text-sm flex items-center gap-1.5 uppercase select-none">
                   <ShoppingCart size={18} className="text-[#58cc02]" /> Carrito Móvil
                 </span>
-                
+
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -878,7 +960,7 @@ export default function ProductBasket({
                   {cart.length > 0 && (
                     <button
                       onClick={() => {
-                        const confirmClear = confirm("¿Deseas vaciar por completo el carrito actual?");
+                        const confirmClear = confirm('¿Deseas vaciar por completo el carrito actual?');
                         if (confirmClear) {
                           setCart([]);
                           setSelectedCustomer(null);
@@ -907,23 +989,40 @@ export default function ProductBasket({
                 </div>
               ) : (
                 <div className="space-y-3 divide-y divide-gray-50 text-left">
-                  {cart.map(it => (
-                    <div key={it.product.id} className="flex justify-between items-center text-xs font-bold text-gray-700 pt-3 first:pt-0">
+                  {cart.map((it) => (
+                    <div
+                      key={it.product.id}
+                      className="flex justify-between items-center text-xs font-bold text-gray-700 pt-3 first:pt-0"
+                    >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <span className="text-2xl select-none flex-shrink-0">{it.product.emoji}</span>
                         <div className="min-w-0 text-left">
-                          <p className="font-extrabold text-[#3c3c3c] truncate text-xs leading-tight mb-0.5">{it.product.name}</p>
+                          <p className="font-extrabold text-[#3c3c3c] truncate text-xs leading-tight mb-0.5">
+                            {it.product.name}
+                          </p>
                           <div className="flex items-center flex-wrap gap-1">
                             {it.customPrice !== undefined ? (
                               <>
-                                <span className="text-[9px] line-through text-gray-300 font-bold">${it.product.price.toFixed(2)}</span>
-                                <span className="text-[10px] text-blue-600 font-black">${it.customPrice.toFixed(2)}</span>
+                                <span className="text-[9px] line-through text-gray-300 font-bold">
+                                  ${it.product.price.toFixed(2)}
+                                </span>
+                                <span className="text-[10px] text-blue-600 font-black">
+                                  ${it.customPrice.toFixed(2)}
+                                </span>
                               </>
                             ) : (
-                              <span className="text-[10px] text-[#58cc02] font-black">${it.product.price.toFixed(2)}</span>
+                              <span className="text-[10px] text-[#58cc02] font-black">
+                                ${it.product.price.toFixed(2)}
+                              </span>
                             )}
-                            <span className="text-[10px] text-gray-400 font-extrabold bg-[#f1fcf0] border border-green-100 px-1 rounded-md" title="Monto equivalente en Bolívares">
-                              {((it.customPrice !== undefined ? it.customPrice : it.product.price) * exchangeRate).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.
+                            <span
+                              className="text-[10px] text-gray-400 font-extrabold bg-[#f1fcf0] border border-green-100 px-1 rounded-md"
+                              title="Monto equivalente en Bolívares"
+                            >
+                              {(
+                                (it.customPrice !== undefined ? it.customPrice : it.product.price) * exchangeRate
+                              ).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
+                              Bs.
                             </span>
                             {it.discountPercent && (
                               <span className="text-[8px] bg-red-100 text-red-700 px-1 py-0.2 rounded font-black border border-red-150">
@@ -939,7 +1038,10 @@ export default function ProductBasket({
                           {it.addons && it.addons.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1 text-left">
                               {it.addons.map((add, addIdx) => (
-                                <span key={addIdx} className="text-[8px] text-[#2c7a02] bg-[#f2ffd4] font-black px-1 py-0.5 rounded border border-[#ccd9ad]">
+                                <span
+                                  key={addIdx}
+                                  className="text-[8px] text-[#2c7a02] bg-[#f2ffd4] font-black px-1 py-0.5 rounded border border-[#ccd9ad]"
+                                >
                                   +{add.name} (+${add.price.toFixed(2)})
                                 </span>
                               ))}
@@ -956,9 +1058,7 @@ export default function ProductBasket({
                           >
                             <Minus size={11} strokeWidth={3} />
                           </button>
-                          <span className="px-1.5 font-black text-gray-800 font-mono">
-                            {it.quantity}
-                          </span>
+                          <span className="px-1.5 font-black text-gray-800 font-mono">{it.quantity}</span>
                           <button
                             disabled={it.quantity >= it.product.stock}
                             onClick={() => addToCart(it.product)}
@@ -1007,11 +1107,10 @@ export default function ProductBasket({
                       <span className="text-xl">👥</span>
                       {selectedCustomer ? (
                         <div className="min-w-0 text-left">
-                          <p className="text-xs font-black text-gray-800 truncate">
-                            {selectedCustomer.name}
-                          </p>
+                          <p className="text-xs font-black text-gray-800 truncate">{selectedCustomer.name}</p>
                           <p className="text-[9px] text-gray-400 font-extrabold uppercase tracking-wide">
-                            Liga {selectedCustomer.league} • <span className="text-[#58cc02]">💎 {selectedCustomer.gems} G</span>
+                            Liga {selectedCustomer.league} •{' '}
+                            <span className="text-[#58cc02]">💎 {selectedCustomer.gems} G</span>
                           </p>
                         </div>
                       ) : (
@@ -1037,7 +1136,7 @@ export default function ProductBasket({
                       <select
                         value=""
                         onChange={(e) => {
-                          const cust = customers.find(c => c.id === e.target.value);
+                          const cust = customers.find((c) => c.id === e.target.value);
                           if (cust) {
                             setSelectedCustomer(cust);
                             playSound('success');
@@ -1046,7 +1145,7 @@ export default function ProductBasket({
                         className="text-[#1cb0f6] border border-sky-150 bg-sky-50 rounded-lg px-2 py-1 text-[10px] font-black uppercase outline-none cursor-pointer max-w-[120px]"
                       >
                         <option value="">+ Asociar Cliente</option>
-                        {customers.map(c => (
+                        {customers.map((c) => (
                           <option key={c.id} value={c.id}>
                             {c.name} (💎{c.gems})
                           </option>
@@ -1074,7 +1173,8 @@ export default function ProductBasket({
                       </div>
                       {useGemsDiscount && (
                         <p className="text-[9px] text-gray-400 font-bold mt-1.5 pt-1.5 border-t border-dashed text-left">
-                          Descuento aplicado: <span className="text-gray-800 font-extrabold">${gemsDiscount.toFixed(2)} USD</span>
+                          Descuento aplicado:{' '}
+                          <span className="text-gray-800 font-extrabold">${gemsDiscount.toFixed(2)} USD</span>
                         </p>
                       )}
                     </div>
@@ -1101,7 +1201,9 @@ export default function ProductBasket({
                     </button>
                   </form>
                   {promoMessage && (
-                    <p className={`text-[10px] font-extrabold text-left ${promoMessage.includes('⛔') ? 'text-red-500' : 'text-[#58cc02]'}`}>
+                    <p
+                      className={`text-[10px] font-extrabold text-left ${promoMessage.includes('⛔') ? 'text-red-500' : 'text-[#58cc02]'}`}
+                    >
                       {promoMessage}
                     </p>
                   )}
@@ -1113,17 +1215,39 @@ export default function ProductBasket({
                 <div className="space-y-1.5 text-xs text-gray-500 font-extrabold p-3 bg-gray-50 rounded-2xl border border-gray-100">
                   <div className="flex justify-between items-center text-[11px]">
                     <span>Subtotal:</span>
-                    <span className="text-gray-700">${subtotal.toFixed(2)} USD • <span className="text-gray-400 font-bold">{subtotalVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.</span></span>
+                    <span className="text-gray-700">
+                      ${subtotal.toFixed(2)} USD •{' '}
+                      <span className="text-gray-400 font-bold">
+                        {subtotalVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
+                        Bs.
+                      </span>
+                    </span>
                   </div>
                   {discountAmount > 0 && (
                     <div className="flex justify-between items-center text-[11px] text-red-500">
                       <span>Descuento:</span>
-                      <span>-${discountAmount.toFixed(2)} USD • <span className="text-red-400 font-bold">-{discountAmountVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.</span></span>
+                      <span>
+                        -${discountAmount.toFixed(2)} USD •{' '}
+                        <span className="text-red-400 font-bold">
+                          -
+                          {discountAmountVES.toLocaleString('es-VE', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}{' '}
+                          Bs.
+                        </span>
+                      </span>
                     </div>
                   )}
                   <div className="flex justify-between items-center text-[11px]">
                     <span>Impuesto Ventas:</span>
-                    <span className="text-gray-700">${taxAmount.toFixed(2)} USD • <span className="text-gray-400 font-bold">{taxAmountVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.</span></span>
+                    <span className="text-gray-700">
+                      ${taxAmount.toFixed(2)} USD •{' '}
+                      <span className="text-gray-400 font-bold">
+                        {taxAmountVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
+                        Bs.
+                      </span>
+                    </span>
                   </div>
                   <div className="flex flex-col text-sm font-black text-gray-800 border-t border-dashed border-gray-200 pt-2 text-right">
                     <div className="flex justify-between items-center w-full">
@@ -1132,7 +1256,10 @@ export default function ProductBasket({
                     </div>
                     <div className="flex justify-between items-center w-full mt-1 border-t border-dotted border-gray-100 pt-1">
                       <span className="text-[11px] text-indigo-500">Equivalente VES:</span>
-                      <span className="text-sm font-black text-indigo-650 tracking-wide animate-pulse">{totalAmountVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.</span>
+                      <span className="text-sm font-black text-indigo-650 tracking-wide animate-pulse">
+                        {totalAmountVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
+                        Bs.
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1146,23 +1273,27 @@ export default function ProductBasket({
                     onClick={() => {
                       if (!activeTableId) {
                         playSound('error');
-                        toast.error("Selecciona una Mesa en el mapa superior primero.", { title: 'Mesa no seleccionada' });
+                        toast.error('Selecciona una Mesa en el mapa superior primero.', {
+                          title: 'Mesa no seleccionada',
+                        });
                         return;
                       }
                       playSound('success');
-                      setTables(prev => prev.map(t => {
-                        if (t.id === activeTableId) {
-                          return {
-                            ...t,
-                            status: 'occupied',
-                            waiterName: activeWaiterName || 'Personal General',
-                            cart: cart,
-                            customer: selectedCustomer,
-                            occupiedSince: t.occupiedSince || new Date().toISOString()
-                          };
-                        }
-                        return t;
-                      }));
+                      setTables((prev) =>
+                        prev.map((t) => {
+                          if (t.id === activeTableId) {
+                            return {
+                              ...t,
+                              status: 'occupied',
+                              waiterName: activeWaiterName || 'Personal General',
+                              cart: cart,
+                              customer: selectedCustomer,
+                              occupiedSince: t.occupiedSince || new Date().toISOString(),
+                            };
+                          }
+                          return t;
+                        }),
+                      );
                       setCart([]);
                       setActiveTableId(null);
                       setSelectedCustomer(null);
@@ -1177,39 +1308,41 @@ export default function ProductBasket({
                     type="button"
                     onClick={() => {
                       playSound('click');
-                      const activeTable = tables.find(t => t.id === activeTableId);
+                      const activeTable = tables.find((t) => t.id === activeTableId);
                       const tableName = activeTable ? activeTable.name : 'Venta de Mostrador';
-                      
+
                       const newOrder: KitchenOrder = {
                         id: `KITCHEN-${Math.floor(1000 + Math.random() * 9000).toString()}`,
                         tableId: activeTableId || 'walk-in',
                         tableName: tableName,
                         waiterName: activeWaiterName || 'Personal General',
                         sentAt: new Date().toISOString(),
-                        items: cart.map(it => ({
+                        items: cart.map((it) => ({
                           name: it.product.name,
                           emoji: it.product.emoji,
                           quantity: it.quantity,
                           notes: it.notes,
-                          addons: it.addons
+                          addons: it.addons,
                         })),
-                        status: 'pending'
+                        status: 'pending',
                       };
-                      
-                      setKitchenOrders(prev => [newOrder, ...prev]);
+
+                      setKitchenOrders((prev) => [newOrder, ...prev]);
                       if (activeTableId) {
-                        setTables(prev => prev.map(t => {
-                          if (t.id === activeTableId) {
-                            return { ...t, status: 'occupied', cart: cart };
-                          }
-                          return t;
-                        }));
+                        setTables((prev) =>
+                          prev.map((t) => {
+                            if (t.id === activeTableId) {
+                              return { ...t, status: 'occupied', cart: cart };
+                            }
+                            return t;
+                          }),
+                        );
                         setCart([]);
                         setActiveTableId(null);
                         setSelectedCustomer(null);
                         setIsMobileCartOpen(false);
                       }
-                      toast.info("Enviado a cocina con éxito.", { title: 'KDS - Cocina 🛎️' });
+                      toast.info('Enviado a cocina con éxito.', { title: 'KDS - Cocina 🛎️' });
                     }}
                     className="py-2 px-1 bg-amber-50 text-amber-700 border border-amber-150 rounded-xl text-[9px] uppercase font-black"
                   >
@@ -1241,7 +1374,6 @@ export default function ProductBasket({
                   Cobrar Ticket (${totalAmount.toFixed(2)})
                 </button>
               )}
-
             </div>
           </div>
         </div>
@@ -1265,7 +1397,9 @@ export default function ProductBasket({
 
             <div className="space-y-3">
               <div>
-                <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">Nombre por Concepto o Descripción</label>
+                <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">
+                  Nombre por Concepto o Descripción
+                </label>
                 <input
                   type="text"
                   placeholder="Ej. Envase Especial, Producto sin código, Servicio"
@@ -1277,7 +1411,9 @@ export default function ProductBasket({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">Precio Unitario ($)</label>
+                  <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">
+                    Precio Unitario ($)
+                  </label>
                   <input
                     type="text"
                     placeholder="0.00"
@@ -1299,7 +1435,9 @@ export default function ProductBasket({
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">Categoría Sectorial (Para Impuestos)</label>
+                <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">
+                  Categoría Sectorial (Para Impuestos)
+                </label>
                 <select
                   value={freeSaleCategory}
                   onChange={(e) => setFreeSaleCategory(e.target.value)}
@@ -1321,25 +1459,25 @@ export default function ProductBasket({
                   const price = Number(freeSalePrice) || 0;
                   const qty = Number(freeSaleQty) || 1;
                   if (price <= 0) {
-                    toast.error("Ingresa un precio válido mayor a 0.", { title: 'Precio inválido' });
+                    toast.error('Ingresa un precio válido mayor a 0.', { title: 'Precio inválido' });
                     return;
                   }
                   const customProd: Product = {
                     id: `FREE-${Date.now()}`,
                     name,
                     price,
-                    cost: price * 0.65, 
-                    stock: 9999, 
+                    cost: price * 0.65,
+                    stock: 9999,
                     category: freeSaleCategory,
                     emoji: '🏷️',
                     description: 'Venta rápida libre de mostrador',
                     branchesStock: {
                       'branch-centro': 9999,
                       'branch-central': 9999,
-                      'branch-norte': 9999
-                    }
+                      'branch-norte': 9999,
+                    },
                   };
-                  setCart(prev => [...prev, { product: customProd, quantity: qty }]);
+                  setCart((prev) => [...prev, { product: customProd, quantity: qty }]);
                   setIsFreeSaleModalOpen(false);
                   playSound('success');
                   onGrantXp(5);
@@ -1379,7 +1517,9 @@ export default function ProductBasket({
             <div className="space-y-3.5 text-xs">
               {/* Unit Price Overwrite */}
               <div>
-                <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">Precio Unitario Overwrite ($)</label>
+                <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">
+                  Precio Unitario Overwrite ($)
+                </label>
                 <div className="relative">
                   <span className="absolute left-3 top-2.5 text-gray-400 font-extrabold">$</span>
                   <input
@@ -1389,25 +1529,33 @@ export default function ProductBasket({
                     className="w-full pl-6 pr-3 py-2 bg-white border-2 border-[#e5e5e5] focus:border-[#58cc02] rounded-xl font-mono font-bold text-sm text-gray-800 outline-none"
                   />
                 </div>
-                <span className="text-[9px] text-gray-400 font-bold mt-1 block">Precio regular del catálogo: ${editingCartItem.product.price.toFixed(2)}</span>
+                <span className="text-[9px] text-gray-400 font-bold mt-1 block">
+                  Precio regular del catálogo: ${editingCartItem.product.price.toFixed(2)}
+                </span>
               </div>
 
               {/* Quantity setting */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">Cantidad Exacta (Manual)</label>
+                  <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">
+                    Cantidad Exacta (Manual)
+                  </label>
                   <input
                     type="text"
                     value={editCartItemQty}
                     onChange={(e) => setEditCartItemQty(e.target.value.replace(/[^0-9.]/g, ''))}
                     className="w-full pl-3 pr-3 py-2 bg-white border-2 border-[#e5e5e5] focus:border-[#58cc02] rounded-xl font-mono font-bold text-sm text-gray-800 outline-none"
                   />
-                  <span className="text-[9px] text-gray-400 font-bold mt-0.5 block">Stock: {editingCartItem.product.stock}</span>
+                  <span className="text-[9px] text-gray-400 font-bold mt-0.5 block">
+                    Stock: {editingCartItem.product.stock}
+                  </span>
                 </div>
 
                 {/* Item-level discount % */}
                 <div>
-                  <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">Descuento de Item (%)</label>
+                  <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">
+                    Descuento de Item (%)
+                  </label>
                   <input
                     type="text"
                     placeholder="0"
@@ -1417,13 +1565,17 @@ export default function ProductBasket({
                     onChange={(e) => setEditCartItemDiscount(e.target.value.replace(/[^0-9]/g, ''))}
                     className="w-full pl-3 pr-3 py-2 bg-white border-2 border-red-200 text-red-600 focus:border-red-500 rounded-xl font-mono font-bold text-sm outline-none"
                   />
-                  <span className="text-[9px] text-red-400 font-bold mt-0.5 block">Se resta de esta línea únicamente</span>
+                  <span className="text-[9px] text-red-400 font-bold mt-0.5 block">
+                    Se resta de esta línea únicamente
+                  </span>
                 </div>
               </div>
 
               {/* Specific notes */}
               <div>
-                <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">Notas de Línea / Instrucciones</label>
+                <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">
+                  Notas de Línea / Instrucciones
+                </label>
                 <input
                   type="text"
                   placeholder="Ej. Sabor fresa / Caja sin abrir / Empaque dañado"

@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { User } from '../../../types';
 import { playSound } from '../../../services/sounds';
 import { toast } from '../../../components/Modal/FlashNotifications';
-import { 
-  LicenseDetails, PLANS, SubscriptionTier, revokeLicenseOnline, listLicensesOnline 
+import {
+  LicenseDetails,
+  PLANS,
+  SubscriptionTier,
+  revokeLicenseOnline,
+  listLicensesOnline,
 } from '../../../services/licensing';
-import { 
-  ShieldCheck, Laptop, Cpu, Key, RefreshCw 
-} from 'lucide-react';
+import { ShieldCheck, Laptop, Cpu, Key, RefreshCw } from 'lucide-react';
 
 interface LicenseSettingsProps {
   licenseDetails: LicenseDetails;
@@ -24,7 +26,7 @@ export default function LicenseSettings({
   onResetLicenseToFree,
   onGrantXp,
   user,
-  companyName
+  companyName,
 }: LicenseSettingsProps) {
   const [licenses, setLicenses] = useState<any[]>([]);
   const [loadingLicenses, setLoadingLicenses] = useState(false);
@@ -52,8 +54,12 @@ export default function LicenseSettings({
         <div className="flex items-center gap-2">
           <span className="text-2xl select-none font-black text-amber-500">🔑</span>
           <div>
-            <h3 className="text-sm font-black uppercase text-gray-800 tracking-tight font-sans">Gestión de Suscripciones y Licencias Offline (.exe)</h3>
-            <p className="text-[10px] text-gray-400 font-bold uppercase">Control de cuotas de almacén y firmas criptográficas del sistema</p>
+            <h3 className="text-sm font-black uppercase text-gray-800 tracking-tight font-sans">
+              Gestión de Suscripciones y Licencias Offline (.exe)
+            </h3>
+            <p className="text-[10px] text-gray-400 font-bold uppercase">
+              Control de cuotas de almacén y firmas criptográficas del sistema
+            </p>
           </div>
         </div>
         {licenseDetails.activated ? (
@@ -118,10 +124,10 @@ export default function LicenseSettings({
               </span>
             </div>
             <div className="w-full bg-gray-100 h-2.5 rounded-xl overflow-hidden border">
-              <div 
+              <div
                 className="bg-sky-500 h-full rounded-xl transition-all duration-500"
-                style={{ 
-                  width: `${licenseDetails.clientLimit === 99999 ? 100 : Math.min(100, (5 / licenseDetails.clientLimit) * 100)}%` 
+                style={{
+                  width: `${licenseDetails.clientLimit === 99999 ? 100 : Math.min(100, (5 / licenseDetails.clientLimit) * 100)}%`,
                 }}
               />
             </div>
@@ -135,14 +141,16 @@ export default function LicenseSettings({
             <div className="flex justify-between items-center text-xs font-bold font-mono">
               <span className="text-gray-500">Volumen Ventas Guardadas:</span>
               <span className="text-gray-800">
-                {licenseDetails.salesLimit === 99999 ? 'Ilimitadas ♾️' : `${licenseDetails.currentSalesCount} / ${licenseDetails.salesLimit}`}
+                {licenseDetails.salesLimit === 99999
+                  ? 'Ilimitadas ♾️'
+                  : `${licenseDetails.currentSalesCount} / ${licenseDetails.salesLimit}`}
               </span>
             </div>
             <div className="w-full bg-gray-100 h-2.5 rounded-xl overflow-hidden border">
-              <div 
+              <div
                 className="bg-emerald-500 h-full rounded-xl transition-all duration-500"
-                style={{ 
-                  width: `${licenseDetails.salesLimit === 99999 ? 100 : Math.min(100, (licenseDetails.currentSalesCount / licenseDetails.salesLimit) * 100)}%` 
+                style={{
+                  width: `${licenseDetails.salesLimit === 99999 ? 100 : Math.min(100, (licenseDetails.currentSalesCount / licenseDetails.salesLimit) * 100)}%`,
                 }}
               />
             </div>
@@ -165,7 +173,9 @@ export default function LicenseSettings({
               Seguridad matemática para compilaciones de escritorio sin conexión a Internet
             </p>
             <p className="text-xs text-gray-600 leading-relaxed font-bold lowercase">
-              El instalable <strong className="text-slate-800 font-extrabold">DuoPOS.exe</strong> está diseñado para operar en zonas de baja cobertura o directamente en terminales independientes de cobro. Las licencias se firman digitalmente usando un algoritmo simétrico basado en tu Fingerprint de Hardware único:
+              El instalable <strong className="text-slate-800 font-extrabold">DuoPOS.exe</strong> está diseñado para
+              operar en zonas de baja cobertura o directamente en terminales independientes de cobro. Las licencias se
+              firman digitalmente usando un algoritmo simétrico basado en tu Fingerprint de Hardware único:
             </p>
           </div>
         </div>
@@ -239,9 +249,11 @@ export default function LicenseSettings({
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm('¿Estás seguro de que deseas desactivar la licencia actual y volver al Plan Gratuito?')) {
+                    if (
+                      confirm('¿Estás seguro de que deseas desactivar la licencia actual y volver al Plan Gratuito?')
+                    ) {
                       onResetLicenseToFree();
-                      if ((document.getElementById('activation-key-input') as HTMLInputElement)) {
+                      if (document.getElementById('activation-key-input') as HTMLInputElement) {
                         (document.getElementById('activation-key-input') as HTMLInputElement).value = '';
                       }
                     }
@@ -281,14 +293,17 @@ export default function LicenseSettings({
               <div className="flex items-center gap-1.5 text-indigo-400 font-black mb-1 uppercase tracking-wide">
                 <span>🛡️ Aislamiento de Seguridad Activo</span>
               </div>
-              Por motivos de seguridad y para evitar la decompilación de algoritmos críticos, la generación de nuevas licencias **está totalmente aislada del software de producción**. Para emitir activaciones (online u offline), debes utilizar la herramienta privada local <strong>DuoPOS Core Generator</strong> en tu equipo de desarrollo.
+              Por motivos de seguridad y para evitar la decompilación de algoritmos críticos, la generación de nuevas
+              licencias **está totalmente aislada del software de producción**. Para emitir activaciones (online u
+              offline), debes utilizar la herramienta privada local <strong>DuoPOS Core Generator</strong> en tu equipo
+              de desarrollo.
             </div>
 
             <div className="space-y-2 text-left">
               <span className="text-[9px] uppercase font-black text-indigo-800 tracking-wider block">
                 Llaves en Base de Datos ({licenses.length})
               </span>
-              
+
               {loadingLicenses ? (
                 <div className="text-center py-4 text-xs text-indigo-600 font-bold uppercase tracking-wider animate-pulse">
                   Cargando...
@@ -300,37 +315,43 @@ export default function LicenseSettings({
               ) : (
                 <div className="max-h-48 overflow-y-auto border rounded-xl bg-white divide-y">
                   {licenses.map((lic) => (
-                    <div key={lic.id} className="p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-slate-50 transition-all text-[11px] text-left">
+                    <div
+                      key={lic.id}
+                      className="p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-slate-50 transition-all text-[11px] text-left"
+                    >
                       <div className="space-y-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="font-mono font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border select-all">
                             {lic.license_key}
                           </span>
-                          <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md ${
-                            lic.tier === 'pro' 
-                              ? 'bg-violet-100 text-violet-800' 
-                              : 'bg-emerald-100 text-emerald-800'
-                          }`}>
+                          <span
+                            className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md ${
+                              lic.tier === 'pro' ? 'bg-violet-100 text-violet-800' : 'bg-emerald-100 text-emerald-800'
+                            }`}
+                          >
                             {lic.tier}
                           </span>
-                          <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md ${
-                            lic.status === 'available'
-                              ? 'bg-green-100 text-green-800'
+                          <span
+                            className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md ${
+                              lic.status === 'available'
+                                ? 'bg-green-100 text-green-800'
+                                : lic.status === 'activated'
+                                  ? 'bg-sky-100 text-sky-800'
+                                  : 'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {lic.status === 'available'
+                              ? 'disponible'
                               : lic.status === 'activated'
-                              ? 'bg-sky-100 text-sky-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {lic.status === 'available' ? 'disponible' : lic.status === 'activated' ? 'activa' : 'revocada'}
+                                ? 'activa'
+                                : 'revocada'}
                           </span>
                         </div>
-                        {lic.notes && (
-                          <div className="text-[10px] text-gray-500 font-semibold">
-                            Notas: {lic.notes}
-                          </div>
-                        )}
+                        {lic.notes && <div className="text-[10px] text-gray-500 font-semibold">Notas: {lic.notes}</div>}
                         {lic.status === 'activated' && (
                           <div className="text-[9px] text-slate-500 font-bold uppercase leading-none mt-1">
-                            Activo en: <span className="font-mono text-gray-700">{lic.activated_by}</span> {lic.company_name ? `(${lic.company_name})` : ''}
+                            Activo en: <span className="font-mono text-gray-700">{lic.activated_by}</span>{' '}
+                            {lic.company_name ? `(${lic.company_name})` : ''}
                           </div>
                         )}
                       </div>
@@ -386,11 +407,11 @@ export default function LicenseSettings({
             const plan = PLANS[key];
             const isCurrent = licenseDetails.tier === key;
             return (
-              <div 
-                key={key} 
+              <div
+                key={key}
                 className={`border-2 rounded-2xl flex flex-col justify-between p-4 relative overflow-hidden transition-all bg-linear-to-b ${
-                  isCurrent 
-                    ? 'border-amber-500 bg-amber-50/10 shadow-xs' 
+                  isCurrent
+                    ? 'border-amber-500 bg-amber-50/10 shadow-xs'
                     : 'border-gray-250 bg-white hover:border-gray-300'
                 }`}
               >
@@ -437,7 +458,9 @@ export default function LicenseSettings({
                     <button
                       type="button"
                       onClick={() => {
-                        alert(`Para actualizar tu negocio al plan ${plan.name}, por favor adquiere una llave de licencia válida con tu administrador y regístrala en el formulario de arriba.`);
+                        alert(
+                          `Para actualizar tu negocio al plan ${plan.name}, por favor adquiere una llave de licencia válida con tu administrador y regístrala en el formulario de arriba.`,
+                        );
                         const inputEl = document.getElementById('activation-key-input');
                         if (inputEl) {
                           inputEl.scrollIntoView({ behavior: 'smooth' });

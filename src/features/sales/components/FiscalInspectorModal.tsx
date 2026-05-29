@@ -5,14 +5,30 @@
 
 import React, { useState, useEffect } from 'react';
 import { Transaction, LegalBillingSettings } from '../../../types/index';
-import { 
-  X, Copy, Download, ShieldCheck, Printer, Send, 
-  Check, FileText, Terminal, AlertCircle, Eye, RefreshCcw, Sparkles 
+import {
+  X,
+  Copy,
+  Download,
+  ShieldCheck,
+  Printer,
+  Send,
+  Check,
+  FileText,
+  Terminal,
+  AlertCircle,
+  Eye,
+  RefreshCcw,
+  Sparkles,
 } from 'lucide-react';
-import { generateCFDI40XML, getCadenaOriginal, getSATQrUrl, isVenezuelanTaxContext, generateSENIATInvoiceText } from '../../../services/fiscal';
+import {
+  generateCFDI40XML,
+  getCadenaOriginal,
+  getSATQrUrl,
+  isVenezuelanTaxContext,
+  generateSENIATInvoiceText,
+} from '../../../services/fiscal';
 import { playSound } from '../../../services/sounds';
 import SATQRCode from '../../../components/Invoice/SATQRCode';
-
 
 interface FiscalInspectorModalProps {
   transaction: Transaction;
@@ -20,22 +36,18 @@ interface FiscalInspectorModalProps {
   onClose: () => void;
 }
 
-export default function FiscalInspectorModal({
-  transaction,
-  billingSettings,
-  onClose
-}: FiscalInspectorModalProps) {
+export default function FiscalInspectorModal({ transaction, billingSettings, onClose }: FiscalInspectorModalProps) {
   const [activeTab, setActiveTab] = useState<'xml' | 'pdf' | 'validation'>('pdf');
   const [copied, setCopied] = useState(false);
   const [sentEmail, setSentEmail] = useState(false);
   const [emailInput, setEmailInput] = useState('');
-  
+
   // Validation status
   const [validationState, setValidationState] = useState<'idle' | 'calling' | 'success' | 'error'>('idle');
   const [validationLog, setValidationLog] = useState<string[]>([]);
 
   const isVen = isVenezuelanTaxContext(billingSettings);
-  const xmlContent = isVen 
+  const xmlContent = isVen
     ? generateSENIATInvoiceText(transaction, billingSettings)
     : generateCFDI40XML(transaction, billingSettings);
   const cadenaOriginal = getCadenaOriginal(transaction, billingSettings);
@@ -101,41 +113,45 @@ export default function FiscalInspectorModal({
       setValidationLog([
         '[SENIAT] Conectando con servidores del Servicio Nacional Integrado de Administración Aduanera y Tributaria (SENIAT)...',
         '[SENIAT] Verificando RIF del emisor y receptor...',
-        '[SENIAT] Validando número de control y firma de impresora fiscal...'
+        '[SENIAT] Validando número de control y firma de impresora fiscal...',
       ]);
-      
+
       setTimeout(() => {
-        setValidationLog(prev => [...prev, '[SENIAT] Verificando declaración de IVA e impuesto IGTF 3%...']);
+        setValidationLog((prev) => [...prev, '[SENIAT] Verificando declaración de IVA e impuesto IGTF 3%...']);
       }, 1000);
 
       setTimeout(() => {
-        setValidationLog(prev => [
+        setValidationLog((prev) => [
           ...prev,
           `[SENIAT] RESPUESTA RECIBIDA CON ÉXITO:`,
           `  - Estatus de Factura Fiscal: REGISTRADA / VIGENTE`,
           `  - Registro Impresora Fiscal: Homologado (Nro DPG120525D10)`,
           `  - Contribuyente Especial: Sí (Sujeto a retención)`,
-          `  - Firma Criptográfica SENIAT: ${inv?.satSignature || 'MOCK-HASH-SENIAT-8f8d9b1a'}`
+          `  - Firma Criptográfica SENIAT: ${inv?.satSignature || 'MOCK-HASH-SENIAT-8f8d9b1a'}`,
         ]);
         setValidationState('success');
         playSound('levelup');
       }, 2500);
     } else {
-      setValidationLog(['[PAC] Iniciando conexión SOAP con PAC Autorizado...', '[PAC] Enviando petición de verificación a SAT WebService...', '[PAC] Validando sello del emisor... OK']);
-      
+      setValidationLog([
+        '[PAC] Iniciando conexión SOAP con PAC Autorizado...',
+        '[PAC] Enviando petición de verificación a SAT WebService...',
+        '[PAC] Validando sello del emisor... OK',
+      ]);
+
       setTimeout(() => {
-        setValidationLog(prev => [...prev, '[PAC] Validando estatus en los servidores centrales del SAT...']);
+        setValidationLog((prev) => [...prev, '[PAC] Validando estatus en los servidores centrales del SAT...']);
       }, 1000);
 
       setTimeout(() => {
-        setValidationLog(prev => [
+        setValidationLog((prev) => [
           ...prev,
           `[SAT] RESPUESTA RECIBIDA CON ÉXITO:`,
           `  - Estado del Comprobante: VIGENTE`,
           `  - Código de Estatus: S - Comprobante obtenido satisfactoriamente`,
           `  - Es Cancelable?: Sí (Aceptación de receptor requerida)`,
           `  - Proveedor Certificado PAC: DuoPAC S.A. de C.V. (Reg. #DIL120525A12)`,
-          `  - Huella Digital SHA-1: 9c:88:51:ee:f5:bc:25:3c:9d...`
+          `  - Huella Digital SHA-1: 9c:88:51:ee:f5:bc:25:3c:9d...`,
         ]);
         setValidationState('success');
         playSound('levelup');
@@ -149,7 +165,7 @@ export default function FiscalInspectorModal({
     setTimeout(() => setSentEmail(false), 4000);
   };
 
-  // Simple print helper using browser print styles or custom text content 
+  // Simple print helper using browser print styles or custom text content
   const handlePrintPDF = () => {
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -237,17 +253,19 @@ export default function FiscalInspectorModal({
                   </tr>
                 </thead>
                 <tbody>
-                  ${transaction.items.map(it => {
-                    const ratePerc = it.taxRateApplied !== undefined ? it.taxRateApplied : (billingSettings.generalTaxRate ?? 16);
-                    let base = it.price * it.quantity;
-                    let taxAm = base * (ratePerc / 100);
-                    let unitVal = it.price;
-                    if (billingSettings.taxIncludedInPrice) {
-                      base = (it.price * it.quantity) / (1 + (ratePerc / 100));
-                      taxAm = (it.price * it.quantity) - base;
-                      unitVal = it.price / (1 + (ratePerc / 100));
-                    }
-                    return `
+                  ${transaction.items
+                    .map((it) => {
+                      const ratePerc =
+                        it.taxRateApplied !== undefined ? it.taxRateApplied : (billingSettings.generalTaxRate ?? 16);
+                      let base = it.price * it.quantity;
+                      let taxAm = base * (ratePerc / 100);
+                      let unitVal = it.price;
+                      if (billingSettings.taxIncludedInPrice) {
+                        base = (it.price * it.quantity) / (1 + ratePerc / 100);
+                        taxAm = it.price * it.quantity - base;
+                        unitVal = it.price / (1 + ratePerc / 100);
+                      }
+                      return `
                       <tr>
                         <td>43231500</td>
                         <td>${it.quantity.toFixed(2)}</td>
@@ -258,7 +276,8 @@ export default function FiscalInspectorModal({
                         <td style="text-align: right;">$${taxAm.toFixed(2)} (IVA ${ratePerc}%)</td>
                       </tr>
                     `;
-                  }).join('')}
+                    })
+                    .join('')}
                 </tbody>
               </table>
             </div>
@@ -322,7 +341,6 @@ export default function FiscalInspectorModal({
   return (
     <div className="fixed inset-0 z-50 bg-[#141414]/75 backdrop-blur-xs flex items-center justify-center p-4 font-sans animate-fadeIn">
       <div className="bg-white border-2 border-gray-200 border-b-[8px] rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-        
         {/* HEADER RAIL */}
         <div className="bg-gray-55 border-b border-gray-150 p-4 md:p-5 flex justify-between items-center bg-[#fdfdfd]">
           <div className="flex items-center gap-3">
@@ -336,7 +354,9 @@ export default function FiscalInspectorModal({
               </h3>
               <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
                 {isVen ? `Factura en tiempo real • Control: ` : `Timbrado en tiempo real • Folio: `}
-                <span className="font-mono text-gray-600 font-black">{isVen && inv.uuid ? inv.uuid.substring(9, 21) : inv.invoiceNo}</span>
+                <span className="font-mono text-gray-600 font-black">
+                  {isVen && inv.uuid ? inv.uuid.substring(9, 21) : inv.invoiceNo}
+                </span>
               </p>
             </div>
           </div>
@@ -351,10 +371,13 @@ export default function FiscalInspectorModal({
         {/* TABS SELECTS */}
         <div className="flex border-b border-gray-150 bg-gray-50/50 p-2 gap-1 md:gap-2">
           <button
-            onClick={() => { setActiveTab('pdf'); playSound('click'); }}
+            onClick={() => {
+              setActiveTab('pdf');
+              playSound('click');
+            }}
             className={`flex-1 md:flex-initial flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl font-black text-xs uppercase cursor-pointer transition-all ${
-              activeTab === 'pdf' 
-                ? 'bg-amber-500 text-white shadow-xs' 
+              activeTab === 'pdf'
+                ? 'bg-amber-500 text-white shadow-xs'
                 : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
             }`}
           >
@@ -363,10 +386,13 @@ export default function FiscalInspectorModal({
           </button>
 
           <button
-            onClick={() => { setActiveTab('xml'); playSound('click'); }}
+            onClick={() => {
+              setActiveTab('xml');
+              playSound('click');
+            }}
             className={`flex-1 md:flex-initial flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl font-black text-xs uppercase cursor-pointer transition-all ${
-              activeTab === 'xml' 
-                ? 'bg-[#1cb0f6] text-white shadow-xs' 
+              activeTab === 'xml'
+                ? 'bg-[#1cb0f6] text-white shadow-xs'
                 : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
             }`}
           >
@@ -375,10 +401,13 @@ export default function FiscalInspectorModal({
           </button>
 
           <button
-            onClick={() => { setActiveTab('validation'); playSound('click'); }}
+            onClick={() => {
+              setActiveTab('validation');
+              playSound('click');
+            }}
             className={`flex-1 md:flex-initial flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl font-black text-xs uppercase cursor-pointer transition-all ${
-              activeTab === 'validation' 
-                ? 'bg-[#58cc02] text-white shadow-xs' 
+              activeTab === 'validation'
+                ? 'bg-[#58cc02] text-white shadow-xs'
                 : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
             }`}
           >
@@ -389,11 +418,9 @@ export default function FiscalInspectorModal({
 
         {/* INNER SCROLL CONTENT wrapper */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/50">
-          
           {/* TAB 1: PDF DESIGN REPRESENTATION */}
           {activeTab === 'pdf' && isVen && (
             <div className="bg-white border-2 border-gray-150 p-5 md:p-8 rounded-2xl shadow-xs space-y-6 max-w-3xl mx-auto text-[11px] leading-relaxed relative">
-              
               {/* WATERMARK MOCK LEGAL */}
               <div className="absolute inset-0 flex items-center justify-center select-none pointer-events-none opacity-[0.03]">
                 <span className="text-[120px] font-black -rotate-45 uppercase">SENIAT FISCAL</span>
@@ -402,18 +429,37 @@ export default function FiscalInspectorModal({
               {/* Emisor & Doc info header */}
               <div className="flex flex-col md:flex-row justify-between gap-4 border-b-2 border-dashed pb-6">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-black text-[#58cc02] uppercase tracking-widest block font-mono">EMISOR FISCAL REGISTRADO</span>
-                  <h4 className="text-sm font-black text-gray-800 leading-tight uppercase">{(billingSettings.companyName || 'DUO ACADEMIA COMERCIAL')}</h4>
-                  <p className="text-gray-500 font-bold">R.I.F.: <span className="font-mono text-gray-800 font-black">{billingSettings.companyTaxId || 'J-120525D10'}</span></p>
-                  <p className="text-gray-400 font-semibold">Dirección Fiscal: {billingSettings.companyAddress || 'Caracas, Distrito Capital'}</p>
-                  <p className="text-gray-400 font-semibold">Autoridad Tributaria: SENIAT (Servicio Nacional Integrado)</p>
+                  <span className="text-[10px] font-black text-[#58cc02] uppercase tracking-widest block font-mono">
+                    EMISOR FISCAL REGISTRADO
+                  </span>
+                  <h4 className="text-sm font-black text-gray-800 leading-tight uppercase">
+                    {billingSettings.companyName || 'DUO ACADEMIA COMERCIAL'}
+                  </h4>
+                  <p className="text-gray-500 font-bold">
+                    R.I.F.:{' '}
+                    <span className="font-mono text-gray-800 font-black">
+                      {billingSettings.companyTaxId || 'J-120525D10'}
+                    </span>
+                  </p>
+                  <p className="text-gray-400 font-semibold">
+                    Dirección Fiscal: {billingSettings.companyAddress || 'Caracas, Distrito Capital'}
+                  </p>
+                  <p className="text-gray-400 font-semibold">
+                    Autoridad Tributaria: SENIAT (Servicio Nacional Integrado)
+                  </p>
                 </div>
-                
+
                 <div className="bg-gray-50 p-3 rounded-xl border-2 border-gray-150 text-right md:-mt-2 shrink-0 space-y-1">
-                  <span className="text-[9px] font-black text-amber-500 tracking-wider block uppercase">Factura Fiscal</span>
+                  <span className="text-[9px] font-black text-amber-500 tracking-wider block uppercase">
+                    Factura Fiscal
+                  </span>
                   <p className="text-xs font-black text-slate-800 font-mono">Factura Nro: {inv.invoiceNo}</p>
-                  <p className="text-[10px] text-gray-400 font-bold">Nro Control: {inv.uuid ? inv.uuid.substring(9, 21) : '00-0001530'}</p>
-                  <p className="text-[10px] text-gray-400 font-bold">Fecha: {transaction.date.replace('T', ' ').substring(0, 19)}</p>
+                  <p className="text-[10px] text-gray-400 font-bold">
+                    Nro Control: {inv.uuid ? inv.uuid.substring(9, 21) : '00-0001530'}
+                  </p>
+                  <p className="text-[10px] text-gray-400 font-bold">
+                    Fecha: {transaction.date.replace('T', ' ').substring(0, 19)}
+                  </p>
                   <p className="text-[10px] text-indigo-655 font-black uppercase">Moneda Base: VES / USD</p>
                 </div>
               </div>
@@ -421,23 +467,37 @@ export default function FiscalInspectorModal({
               {/* Receptor Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b pb-4">
                 <div className="space-y-1">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Receptor Fiscal</span>
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">
+                    Receptor Fiscal
+                  </span>
                   <h5 className="font-black text-gray-800 uppercase text-xs">{inv.fiscalName}</h5>
-                  <p className="text-gray-500 font-bold">R.I.F. / C.I: <span className="font-mono text-gray-800 font-black">{inv.taxId}</span></p>
+                  <p className="text-gray-500 font-bold">
+                    R.I.F. / C.I: <span className="font-mono text-gray-800 font-black">{inv.taxId}</span>
+                  </p>
                   <p className="text-gray-500 font-bold">Dirección: CP {inv.postalCode || '1010'}</p>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Condiciones SENIAT</span>
-                  <p className="text-gray-500 font-semibold">Forma de Pago: {transaction.paymentMethod === 'cash' ? '01 - Efectivo USD' : '02 - Transferencia / Débito'}</p>
-                  <p className="text-gray-500 font-semibold">Moneda del Pago: {transaction.paymentMethod === 'cash' ? 'Dólares Americanos (USD)' : 'Bolívares Digitales (VES)'}</p>
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">
+                    Condiciones SENIAT
+                  </span>
+                  <p className="text-gray-500 font-semibold">
+                    Forma de Pago:{' '}
+                    {transaction.paymentMethod === 'cash' ? '01 - Efectivo USD' : '02 - Transferencia / Débito'}
+                  </p>
+                  <p className="text-gray-500 font-semibold">
+                    Moneda del Pago:{' '}
+                    {transaction.paymentMethod === 'cash' ? 'Dólares Americanos (USD)' : 'Bolívares Digitales (VES)'}
+                  </p>
                   <p className="text-gray-500 font-semibold">Impresora Fiscal Nro: SENIAT-IMPFISCAL-DPG120525D10</p>
                 </div>
               </div>
 
               {/* Line items table with VAT codes */}
               <div className="space-y-2">
-                <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Artículos Facturados</span>
-                
+                <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">
+                  Artículos Facturados
+                </span>
+
                 <div className="overflow-x-auto border rounded-xl bg-gray-50/20">
                   <table className="w-full text-left text-[10.5px]">
                     <thead className="bg-gray-100 text-gray-500 font-black uppercase text-[9px] border-b">
@@ -452,23 +512,30 @@ export default function FiscalInspectorModal({
                     </thead>
                     <tbody className="divide-y text-gray-700 font-medium">
                       {transaction.items.map((it, idx) => {
-                        const ratePerc = it.taxRateApplied !== undefined ? it.taxRateApplied : (billingSettings.generalTaxRate ?? 16);
+                        const ratePerc =
+                          it.taxRateApplied !== undefined ? it.taxRateApplied : (billingSettings.generalTaxRate ?? 16);
                         let base = it.price * it.quantity;
                         let taxAm = base * (ratePerc / 100);
                         let unitVal = it.price;
                         if (billingSettings.taxIncludedInPrice) {
-                          base = (it.price * it.quantity) / (1 + (ratePerc / 100));
-                          taxAm = (it.price * it.quantity) - base;
-                          unitVal = it.price / (1 + (ratePerc / 100));
+                          base = (it.price * it.quantity) / (1 + ratePerc / 100);
+                          taxAm = it.price * it.quantity - base;
+                          unitVal = it.price / (1 + ratePerc / 100);
                         }
                         return (
                           <tr key={idx} className="hover:bg-gray-50/50">
-                            <td className="p-2.5 font-mono text-gray-500 select-all">{it.productId.substring(0, 8).toUpperCase()}</td>
+                            <td className="p-2.5 font-mono text-gray-500 select-all">
+                              {it.productId.substring(0, 8).toUpperCase()}
+                            </td>
                             <td className="p-2.5 text-center font-bold font-mono">{it.quantity.toFixed(1)}</td>
-                            <td className="p-2.5 font-bold uppercase truncate max-w-[200px]" title={it.name}>{it.name}</td>
+                            <td className="p-2.5 font-bold uppercase truncate max-w-[200px]" title={it.name}>
+                              {it.name}
+                            </td>
                             <td className="p-2.5 text-right font-mono">${unitVal.toFixed(2)}</td>
                             <td className="p-2.5 text-right font-mono font-bold text-gray-900">${base.toFixed(2)}</td>
-                            <td className="p-2.5 text-right font-mono text-emerald-600 bg-emerald-50/30 font-bold">${taxAm.toFixed(2)} (IVA {it.taxRateApplied ?? ratePerc}%)</td>
+                            <td className="p-2.5 text-right font-mono text-emerald-600 bg-emerald-50/30 font-bold">
+                              ${taxAm.toFixed(2)} (IVA {it.taxRateApplied ?? ratePerc}%)
+                            </td>
                           </tr>
                         );
                       })}
@@ -480,9 +547,10 @@ export default function FiscalInspectorModal({
               {/* Totals split */}
               <div className="flex border-t-2 border-double pt-4">
                 <div className="flex-1 pr-6 leading-normal text-gray-400 text-[10px] font-bold">
-                  * FACTURA FISCAL MOCK. Este comprobante cumple con las especificaciones de facturación de la República Bolivariana de Venezuela para fines formativos de DuoPOS.
+                  * FACTURA FISCAL MOCK. Este comprobante cumple con las especificaciones de facturación de la República
+                  Bolivariana de Venezuela para fines formativos de DuoPOS.
                 </div>
-                
+
                 <div className="w-64 space-y-2 shrink-0">
                   <div className="flex justify-between font-bold text-gray-500 text-xs">
                     <span>Subtotal Neto:</span>
@@ -505,7 +573,10 @@ export default function FiscalInspectorModal({
                   <div className="flex justify-between font-black text-gray-800 border-t pt-2 text-sm">
                     <span>Total Factura:</span>
                     <span className="font-mono text-[#58cc02]">
-                      ${(transaction.total + (transaction.paymentMethod === 'cash' ? transaction.total * 0.03 : 0)).toFixed(2)}
+                      $
+                      {(
+                        transaction.total + (transaction.paymentMethod === 'cash' ? transaction.total * 0.03 : 0)
+                      ).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -514,27 +585,38 @@ export default function FiscalInspectorModal({
               {/* Legal Block with real QR Code & stamp signatures */}
               <div className="border-t pt-5 mt-4 flex gap-4 text-[9px] text-gray-400 font-mono">
                 <div className="shrink-0 flex items-center justify-center p-2.5 bg-gray-55 rounded-xl border font-sans font-bold text-[9px] text-gray-400 w-24 h-24 border-dashed select-none">
-                  🧾<br/>IMPRESORA FISCAL
+                  🧾
+                  <br />
+                  IMPRESORA FISCAL
                 </div>
 
                 <div className="flex-1 space-y-2 overflow-hidden leading-tight text-gray-500 select-all">
-                  <p className="truncate"><strong>Número de Control Fiscal:</strong> <span className="font-black text-gray-700">{inv.uuid ? inv.uuid.substring(9, 21) : '00-0001530'}</span></p>
-                  <p className="truncate"><strong>Registro de Impresora:</strong> SENIAT-IMPFISCAL-DPG120525D10</p>
-                  <p className="truncate"><strong>Fecha y Hora de Firma:</strong> {transaction.date.replace('T', ' ')}</p>
-                  
+                  <p className="truncate">
+                    <strong>Número de Control Fiscal:</strong>{' '}
+                    <span className="font-black text-gray-700">
+                      {inv.uuid ? inv.uuid.substring(9, 21) : '00-0001530'}
+                    </span>
+                  </p>
+                  <p className="truncate">
+                    <strong>Registro de Impresora:</strong> SENIAT-IMPFISCAL-DPG120525D10
+                  </p>
+                  <p className="truncate">
+                    <strong>Fecha y Hora de Firma:</strong> {transaction.date.replace('T', ' ')}
+                  </p>
+
                   <div className="space-y-1">
                     <span className="font-black text-gray-600 block text-[8px] uppercase">Firma Fiscal Digital:</span>
-                    <p className="truncate bg-gray-50 p-1 border rounded text-[8px] text-gray-400 font-bold">{inv.satSignature || 'MOCK-HASH-SENIAT-8f8d9b1a'}</p>
+                    <p className="truncate bg-gray-50 p-1 border rounded text-[8px] text-gray-400 font-bold">
+                      {inv.satSignature || 'MOCK-HASH-SENIAT-8f8d9b1a'}
+                    </p>
                   </div>
                 </div>
               </div>
-
             </div>
           )}
 
           {activeTab === 'pdf' && !isVen && (
             <div className="bg-white border-2 border-gray-150 p-5 md:p-8 rounded-2xl shadow-xs space-y-6 max-w-3xl mx-auto text-[11px] leading-relaxed relative">
-              
               {/* WATERMARK MOCK LEGAL */}
               <div className="absolute inset-0 flex items-center justify-center select-none pointer-events-none opacity-[0.03]">
                 <span className="text-[120px] font-black -rotate-45 uppercase">SIMULACIÓN</span>
@@ -543,15 +625,31 @@ export default function FiscalInspectorModal({
               {/* Emisor & Doc info header */}
               <div className="flex flex-col md:flex-row justify-between gap-4 border-b-2 border-dashed pb-6">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-black text-[#58cc02] uppercase tracking-widest block font-mono">EMISOR DEL COMPROBANTE</span>
-                  <h4 className="text-sm font-black text-gray-800 leading-tight uppercase">{(billingSettings.companyName || 'DUO ACADEMIA S.A. DE C.V.')}</h4>
-                  <p className="text-gray-500 font-bold">RFC: <span className="font-mono text-gray-800 font-black">{billingSettings.companyTaxId || 'DAC120525D10'}</span></p>
-                  <p className="text-gray-400 font-semibold">Dirección: {billingSettings.companyAddress || 'Nido Verde #12, Bosque de Duolingo'}</p>
-                  <p className="text-gray-400 font-semibold">Lugar de Expedición: CP {billingSettings.companyPostalCode || '06700'} | Régimen: {billingSettings.companyRegime || '601 Personas Morales'}</p>
+                  <span className="text-[10px] font-black text-[#58cc02] uppercase tracking-widest block font-mono">
+                    EMISOR DEL COMPROBANTE
+                  </span>
+                  <h4 className="text-sm font-black text-gray-800 leading-tight uppercase">
+                    {billingSettings.companyName || 'DUO ACADEMIA S.A. DE C.V.'}
+                  </h4>
+                  <p className="text-gray-500 font-bold">
+                    RFC:{' '}
+                    <span className="font-mono text-gray-800 font-black">
+                      {billingSettings.companyTaxId || 'DAC120525D10'}
+                    </span>
+                  </p>
+                  <p className="text-gray-400 font-semibold">
+                    Dirección: {billingSettings.companyAddress || 'Nido Verde #12, Bosque de Duolingo'}
+                  </p>
+                  <p className="text-gray-400 font-semibold">
+                    Lugar de Expedición: CP {billingSettings.companyPostalCode || '06700'} | Régimen:{' '}
+                    {billingSettings.companyRegime || '601 Personas Morales'}
+                  </p>
                 </div>
-                
+
                 <div className="bg-gray-50 p-3 rounded-xl border-2 border-gray-150 text-right md:-mt-2 shrink-0 space-y-1">
-                  <span className="text-[9px] font-black text-amber-500 tracking-wider block uppercase">Factura Digital</span>
+                  <span className="text-[9px] font-black text-amber-500 tracking-wider block uppercase">
+                    Factura Digital
+                  </span>
                   <p className="text-xs font-black text-slate-800 font-mono">Serie/Folio: {inv.invoiceNo}</p>
                   <p className="text-[10px] text-gray-400 font-bold">Tipo: I - Ingreso</p>
                   <p className="text-[10px] text-gray-400 font-bold">Fecha: {transaction.date.replace('T', ' ')}</p>
@@ -562,14 +660,27 @@ export default function FiscalInspectorModal({
               {/* Receptor Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b pb-4">
                 <div className="space-y-1">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Receptor Fiscal</span>
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">
+                    Receptor Fiscal
+                  </span>
                   <h5 className="font-black text-gray-800 uppercase text-xs">{inv.fiscalName}</h5>
-                  <p className="text-gray-500 font-bold">RFC: <span className="font-mono text-gray-800 font-black">{inv.taxId}</span></p>
-                  <p className="text-gray-500 font-bold">Domicilio CP: <span className="font-mono text-gray-800">{inv.postalCode}</span></p>
+                  <p className="text-gray-500 font-bold">
+                    RFC: <span className="font-mono text-gray-800 font-black">{inv.taxId}</span>
+                  </p>
+                  <p className="text-gray-500 font-bold">
+                    Domicilio CP: <span className="font-mono text-gray-800">{inv.postalCode}</span>
+                  </p>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Esquema Sat</span>
-                  <p className="text-gray-500 font-bold">Uso del CFDI: <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded text-[10px] border border-blue-100 font-black">{inv.useCFDI || 'G03 - Gastos en general'}</span></p>
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">
+                    Esquema Sat
+                  </span>
+                  <p className="text-gray-500 font-bold">
+                    Uso del CFDI:{' '}
+                    <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded text-[10px] border border-blue-100 font-black">
+                      {inv.useCFDI || 'G03 - Gastos en general'}
+                    </span>
+                  </p>
                   <p className="text-gray-500 font-semibold">Régimen Receptor: {inv.regime || '626 - RESICO'}</p>
                   <p className="text-gray-500 font-semibold">Forma de Pago: {inv.paymentForm || '01 - Efectivo'}</p>
                   <p className="text-gray-500 font-semibold">Método de Pago: PUE - Pago en una sola Exhibición</p>
@@ -578,8 +689,10 @@ export default function FiscalInspectorModal({
 
               {/* Line items table with SAT codes */}
               <div className="space-y-2">
-                <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">Conceptos Declarados</span>
-                
+                <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider block">
+                  Conceptos Declarados
+                </span>
+
                 <div className="overflow-x-auto border rounded-xl bg-gray-50/20">
                   <table className="w-full text-left text-[10.5px]">
                     <thead className="bg-gray-100 text-gray-500 font-black uppercase text-[9px] border-b">
@@ -595,24 +708,29 @@ export default function FiscalInspectorModal({
                     </thead>
                     <tbody className="divide-y text-gray-700 font-medium">
                       {transaction.items.map((it, idx) => {
-                        const ratePerc = it.taxRateApplied !== undefined ? it.taxRateApplied : (billingSettings.generalTaxRate ?? 16);
+                        const ratePerc =
+                          it.taxRateApplied !== undefined ? it.taxRateApplied : (billingSettings.generalTaxRate ?? 16);
                         let base = it.price * it.quantity;
                         let taxAm = base * (ratePerc / 100);
                         let unitVal = it.price;
                         if (billingSettings.taxIncludedInPrice) {
-                          base = (it.price * it.quantity) / (1 + (ratePerc / 100));
-                          taxAm = (it.price * it.quantity) - base;
-                          unitVal = it.price / (1 + (ratePerc / 100));
+                          base = (it.price * it.quantity) / (1 + ratePerc / 100);
+                          taxAm = it.price * it.quantity - base;
+                          unitVal = it.price / (1 + ratePerc / 100);
                         }
                         return (
                           <tr key={idx} className="hover:bg-gray-50/50">
                             <td className="p-2.5 font-mono text-gray-500 select-all">43231500</td>
                             <td className="p-2.5 text-center font-bold font-mono">{it.quantity.toFixed(2)}</td>
                             <td className="p-2.5 text-gray-400">H87 - Pieza</td>
-                            <td className="p-2.5 font-bold uppercase truncate max-w-[200px]" title={it.name}>{it.name}</td>
+                            <td className="p-2.5 font-bold uppercase truncate max-w-[200px]" title={it.name}>
+                              {it.name}
+                            </td>
                             <td className="p-2.5 text-right font-mono">${unitVal.toFixed(2)}</td>
                             <td className="p-2.5 text-right font-mono font-bold text-gray-900">${base.toFixed(2)}</td>
-                            <td className="p-2.5 text-right font-mono text-emerald-600 bg-emerald-50/30 font-bold">${taxAm.toFixed(2)} ({it.taxRateApplied ?? ratePerc}%)</td>
+                            <td className="p-2.5 text-right font-mono text-emerald-600 bg-emerald-50/30 font-bold">
+                              ${taxAm.toFixed(2)} ({it.taxRateApplied ?? ratePerc}%)
+                            </td>
                           </tr>
                         );
                       })}
@@ -624,9 +742,10 @@ export default function FiscalInspectorModal({
               {/* Totals split */}
               <div className="flex border-t-2 border-double pt-4">
                 <div className="flex-1 pr-6 leading-normal text-gray-400 text-[10px] font-bold">
-                  * Este comprobante fiscal se emite de conformidad con las leyes vigentes del SAT de carácter simulado educativo de DuoPOS. PAC autorizador: DIL120525A12.
+                  * Este comprobante fiscal se emite de conformidad con las leyes vigentes del SAT de carácter simulado
+                  educativo de DuoPOS. PAC autorizador: DIL120525A12.
                 </div>
-                
+
                 <div className="w-56 space-y-2 shrink-0">
                   <div className="flex justify-between font-bold text-gray-500 text-xs">
                     <span>Subtotal:</span>
@@ -654,22 +773,33 @@ export default function FiscalInspectorModal({
                 </div>
 
                 <div className="flex-1 space-y-2 overflow-hidden leading-tight text-gray-500 select-all">
-                  <p className="truncate"><strong>Folio Fiscal (UUID):</strong> <span className="font-black text-gray-700">{inv.uuid}</span></p>
-                  <p className="truncate"><strong>Certificado SAT:</strong> 00001000000504465028</p>
-                  <p className="truncate"><strong>Fecha Certificación:</strong> {inv.certifiedAt}</p>
-                  
+                  <p className="truncate">
+                    <strong>Folio Fiscal (UUID):</strong> <span className="font-black text-gray-700">{inv.uuid}</span>
+                  </p>
+                  <p className="truncate">
+                    <strong>Certificado SAT:</strong> 00001000000504465028
+                  </p>
+                  <p className="truncate">
+                    <strong>Fecha Certificación:</strong> {inv.certifiedAt}
+                  </p>
+
                   <div className="space-y-1">
                     <span className="font-black text-gray-600 block text-[8px] uppercase">Sello Digital CFD:</span>
-                    <p className="truncate bg-gray-50 p-1 border rounded text-[8px] text-gray-400 font-bold">{inv.satSignature || 'fO9rR47d7vDqPlKszx8yvN60I9...==='}</p>
+                    <p className="truncate bg-gray-50 p-1 border rounded text-[8px] text-gray-400 font-bold">
+                      {inv.satSignature || 'fO9rR47d7vDqPlKszx8yvN60I9...==='}
+                    </p>
                   </div>
-                  
+
                   <div className="space-y-1">
-                    <span className="font-black text-gray-600 block text-[8px] uppercase">Cadena Original del SAT:</span>
-                    <p className="truncate bg-gray-50 p-1 border rounded text-[8px] text-gray-400 font-bold">{cadenaOriginal}</p>
+                    <span className="font-black text-gray-600 block text-[8px] uppercase">
+                      Cadena Original del SAT:
+                    </span>
+                    <p className="truncate bg-gray-50 p-1 border rounded text-[8px] text-gray-400 font-bold">
+                      {cadenaOriginal}
+                    </p>
                   </div>
                 </div>
               </div>
-
             </div>
           )}
 
@@ -678,13 +808,13 @@ export default function FiscalInspectorModal({
             <div className="space-y-4 max-w-4xl mx-auto">
               <div className="bg-sky-50 border border-sky-150 p-3 rounded-2xl flex items-center justify-between text-xs text-sky-800 font-bold">
                 <p>
-                  {isVen 
+                  {isVen
                     ? '💡 Puedes copiar esta Firma y Log del Ticket Fiscal emitido por la Impresora Homologada SENIAT para tu reporte diario.'
                     : '💡 Puedes copiar este XML oficial y subirlo directamente al validador web del SAT. Cumple con el esquema estructural CFDI 4.0.'}
                 </p>
                 <span className="text-xl shrink-0 select-none">🧾</span>
               </div>
-              
+
               {/* Syntax highlighted XML block container */}
               <div className="bg-[#141414] rounded-2xl border-2 border-slate-800 p-4 font-mono text-[11px] text-gray-300 leading-relaxed overflow-x-auto select-all max-h-[500px]">
                 <pre>{xmlContent}</pre>
@@ -698,20 +828,26 @@ export default function FiscalInspectorModal({
               <div className="bg-white border-2 border-[#e5e5e5] border-b-[8px] rounded-3xl p-5 space-y-4 shadow-xs">
                 <div className="text-center space-y-2">
                   <span className="text-5xl select-none animate-pulse block">📡</span>
-                  <h4 className="text-lg font-black text-gray-800 uppercase tracking-tight">{isVen ? 'Portal Fiscal SENIAT' : 'PAC Fiscal WebService'}</h4>
+                  <h4 className="text-lg font-black text-gray-800 uppercase tracking-tight">
+                    {isVen ? 'Portal Fiscal SENIAT' : 'PAC Fiscal WebService'}
+                  </h4>
                   <p className="text-xs text-gray-400 font-black leading-relaxed max-w-sm mx-auto uppercase">
-                    {isVen 
-                      ? 'Consulta el estatus de la firma de tu impresora homologada frente al SENIAT' 
+                    {isVen
+                      ? 'Consulta el estatus de la firma de tu impresora homologada frente al SENIAT'
                       : 'Consulta el estatus legal en tiempo real de tu racha comercial frente a los servidores tributarios'}
                   </p>
                 </div>
 
                 <div className="border border-dashed border-gray-200 p-4 rounded-2xl bg-gray-50 flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] font-black uppercase text-gray-400 block tracking-wider">{isVen ? 'Nro Control' : 'UUID en consulta'}</span>
-                    <span className="font-mono text-xs font-black text-indigo-600 select-all">{isVen && inv.uuid ? inv.uuid.substring(9, 21) : inv.uuid}</span>
+                    <span className="text-[10px] font-black uppercase text-gray-400 block tracking-wider">
+                      {isVen ? 'Nro Control' : 'UUID en consulta'}
+                    </span>
+                    <span className="font-mono text-xs font-black text-indigo-600 select-all">
+                      {isVen && inv.uuid ? inv.uuid.substring(9, 21) : inv.uuid}
+                    </span>
                   </div>
-                  
+
                   {validationState === 'success' ? (
                     <span className="bg-[#58cc02] text-white border-2 border-[#3c9e01] text-[10px] font-black px-3 py-1 rounded-full uppercase flex items-center gap-1">
                       ● VIGENTE
@@ -731,12 +867,16 @@ export default function FiscalInspectorModal({
                 <div className="bg-[#1e1e1e] border-2 border-slate-800 p-3.5 rounded-2xl font-mono text-[10.5px] text-emerald-400 h-44 overflow-y-auto space-y-1.5 shadow-inner">
                   <p className="text-gray-500">DuoPOS PAC Client CLI v2026.05</p>
                   <p className="text-gray-500">--------------------------------------</p>
-                  
+
                   {validationLog.length === 0 ? (
-                    <p className="text-gray-400 font-bold italic">La consola está vacía. Inicia la verificación arriba.</p>
+                    <p className="text-gray-400 font-bold italic">
+                      La consola está vacía. Inicia la verificación arriba.
+                    </p>
                   ) : (
                     validationLog.map((log, i) => (
-                      <p key={i} className="leading-tight break-all">{log}</p>
+                      <p key={i} className="leading-tight break-all">
+                        {log}
+                      </p>
                     ))
                   )}
                 </div>
@@ -744,26 +884,28 @@ export default function FiscalInspectorModal({
                 <div className="pt-2 text-center">
                   {validationState !== 'success' && (
                     <button
-                       type="button"
-                       disabled={validationState === 'calling'}
-                       onClick={triggerSATValidation}
-                       className="w-full bg-[#58cc02] text-white border-b-4 border-[#3c9e01] py-3 rounded-2xl font-black text-xs uppercase tracking-wider hover:bg-[#61e002] active:translate-y-px active:border-b-0 cursor-pointer flex items-center justify-center gap-1.5"
+                      type="button"
+                      disabled={validationState === 'calling'}
+                      onClick={triggerSATValidation}
+                      className="w-full bg-[#58cc02] text-white border-b-4 border-[#3c9e01] py-3 rounded-2xl font-black text-xs uppercase tracking-wider hover:bg-[#61e002] active:translate-y-px active:border-b-0 cursor-pointer flex items-center justify-center gap-1.5"
                     >
-                       <RefreshCcw size={14} className={validationState === 'calling' ? 'animate-spin' : ''} />
-                       {isVen ? 'Consultar R.I.F. & Firma en el SENIAT' : 'Consultar RFC & Firma en el SAT'}
+                      <RefreshCcw size={14} className={validationState === 'calling' ? 'animate-spin' : ''} />
+                      {isVen ? 'Consultar R.I.F. & Firma en el SENIAT' : 'Consultar RFC & Firma en el SAT'}
                     </button>
                   )}
                   {validationState === 'success' && (
                     <div className="bg-green-50 border border-green-200 p-3 rounded-2xl text-green-800 font-black text-xs flex items-center gap-2 justify-center">
-                       <span>{isVen ? '✅ ¡Factura registrada con estatus "Vigente" y validada por el SENIAT!' : '✅ ¡Comprobante timbrado con estatus "Vigente" y validado por el SAT!'}</span>
+                      <span>
+                        {isVen
+                          ? '✅ ¡Factura registrada con estatus "Vigente" y validada por el SENIAT!'
+                          : '✅ ¡Comprobante timbrado con estatus "Vigente" y validado por el SAT!'}
+                      </span>
                     </div>
                   )}
                 </div>
-
               </div>
             </div>
           )}
-
         </div>
 
         {/* BOTTOM ACTION BUTTONS */}
@@ -812,11 +954,9 @@ export default function FiscalInspectorModal({
                 <Send size={12} />
               </button>
             </div>
-            
-            {sentEmail && (
-              <span className="text-[10px] font-black text-green-600 animate-pulse">¡Enviado!</span>
-            )}
-            
+
+            {sentEmail && <span className="text-[10px] font-black text-green-600 animate-pulse">¡Enviado!</span>}
+
             <button
               onClick={onClose}
               className="py-2.5 px-4 bg-white text-gray-500 border-2 border-gray-200 border-b-4 hover:bg-gray-50 active:translate-y-px active:border-b-2 font-black text-xs uppercase tracking-wider rounded-xl cursor-pointer"
@@ -825,7 +965,6 @@ export default function FiscalInspectorModal({
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );

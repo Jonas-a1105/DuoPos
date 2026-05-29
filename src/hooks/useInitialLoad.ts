@@ -8,9 +8,30 @@ import { useInventoryStore } from '../stores/useInventoryStore';
 import { useCustomerStore } from '../stores/useCustomerStore';
 
 const DEFAULT_BRANCHES: Branch[] = [
-  { id: 'branch-central', name: 'Almacén Central (CEDIS) 🏢', type: 'central', emoji: '🏢', city: 'CDMX', address: 'Camino Real de Toluca #400, Coyoacán' },
-  { id: 'branch-centro', name: 'Sucursal Duo Centro 🦉', type: 'branch', emoji: '🦉', city: 'CDMX', address: 'Av. Paseo de la Reforma #150, Cuauhtémoc' },
-  { id: 'branch-norte', name: 'Sucursal Portal Norte 🦁', type: 'branch', emoji: '🦁', city: 'Monterrey', address: 'Av. Lázaro Cárdenas #2400, San Pedro Garza García' },
+  {
+    id: 'branch-central',
+    name: 'Almacén Central (CEDIS) 🏢',
+    type: 'central',
+    emoji: '🏢',
+    city: 'CDMX',
+    address: 'Camino Real de Toluca #400, Coyoacán',
+  },
+  {
+    id: 'branch-centro',
+    name: 'Sucursal Duo Centro 🦉',
+    type: 'branch',
+    emoji: '🦉',
+    city: 'CDMX',
+    address: 'Av. Paseo de la Reforma #150, Cuauhtémoc',
+  },
+  {
+    id: 'branch-norte',
+    name: 'Sucursal Portal Norte 🦁',
+    type: 'branch',
+    emoji: '🦁',
+    city: 'Monterrey',
+    address: 'Av. Lázaro Cárdenas #2400, San Pedro Garza García',
+  },
 ];
 
 const DEFAULT_REGISTERS: CashRegister[] = [

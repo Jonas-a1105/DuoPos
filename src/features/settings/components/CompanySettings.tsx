@@ -23,23 +23,28 @@ export default function CompanySettings({
   companyPostalCode,
   setCompanyPostalCode,
   companyAddress,
-  setCompanyAddress
+  setCompanyAddress,
 }: CompanySettingsProps) {
   return (
     <div className="space-y-6 animate-fadeIn text-left">
       <div className="border-b pb-3 flex items-center gap-2">
         <span className="text-2xl select-none">🏢</span>
         <div>
-          <h3 className="text-sm font-black uppercase text-gray-800 tracking-tight font-sans">Datos de Empresa Emisor Corporativo</h3>
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Define el membrete fiscal y comercial oficial para tus CFDI y Tickets</p>
+          <h3 className="text-sm font-black uppercase text-gray-800 tracking-tight font-sans">
+            Datos de Empresa Emisor Corporativo
+          </h3>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">
+            Define el membrete fiscal y comercial oficial para tus CFDI y Tickets
+          </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-sans text-gray-700">
-        
         {/* Razón Social */}
         <div className="md:col-span-2 space-y-1">
-          <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">Razón Social / Denominación Comercial</label>
+          <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">
+            Razón Social / Denominación Comercial
+          </label>
           <input
             type="text"
             required
@@ -52,7 +57,9 @@ export default function CompanySettings({
 
         {/* RFC / Identificación Fiscal */}
         <div className="space-y-1">
-          <label className="text-[10px] uppercase font-black text-gray-455 tracking-wider block">RFC / Identificación Fiscal Tributaria</label>
+          <label className="text-[10px] uppercase font-black text-gray-455 tracking-wider block">
+            RFC / Identificación Fiscal Tributaria
+          </label>
           <input
             type="text"
             required
@@ -65,7 +72,9 @@ export default function CompanySettings({
 
         {/* Régimen Fiscal */}
         <div className="space-y-1">
-          <label className="text-[10px] uppercase font-black text-gray-455 tracking-wider block">Régimen Fiscal (Catálogo SAT)</label>
+          <label className="text-[10px] uppercase font-black text-gray-455 tracking-wider block">
+            Régimen Fiscal (Catálogo SAT)
+          </label>
           <select
             value={companyRegime}
             onChange={(e) => setCompanyRegime(e.target.value)}
@@ -83,7 +92,9 @@ export default function CompanySettings({
 
         {/* Código Postal */}
         <div className="space-y-1">
-          <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">Lugar de Expedición (Código Postal CP)</label>
+          <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">
+            Lugar de Expedición (Código Postal CP)
+          </label>
           <input
             type="text"
             required
@@ -96,7 +107,9 @@ export default function CompanySettings({
 
         {/* Dirección Física */}
         <div className="md:col-span-2 space-y-1">
-          <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">Domicilio de Oficina & Bodega Principal</label>
+          <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">
+            Domicilio de Oficina & Bodega Principal
+          </label>
           <input
             type="text"
             required
@@ -106,7 +119,6 @@ export default function CompanySettings({
             placeholder="Ej: Av. de la Racha 404, Col. Bosques del Búho, Ciudad de México"
           />
         </div>
-
       </div>
     </div>
   );

@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { LegalBillingSettings, TaxCategoryOverride, User } from '../../types';
-import { 
-  Percent, Building2, Receipt, ShieldCheck, Save, Sliders, Info, CheckCircle2, RefreshCw
-} from 'lucide-react';
+import { Percent, Building2, Receipt, ShieldCheck, Save, Sliders, Info, CheckCircle2, RefreshCw } from 'lucide-react';
 import { playSound } from '../../services/sounds';
 import { LicenseDetails } from '../../services/licensing';
 
@@ -34,10 +32,12 @@ export default function SettingsScreen({
   onResetLicenseToFree,
   appVersion,
   onUpdateAppVersion,
-  user
+  user,
 }: SettingsScreenProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'taxes' | 'company' | 'sequence' | 'app' | 'license' | 'updates'>('license');
-  
+  const [activeSubTab, setActiveSubTab] = useState<'taxes' | 'company' | 'sequence' | 'app' | 'license' | 'updates'>(
+    'license',
+  );
+
   // Local states for inputs (passed down to subcomponents as bindings)
   const [taxName, setTaxName] = useState(settings.taxName);
   const [generalTaxRate, setGeneralTaxRate] = useState(settings.generalTaxRate);
@@ -55,13 +55,19 @@ export default function SettingsScreen({
   const [automaticMockInvoicing, setAutomaticMockInvoicing] = useState(settings.automaticMockInvoicing);
   const [certifyingAuthority, setCertifyingAuthority] = useState(settings.certifyingAuthority);
 
-  const [businessProfile, setBusinessProfile] = useState<'gastronomy' | 'market' | 'retail' | 'general'>(settings.businessProfile || 'gastronomy');
+  const [businessProfile, setBusinessProfile] = useState<'gastronomy' | 'market' | 'retail' | 'general'>(
+    settings.businessProfile || 'gastronomy',
+  );
   const [currencySymbol, setCurrencySymbol] = useState(settings.currencySymbol || '$');
-  const [currencyDecimals, setCurrencyDecimals] = useState(settings.currencyDecimals !== undefined ? settings.currencyDecimals : 2);
+  const [currencyDecimals, setCurrencyDecimals] = useState(
+    settings.currencyDecimals !== undefined ? settings.currencyDecimals : 2,
+  );
   const [enableSounds, setEnableSounds] = useState(settings.enableSounds !== false);
   const [ticketWidth, setTicketWidth] = useState<'80mm' | '58mm'>(settings.ticketWidth || '80mm');
   const [customTicketHeader, setCustomTicketHeader] = useState(settings.customTicketHeader || '');
-  const [customTicketFooter, setCustomTicketFooter] = useState(settings.customTicketFooter || '¡Gracias por su racha de compra!');
+  const [customTicketFooter, setCustomTicketFooter] = useState(
+    settings.customTicketFooter || '¡Gracias por su racha de compra!',
+  );
   const [kdsDelayMinutes, setKdsDelayMinutes] = useState(settings.kdsDelayMinutes || 10);
 
   // Sello digital mock state
@@ -95,7 +101,7 @@ export default function SettingsScreen({
       ticketWidth,
       customTicketHeader,
       customTicketFooter,
-      kdsDelayMinutes: Number(kdsDelayMinutes)
+      kdsDelayMinutes: Number(kdsDelayMinutes),
     };
 
     onSaveSettings(updatedSettings);
@@ -110,7 +116,6 @@ export default function SettingsScreen({
 
   return (
     <div className="space-y-6 animate-fadeIn font-sans p-1 md:p-3 pb-12 text-gray-800 text-left">
-      
       {/* HEADER HERO */}
       <div className="bg-[#58cc02] border-2 border-[#3c9e01] border-b-8 rounded-3xl p-5 md:p-6 text-white relative overflow-hidden shadow-xs">
         <div className="absolute right-4 -bottom-4 opacity-15 text-8xl md:text-9xl select-none font-black translate-x-4">
@@ -121,15 +126,15 @@ export default function SettingsScreen({
             <span className="bg-[#ffd700] text-amber-950 text-[10px] font-black uppercase px-2 py-0.5 tracking-wider rounded-lg border border-white leading-none">
               Módulo Fiscal Avanzado 🏛️
             </span>
-            <span className="text-white text-xs font-bold font-mono">
-              ★ Cumplimiento de Racha Legal
-            </span>
+            <span className="text-white text-xs font-bold font-mono">★ Cumplimiento de Racha Legal</span>
           </div>
           <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight leading-none">
             Impuestos y Facturación Electrónica SAT Mock
           </h2>
           <p className="text-xs md:text-sm text-green-50 leading-relaxed max-w-xl font-bold">
-            Configura las tasas impositivas por categoría, el cálculo de precios inclusive/neto y emite timbrados fiscales con firma criptográfica simétrica. ¡Gana <strong>+50 XP</strong> de racha comercial al guardar cambios validos!
+            Configura las tasas impositivas por categoría, el cálculo de precios inclusive/neto y emite timbrados
+            fiscales con firma criptográfica simétrica. ¡Gana <strong>+50 XP</strong> de racha comercial al guardar
+            cambios validos!
           </p>
         </div>
       </div>
@@ -153,7 +158,9 @@ export default function SettingsScreen({
             📁
           </div>
           <div>
-            <span className="text-[9px] uppercase font-black text-gray-400 block leading-tight">Desgloses Asignados</span>
+            <span className="text-[9px] uppercase font-black text-gray-400 block leading-tight">
+              Desgloses Asignados
+            </span>
             <span className="text-sm font-black text-gray-800 leading-none">
               {categoryOverrides.length} Categorías Especiales
             </span>
@@ -165,7 +172,9 @@ export default function SettingsScreen({
             📜
           </div>
           <div>
-            <span className="text-[9px] uppercase font-black text-gray-400 block leading-tight">Esquema Fiscal de Empresa</span>
+            <span className="text-[9px] uppercase font-black text-gray-400 block leading-tight">
+              Esquema Fiscal de Empresa
+            </span>
             <span className="text-sm font-black text-gray-800 leading-none truncate max-w-[200px]" title={companyTaxId}>
               {companyTaxId || 'No configurado'}
             </span>
@@ -175,7 +184,6 @@ export default function SettingsScreen({
 
       {/* MAIN LAYOUT: SUB-NAV TABS & SUBMIT DESIGN FORM */}
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        
         {/* SIDE BAR BUTTONS */}
         <div className="bg-white border-2 border-gray-200 border-b-6 rounded-2xl p-3 space-y-2 lg:col-span-1">
           {[
@@ -184,14 +192,17 @@ export default function SettingsScreen({
             { id: 'app', label: 'Perfil / Ajustes App', icon: <Sliders size={15} /> },
             { id: 'taxes', label: 'Estructura de Tasas', icon: <Percent size={15} /> },
             { id: 'company', label: 'Emisor Corporativo', icon: <Building2 size={15} /> },
-            { id: 'sequence', label: 'Folio y Certificados', icon: <Receipt size={15} /> }
+            { id: 'sequence', label: 'Folio y Certificados', icon: <Receipt size={15} /> },
           ].map((tab) => {
             const isSelected = activeSubTab === tab.id;
             return (
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => { setActiveSubTab(tab.id as any); playSound('click'); }}
+                onClick={() => {
+                  setActiveSubTab(tab.id as any);
+                  playSound('click');
+                }}
                 className={`w-full text-left p-2.5 rounded-xl font-black text-[11px] uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
                   isSelected
                     ? 'bg-amber-500 text-white border-amber-600 animate-fadeIn'
@@ -208,7 +219,8 @@ export default function SettingsScreen({
             <div className="bg-sky-50 border border-sky-100 rounded-xl p-2.5 text-[10px] text-sky-850 font-bold leading-relaxed flex gap-1.5 items-start">
               <Info size={14} className="text-sky-500 shrink-0 mt-0.5 animate-pulse" />
               <span>
-                Los precios de los productos en tu almacén pueden configurarse como <strong>Netos</strong> u <strong>Hospedados (inclusive)</strong>.
+                Los precios de los productos en tu almacén pueden configurarse como <strong>Netos</strong> u{' '}
+                <strong>Hospedados (inclusive)</strong>.
               </span>
             </div>
           </div>
@@ -216,7 +228,6 @@ export default function SettingsScreen({
 
         {/* COMPONENT SETTINGS INPUTS WRAPPER */}
         <div className="bg-white border-2 border-gray-200 border-b-8 rounded-3xl p-5 md:p-6 lg:col-span-3 space-y-6">
-          
           {/* TAB 0: TAX STRUCTURE */}
           {activeSubTab === 'taxes' && (
             <TaxesSettings
@@ -328,7 +339,7 @@ export default function SettingsScreen({
                   ¡Ajustes Fiscales del SAT Sincronizados con Racha!
                 </span>
               )}
-              
+
               <button
                 type="submit"
                 className="w-full sm:w-auto py-3 px-6 bg-[#58cc02] text-white border-b-6 border-[#3c9e01] hover:bg-[#61e002] active:translate-y-[2px] active:border-b-2 font-black text-xs uppercase tracking-wider rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-2"
@@ -338,11 +349,8 @@ export default function SettingsScreen({
               </button>
             </div>
           </div>
-
         </div>
-
       </form>
-
     </div>
   );
 }

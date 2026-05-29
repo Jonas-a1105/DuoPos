@@ -41,9 +41,8 @@ export default function BranchManager({
   licenseDetails,
   onGrantXp,
   showBranchForm,
-  onCloseForm
+  onCloseForm,
 }: BranchManagerProps) {
-  
   // Localized form states
   const [newBranchName, setNewBranchName] = useState('');
   const [newBranchType, setNewBranchType] = useState<'branch' | 'central'>('branch');
@@ -62,7 +61,9 @@ export default function BranchManager({
     const limit = PLANS[currentTier]?.allowedBranches || 1;
     if (branches.length >= limit) {
       playSound('error');
-      alert(`Límite de sucursales alcanzado: Tu plan [${PLANS[currentTier]?.name}] solo permite hasta ${limit} sucursal(es). Por favor actualiza tu licencia a Pro para habilitar hasta 5 sucursales.`);
+      alert(
+        `Límite de sucursales alcanzado: Tu plan [${PLANS[currentTier]?.name}] solo permite hasta ${limit} sucursal(es). Por favor actualiza tu licencia a Pro para habilitar hasta 5 sucursales.`,
+      );
       return;
     }
 
@@ -73,7 +74,7 @@ export default function BranchManager({
       type: newBranchType,
       emoji: newBranchEmoji,
       city: newBranchCity,
-      address: newBranchAddress.trim()
+      address: newBranchAddress.trim(),
     };
 
     const updatedBranches = [...branches, newB];
@@ -87,14 +88,14 @@ export default function BranchManager({
       branchId: bId,
       name: 'Caja General 01 💵',
       emoji: '💵',
-      status: 'active'
+      status: 'active',
     };
     const updatedRegs = [...registers, newReg];
     setRegisters(updatedRegs);
     await syncInsert<CashRegister>('cash_registers', 'duo_pos_registers', updatedRegs, newReg);
 
     // Init stock multiplication for products in this branch if they have branchesStock
-    products.forEach(p => {
+    products.forEach((p) => {
       const bStock = p.branchesStock || {};
       // CEDIS gets massive initial stock, standard gets standard
       bStock[bId] = newBranchType === 'central' ? 150 : 25;
@@ -110,14 +111,17 @@ export default function BranchManager({
 
   return (
     <div className="space-y-5 animate-fadeIn text-left">
-      
       {/* Modal Alta Sucursal */}
       {showBranchForm && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl border-2 border-gray-200 p-5 max-w-md w-full space-y-4 animate-scaleUp text-left">
             <div className="flex justify-between items-center border-b pb-2">
-              <h3 className="text-lg font-black text-gray-800 flex items-center gap-1">🏦 Dar de Alta Sucursal / CEDIS</h3>
-              <button onClick={onCloseForm} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+              <h3 className="text-lg font-black text-gray-800 flex items-center gap-1">
+                🏦 Dar de Alta Sucursal / CEDIS
+              </h3>
+              <button onClick={onCloseForm} className="text-gray-400 hover:text-gray-600">
+                <X size={18} />
+              </button>
             </div>
 
             <form onSubmit={handleCreateBranch} className="space-y-3.5 text-xs font-bold">
@@ -127,7 +131,7 @@ export default function BranchManager({
                   type="text"
                   placeholder="Ej. Sucursal Duo Centro, CEDIS Almacén Central"
                   value={newBranchName}
-                  onChange={e => setNewBranchName(e.target.value)}
+                  onChange={(e) => setNewBranchName(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-gray-50 border-2 rounded-xl focus:border-green-500 outline-none"
                 />
               </div>
@@ -137,7 +141,7 @@ export default function BranchManager({
                   <label className="text-gray-500 block uppercase">Tipo de Punto</label>
                   <select
                     value={newBranchType}
-                    onChange={e => setNewBranchType(e.target.value as any)}
+                    onChange={(e) => setNewBranchType(e.target.value as any)}
                     className="w-full px-3.5 py-2.5 bg-gray-50 border-2 rounded-xl outline-none"
                   >
                     <option value="branch">Sucursal Estándar</option>
@@ -151,7 +155,7 @@ export default function BranchManager({
                     type="text"
                     placeholder="🏪, 🏢, 🦉, 🦁"
                     value={newBranchEmoji}
-                    onChange={e => setNewBranchEmoji(e.target.value)}
+                    onChange={(e) => setNewBranchEmoji(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-gray-50 border-2 rounded-xl outline-none text-center text-lg"
                   />
                 </div>
@@ -163,7 +167,7 @@ export default function BranchManager({
                   type="text"
                   placeholder="Ej. CDMX, Monterrey, Guadalajara"
                   value={newBranchCity}
-                  onChange={e => setNewBranchCity(e.target.value)}
+                  onChange={(e) => setNewBranchCity(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-gray-50 border-2 rounded-xl outline-none"
                 />
               </div>
@@ -173,7 +177,7 @@ export default function BranchManager({
                 <textarea
                   placeholder="Escriba la calle, número, col. y código postal para el timbrado fiscal"
                   value={newBranchAddress}
-                  onChange={e => setNewBranchAddress(e.target.value)}
+                  onChange={(e) => setNewBranchAddress(e.target.value)}
                   rows={2}
                   className="w-full px-3.5 py-2.5 bg-gray-50 border-2 rounded-xl outline-none text-xs font-bold font-sans"
                 />
@@ -201,10 +205,14 @@ export default function BranchManager({
 
       <div className="bg-gradient-to-r from-[#e5f5ff] to-white border-2 border-blue-200 rounded-3xl p-5 flex flex-col md:flex-row justify-between items-center gap-4 text-left font-sans">
         <div>
-          <span className="text-[9px] bg-blue-200 text-blue-900 font-black px-2 py-0.5 rounded uppercase">Consejo de Logística Duo</span>
+          <span className="text-[9px] bg-blue-200 text-blue-900 font-black px-2 py-0.5 rounded uppercase">
+            Consejo de Logística Duo
+          </span>
           <h4 className="text-base font-black text-blue-950 mt-1">¿Cómo administrar múltiples sucursales?</h4>
           <p className="text-xs text-blue-800 font-bold max-w-xl">
-            Cada sucursal mantiene sus existencias de insumos por separado. El Almacén Central (CEDIS) es el Hub general: puede comprar materia prima en volumen a proveedores y rellenar las reservas críticas de las sucursales con envíos express.
+            Cada sucursal mantiene sus existencias de insumos por separado. El Almacén Central (CEDIS) es el Hub
+            general: puede comprar materia prima en volumen a proveedores y rellenar las reservas críticas de las
+            sucursales con envíos express.
           </p>
         </div>
         <div className="bg-white border-2 border-blue-200 px-4 py-2.5 rounded-2xl shrink-0 font-black text-center text-xs text-blue-950">
@@ -213,18 +221,18 @@ export default function BranchManager({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 font-sans">
-        {branches.map(br => {
+        {branches.map((br) => {
           const isActive = br.id === activeBranchId;
           const isCentral = br.type === 'central';
           const stats = branchesStats[br.id] || { totalSales: 0, count: 0 };
-          const termCount = registers.filter(r => r.branchId === br.id).length;
+          const termCount = registers.filter((r) => r.branchId === br.id).length;
 
           return (
-            <div 
-              key={br.id} 
+            <div
+              key={br.id}
               className={`bg-white border-2 rounded-3xl p-5 flex flex-col justify-between relative transition-all ${
-                isActive 
-                  ? 'border-[#58cc02] border-b-8 ring-4 ring-[#58cc02]/10 scale-[1.01]' 
+                isActive
+                  ? 'border-[#58cc02] border-b-8 ring-4 ring-[#58cc02]/10 scale-[1.01]'
                   : 'border-gray-200 border-b-[6px] hover:border-gray-300'
               }`}
             >
@@ -236,10 +244,16 @@ export default function BranchManager({
 
               <div className="space-y-3.5 text-left">
                 <div className="flex justify-between items-start">
-                  <span className="text-4xl p-2 bg-slate-50 border border-slate-100 rounded-2xl block">{br.emoji || '🏪'}</span>
-                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${
-                    isCentral ? 'bg-indigo-50 border-indigo-250 text-indigo-700' : 'bg-emerald-50 border-emerald-250 text-emerald-700'
-                  }`}>
+                  <span className="text-4xl p-2 bg-slate-50 border border-slate-100 rounded-2xl block">
+                    {br.emoji || '🏪'}
+                  </span>
+                  <span
+                    className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${
+                      isCentral
+                        ? 'bg-indigo-50 border-indigo-250 text-indigo-700'
+                        : 'bg-emerald-50 border-emerald-250 text-emerald-700'
+                    }`}
+                  >
                     {isCentral ? 'CEDIS / Almacén' : 'Punto de Venta'}
                   </span>
                 </div>
@@ -256,7 +270,9 @@ export default function BranchManager({
                 <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3.5 grid grid-cols-2 gap-2 text-center">
                   <div>
                     <span className="text-[8px] uppercase font-black text-gray-400 block leading-none">Ventas</span>
-                    <span className="text-sm font-black text-gray-800 leading-none">${stats.totalSales.toFixed(2)}</span>
+                    <span className="text-sm font-black text-gray-800 leading-none">
+                      ${stats.totalSales.toFixed(2)}
+                    </span>
                     <span className="text-[9px] font-bold text-gray-400 block pt-0.5">{stats.count} tanz.</span>
                   </div>
                   <div className="border-l">

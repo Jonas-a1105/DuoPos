@@ -1,7 +1,18 @@
 import React, { useState } from 'react';
 import { Customer, LeagueType } from '../../../types';
-import { 
-  Search, Phone, Mail, Download, UserPlus, Edit2, FileText, Wallet, Trash2, Clock, ArrowDownLeft, ArrowUpRight 
+import {
+  Search,
+  Phone,
+  Mail,
+  Download,
+  UserPlus,
+  Edit2,
+  FileText,
+  Wallet,
+  Trash2,
+  Clock,
+  ArrowDownLeft,
+  ArrowUpRight,
 } from 'lucide-react';
 import { playSound } from '../../../services/sounds';
 import { exportCustomersToExcel } from '../../../services/exportService';
@@ -36,7 +47,7 @@ export default function CustomerDirectory({
   onOpenLedger,
   onOpenPayment,
   onDeleteCustomer,
-  onUpdateCustomer
+  onUpdateCustomer,
 }: CustomerDirectoryProps) {
   // Manual Gems tuning states
   const [manualGemsAdjustOpen, setManualGemsAdjustOpen] = useState<string | null>(null);
@@ -58,7 +69,7 @@ export default function CustomerDirectory({
 
     const updated: Customer = {
       ...cust,
-      gems: updatedGems
+      gems: updatedGems,
     };
     onUpdateCustomer(updated);
     setManualGemsAdjustOpen(null);
@@ -87,7 +98,10 @@ export default function CustomerDirectory({
         <div className="flex w-full md:w-auto items-center gap-2 shrink-0">
           <select
             value={selectedLeague}
-            onChange={(e) => { setSelectedLeague(e.target.value); playSound('click'); }}
+            onChange={(e) => {
+              setSelectedLeague(e.target.value);
+              playSound('click');
+            }}
             className="bg-white border-2 border-gray-200 border-b-4 rounded-xl px-3.5 py-1.5 font-bold text-xs outline-none focus:border-[#1cb0f6] text-gray-700 max-w-xs cursor-pointer select-none"
           >
             <option value="all">Todas las Ligas 🏆</option>
@@ -107,9 +121,12 @@ export default function CustomerDirectory({
             <UserPlus size={15} strokeWidth={3} />
             <span>Nuevo Cliente (+25 XP)</span>
           </button>
-          
+
           <button
-            onClick={() => { playSound('click'); exportCustomersToExcel(filteredCustomers); }}
+            onClick={() => {
+              playSound('click');
+              exportCustomersToExcel(filteredCustomers);
+            }}
             className="py-2 px-3 bg-[#58cc02] text-white border-b-4 border-[#3c9e01] hover:bg-[#61e002] active:translate-y-[2px] active:border-b-2 font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-1"
           >
             <Download size={14} />
@@ -137,15 +154,15 @@ export default function CustomerDirectory({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredCustomers.map((cust) => {
             const meta = LEAGUE_METADATA[cust.league] || LEAGUE_METADATA.Bronce;
-            
+
             // Credit limit stats calculation
             const limit = cust.creditLimit || 0;
             const debt = cust.creditUsed || 0;
             const creditAvailable = Math.max(0, limit - debt);
-            
+
             // Calculate progress of credit used
             const creditUsedPct = limit > 0 ? Math.min(100, Math.round((debt / limit) * 100)) : 0;
-            
+
             // Color states based on credit percentage used
             let progressBgColor = 'bg-[#58cc02]'; // Safe Green
             let progressBorderColor = 'border-green-100';
@@ -158,8 +175,8 @@ export default function CustomerDirectory({
             }
 
             return (
-              <div 
-                key={cust.id} 
+              <div
+                key={cust.id}
                 className={`bg-white border-2 border-b-6 rounded-3xl p-5 hover:border-gray-300 transition-all space-y-4 relative flex flex-col justify-between ${
                   debt > 0 ? 'border-red-300 hover:border-red-400' : 'border-gray-200'
                 }`}
@@ -170,11 +187,14 @@ export default function CustomerDirectory({
                     <h3 className="text-base font-black text-gray-855 truncate max-w-[150px]" title={cust.name}>
                       {cust.name}
                     </h3>
-                    
+
                     {/* Badge */}
-                    <div 
+                    <div
                       className={`${meta.bg} ${meta.border} ${meta.text} border text-[9px] font-black uppercase px-2 py-0.5 rounded-lg flex items-center gap-1 select-none cursor-pointer`}
-                      onClick={() => { setManualGemsAdjustOpen(cust.id); playSound('click'); }}
+                      onClick={() => {
+                        setManualGemsAdjustOpen(cust.id);
+                        playSound('click');
+                      }}
                       title="Ajuste manual de gemas"
                     >
                       <span>{meta.emoji}</span>
@@ -208,9 +228,7 @@ export default function CustomerDirectory({
                       <span>📝</span> Línea de Crédito ("Fiado")
                     </span>
                     {limit > 0 ? (
-                      <span className="font-mono text-gray-500 font-bold">
-                        Cupo: ${limit.toFixed(0)}
-                      </span>
+                      <span className="font-mono text-gray-500 font-bold">Cupo: ${limit.toFixed(0)}</span>
                     ) : (
                       <span className="text-gray-400 uppercase font-black tracking-wide text-[9px]">Sin Autorizar</span>
                     )}
@@ -228,25 +246,21 @@ export default function CustomerDirectory({
                         </div>
                         <div className="flex flex-col items-end">
                           <span className="text-[8px] text-gray-400 uppercase leading-none">Cupo Disponible</span>
-                          <span className="text-sm font-mono text-[#58cc02] mt-0.5">
-                            ${creditAvailable.toFixed(2)}
-                          </span>
+                          <span className="text-sm font-mono text-[#58cc02] mt-0.5">${creditAvailable.toFixed(2)}</span>
                         </div>
                       </div>
 
                       {/* Debt Progression loading bar */}
                       <div className="w-full h-3.5 bg-gray-200 rounded-full overflow-hidden border p-0.5">
-                        <div 
-                          className={`h-full rounded-full transition-all duration-300 ${progressBgColor}`} 
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${progressBgColor}`}
                           style={{ width: `${creditUsedPct}%` }}
                         />
                       </div>
 
                       <div className="flex justify-between items-center text-[8px] text-gray-400 uppercase font-extrabold leading-none">
                         <span>Porcentaje de cupo usado:</span>
-                        <span className={debt > 0 ? 'text-red-500 font-black' : 'text-gray-400'}>
-                          {creditUsedPct}%
-                        </span>
+                        <span className={debt > 0 ? 'text-red-500 font-black' : 'text-gray-400'}>{creditUsedPct}%</span>
                       </div>
                     </div>
                   ) : (
@@ -269,13 +283,19 @@ export default function CustomerDirectory({
                   <div className="flex items-center gap-1.5 select-none shrink-0 font-bold">
                     <span className="text-lg">💎</span>
                     <div className="text-left">
-                      <span className="text-[8px] uppercase font-black text-gray-400 block leading-tight">Gemas Loyalty</span>
-                      <span className="text-xs font-black text-[#58cc02] font-mono leading-none">{cust.gems} <span className="text-[9px] text-gray-400">G</span></span>
+                      <span className="text-[8px] uppercase font-black text-gray-400 block leading-tight">
+                        Gemas Loyalty
+                      </span>
+                      <span className="text-xs font-black text-[#58cc02] font-mono leading-none">
+                        {cust.gems} <span className="text-[9px] text-gray-400">G</span>
+                      </span>
                     </div>
                   </div>
 
                   <div className="text-right shrink-0">
-                    <span className="text-[8px] uppercase font-black text-gray-400 block leading-none">Compras de Racha</span>
+                    <span className="text-[8px] uppercase font-black text-gray-400 block leading-none">
+                      Compras de Racha
+                    </span>
                     <span className="text-xs font-black text-gray-500 font-mono inline-block">
                       {cust.purchasesCount} ventas
                     </span>
@@ -296,7 +316,10 @@ export default function CustomerDirectory({
 
                   {/* Estado de Cuenta */}
                   <button
-                    onClick={() => { onOpenLedger(cust); playSound('click'); }}
+                    onClick={() => {
+                      onOpenLedger(cust);
+                      playSound('click');
+                    }}
                     className="py-1.5 px-0.5 bg-white border border-gray-200 hover:bg-gray-55 rounded-xl font-bold text-[9px] flex items-center justify-center gap-0.5 text-[#1cb0f6] cursor-pointer shadow-2xs border-b-4 hover:border-b-2 active:translate-y-[2px]"
                     title="Ver Historial / Estado de Cuenta"
                   >
@@ -306,7 +329,10 @@ export default function CustomerDirectory({
 
                   {/* Abono de Deuda */}
                   <button
-                    onClick={() => { onOpenPayment(cust); playSound('click'); }}
+                    onClick={() => {
+                      onOpenPayment(cust);
+                      playSound('click');
+                    }}
                     disabled={!cust.creditUsed || cust.creditUsed <= 0}
                     className={`py-1.5 px-0.5 rounded-xl font-bold text-[9px] flex items-center justify-center gap-0.5 cursor-pointer shadow-2xs border-b-4 hover:border-b-2 active:translate-y-[2px] transition-all ${
                       cust.creditUsed && cust.creditUsed > 0
@@ -322,7 +348,11 @@ export default function CustomerDirectory({
                   {/* Delete Customer */}
                   <button
                     onClick={() => {
-                      if (confirm(`¿Estás seguro de que deseas eliminar a ${cust.name}? El historial cargado persistirá pero ya no acumulará gemas.`)) {
+                      if (
+                        confirm(
+                          `¿Estás seguro de que deseas eliminar a ${cust.name}? El historial cargado persistirá pero ya no acumulará gemas.`,
+                        )
+                      ) {
                         onDeleteCustomer(cust.id);
                         playSound('error');
                       }
@@ -343,7 +373,10 @@ export default function CustomerDirectory({
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
-                        onClick={() => { setAdjustType('add'); playSound('click'); }}
+                        onClick={() => {
+                          setAdjustType('add');
+                          playSound('click');
+                        }}
                         className={`py-1 rounded-xl text-xs font-black border text-center cursor-pointer ${
                           adjustType === 'add' ? 'bg-[#58cc02] border-[#58cc02] text-white' : 'bg-white text-gray-700'
                         }`}
@@ -352,7 +385,10 @@ export default function CustomerDirectory({
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setAdjustType('deduct'); playSound('click'); }}
+                        onClick={() => {
+                          setAdjustType('deduct');
+                          playSound('click');
+                        }}
                         className={`py-1 rounded-xl text-xs font-black border text-center cursor-pointer ${
                           adjustType === 'deduct' ? 'bg-red-50 border-red-500 text-white' : 'bg-white text-gray-700'
                         }`}
@@ -380,7 +416,11 @@ export default function CustomerDirectory({
                         Aplicar
                       </button>
                       <button
-                        onClick={() => { setManualGemsAdjustOpen(null); setAdjustAmount(''); playSound('click'); }}
+                        onClick={() => {
+                          setManualGemsAdjustOpen(null);
+                          setAdjustAmount('');
+                          playSound('click');
+                        }}
                         className="py-1.5 bg-gray-150 rounded-xl font-bold text-xs text-gray-650 cursor-pointer"
                       >
                         Cancelar

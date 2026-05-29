@@ -34,13 +34,13 @@ interface InventoryScreenProps {
   onRegisterSupplierPayout: (supplierId: string, amount: number, notes: string) => void;
 }
 
-export default function InventoryScreen({ 
-  products, 
-  onAddProduct, 
-  onUpdateProduct, 
-  onDeleteProduct, 
-  onGrantXp, 
-  activeShift, 
+export default function InventoryScreen({
+  products,
+  onAddProduct,
+  onUpdateProduct,
+  onDeleteProduct,
+  onGrantXp,
+  activeShift,
   onAddShiftMovement,
   currentUser,
   suppliers,
@@ -52,18 +52,19 @@ export default function InventoryScreen({
   onTransitPurchaseOrder,
   onReceivePurchaseOrder,
   onCancelPurchaseOrder,
-  onRegisterSupplierPayout
+  onRegisterSupplierPayout,
 }: InventoryScreenProps) {
-  
   // Tabs & Filters state
-  const [activeSubTab, setActiveSubTab] = useState<'catalog' | 'alerts' | 'suppliers' | 'orders' | 'accounts'>('catalog');
-  
+  const [activeSubTab, setActiveSubTab] = useState<'catalog' | 'alerts' | 'suppliers' | 'orders' | 'accounts'>(
+    'catalog',
+  );
+
   // Payout helper state to link Supplier list card click to Accounts Payable abonos
   const [paySupId, setPaySupId] = useState<string>('');
 
   // Tab badge math calculations
   const criticalProductsCount = useMemo(() => {
-    return products.filter(p => p.stock <= (p.minStock !== undefined ? p.minStock : 5)).length;
+    return products.filter((p) => p.stock <= (p.minStock !== undefined ? p.minStock : 5)).length;
   }, [products]);
 
   const totalAccountsPayable = useMemo(() => {
@@ -71,12 +72,11 @@ export default function InventoryScreen({
   }, [suppliers]);
 
   const pendingOrdersCount = useMemo(() => {
-    return purchaseOrders.filter(o => o.status === 'sent' || o.status === 'transit').length;
+    return purchaseOrders.filter((o) => o.status === 'sent' || o.status === 'transit').length;
   }, [purchaseOrders]);
 
   return (
     <div className="space-y-6 animate-fadeIn font-sans p-1 md:p-3 relative pb-12 w-full text-gray-800 text-left">
-      
       {/* Dynamic Title Header Bar */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -95,12 +95,20 @@ export default function InventoryScreen({
           { key: 'catalog', label: '📦 Catálogo Central', count: products.length },
           { key: 'alerts', label: '🚨 Alertas Críticas', count: criticalProductsCount, alert: true },
           { key: 'suppliers', label: '🤝 Proveedores', count: suppliers.length },
-          { key: 'orders', label: '🚚 Órdenes Compra', count: purchaseOrders.length, highlight: pendingOrdersCount > 0 },
-          { key: 'accounts', label: '💸 Cuentas Por Pagar', special: `$${totalAccountsPayable.toFixed(2)}` }
+          {
+            key: 'orders',
+            label: '🚚 Órdenes Compra',
+            count: purchaseOrders.length,
+            highlight: pendingOrdersCount > 0,
+          },
+          { key: 'accounts', label: '💸 Cuentas Por Pagar', special: `$${totalAccountsPayable.toFixed(2)}` },
         ].map((tab) => (
           <button
             key={tab.key}
-            onClick={() => { setActiveSubTab(tab.key as any); playSound('click'); }}
+            onClick={() => {
+              setActiveSubTab(tab.key as any);
+              playSound('click');
+            }}
             className={`pb-3 px-2.5 text-xs md:text-sm font-black uppercase tracking-wider border-b-4 transition-all cursor-pointer flex items-center gap-1.5 ${
               activeSubTab === tab.key
                 ? 'border-[#58cc02] text-[#58cc02]'
@@ -109,9 +117,11 @@ export default function InventoryScreen({
           >
             <span>{tab.label}</span>
             {tab.count !== undefined && (tab.count > 0 || tab.alert) && (
-              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black select-none ${
-                tab.alert ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-100 text-gray-550'
-              }`}>
+              <span
+                className={`text-[9px] px-1.5 py-0.5 rounded-full font-black select-none ${
+                  tab.alert ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-100 text-gray-550'
+                }`}
+              >
                 {tab.count}
               </span>
             )}
@@ -138,11 +148,7 @@ export default function InventoryScreen({
       )}
 
       {activeSubTab === 'alerts' && (
-        <CriticalAlerts
-          products={products}
-          onUpdateProduct={onUpdateProduct}
-          onGrantXp={onGrantXp}
-        />
+        <CriticalAlerts products={products} onUpdateProduct={onUpdateProduct} onGrantXp={onGrantXp} />
       )}
 
       {activeSubTab === 'suppliers' && (
@@ -181,7 +187,6 @@ export default function InventoryScreen({
           setPaySupId={setPaySupId}
         />
       )}
-
     </div>
   );
 }

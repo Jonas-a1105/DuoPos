@@ -38,7 +38,9 @@ export default function ServiceControlDeck({
             💼
           </span>
           <div className="text-left">
-            <h3 className="font-black text-gray-800 text-sm uppercase leading-none">Módulo de Servicios y Consultorías</h3>
+            <h3 className="font-black text-gray-800 text-sm uppercase leading-none">
+              Módulo de Servicios y Consultorías
+            </h3>
             <p className="text-[10px] text-emerald-600 font-bold uppercase mt-1 tracking-wider">
               Facturación Ágiles al Vuelo
             </p>
@@ -54,10 +56,12 @@ export default function ServiceControlDeck({
         <span className="text-[9px] uppercase font-black text-emerald-800 block">
           🛠️ Registrar Servicio Ad-Hoc e Inyectar en Carrito:
         </span>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div>
-            <label className="text-[8px] uppercase font-black text-gray-500 block mb-1 font-bold text-left">Concepto de Servicio</label>
+            <label className="text-[8px] uppercase font-black text-gray-500 block mb-1 font-bold text-left">
+              Concepto de Servicio
+            </label>
             <input
               type="text"
               placeholder="Ej. Consultoría TI Personalizada"
@@ -67,7 +71,9 @@ export default function ServiceControlDeck({
             />
           </div>
           <div>
-            <label className="text-[8px] uppercase font-black text-gray-500 block mb-1 font-bold text-left">Precio del Servicio ($)</label>
+            <label className="text-[8px] uppercase font-black text-gray-500 block mb-1 font-bold text-left">
+              Precio del Servicio ($)
+            </label>
             <input
               type="number"
               min="1"
@@ -99,15 +105,15 @@ export default function ServiceControlDeck({
               branchesStock: {
                 'branch-centro': 9999,
                 'branch-central': 9999,
-                'branch-norte': 9999
-              }
+                'branch-norte': 9999,
+              },
             };
-            
+
             // Add directly to cart
-            setCart(curr => {
-              const itemInCart = curr.find(it => it.product.name === svcName);
+            setCart((curr) => {
+              const itemInCart = curr.find((it) => it.product.name === svcName);
               if (itemInCart) {
-                return curr.map(it => it.product.name === svcName ? { ...it, quantity: it.quantity + 1 } : it);
+                return curr.map((it) => (it.product.name === svcName ? { ...it, quantity: it.quantity + 1 } : it));
               }
               return [...curr, { product: newSvcProduct, quantity: 1 }];
             });

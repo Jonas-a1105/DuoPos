@@ -37,15 +37,19 @@ export default function AppSettings({
   customTicketFooter,
   setCustomTicketFooter,
   kdsDelayMinutes,
-  setKdsDelayMinutes
+  setKdsDelayMinutes,
 }: AppSettingsProps) {
   return (
     <div className="space-y-6 animate-fadeIn text-left">
       <div className="border-b pb-3 flex items-center gap-2">
         <span className="text-2xl select-none">🛠️</span>
         <div>
-          <h3 className="text-sm font-black uppercase text-gray-800 tracking-tight font-sans">Perfil de Especialización y Preferencias App</h3>
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Personaliza el comportamiento del punto de venta</p>
+          <h3 className="text-sm font-black uppercase text-gray-800 tracking-tight font-sans">
+            Perfil de Especialización y Preferencias App
+          </h3>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">
+            Personaliza el comportamiento del punto de venta
+          </p>
         </div>
       </div>
 
@@ -54,12 +58,15 @@ export default function AppSettings({
         <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">
           Perfil del Negocio (Especialización Vertical)
         </label>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Gastronomy */}
           <button
             type="button"
-            onClick={() => { setBusinessProfile('gastronomy'); playSound('click'); }}
+            onClick={() => {
+              setBusinessProfile('gastronomy');
+              playSound('click');
+            }}
             className={`p-4 rounded-2xl border-2 text-left flex flex-col justify-between transition-all relative cursor-pointer ${
               businessProfile === 'gastronomy'
                 ? 'border-[#1cb0f6] bg-blue-50/50 text-[#155375]'
@@ -85,7 +92,10 @@ export default function AppSettings({
           {/* Abastos / Minimarket */}
           <button
             type="button"
-            onClick={() => { setBusinessProfile('market'); playSound('click'); }}
+            onClick={() => {
+              setBusinessProfile('market');
+              playSound('click');
+            }}
             className={`p-4 rounded-2xl border-2 text-left flex flex-col justify-between transition-all relative cursor-pointer ${
               businessProfile === 'market'
                 ? 'border-indigo-500 bg-indigo-50/20 text-indigo-950'
@@ -111,7 +121,10 @@ export default function AppSettings({
           {/* Comercio / Retail */}
           <button
             type="button"
-            onClick={() => { setBusinessProfile('retail'); playSound('click'); }}
+            onClick={() => {
+              setBusinessProfile('retail');
+              playSound('click');
+            }}
             className={`p-4 rounded-2xl border-2 text-left flex flex-col justify-between transition-all relative cursor-pointer ${
               businessProfile === 'retail'
                 ? 'border-[#ff9600] bg-orange-50/20 text-[#713f12]'
@@ -137,7 +150,10 @@ export default function AppSettings({
           {/* Servicios Especializados */}
           <button
             type="button"
-            onClick={() => { setBusinessProfile('general'); playSound('click'); }}
+            onClick={() => {
+              setBusinessProfile('general');
+              playSound('click');
+            }}
             className={`p-4 rounded-2xl border-2 text-left flex flex-col justify-between transition-all relative cursor-pointer ${
               businessProfile === 'general'
                 ? 'border-emerald-500 bg-emerald-50/20 text-emerald-950'
@@ -164,7 +180,6 @@ export default function AppSettings({
 
       {/* App Preferences general parameters */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-sans text-gray-700">
-        
         {/* Currency Symbol selection */}
         <div className="space-y-1">
           <label className="text-[10px] uppercase font-black text-gray-400 tracking-wider block">
@@ -196,7 +211,10 @@ export default function AppSettings({
               <button
                 key={dec}
                 type="button"
-                onClick={() => { setCurrencyDecimals(dec); playSound('click'); }}
+                onClick={() => {
+                  setCurrencyDecimals(dec);
+                  playSound('click');
+                }}
                 className={`flex-1 py-2 font-mono text-xs font-black rounded-xl border-2 transition-all cursor-pointer ${
                   currencyDecimals === dec
                     ? 'border-[#58cc02] bg-green-50 text-emerald-800 animate-fadeIn'
@@ -219,7 +237,10 @@ export default function AppSettings({
               <button
                 key={width}
                 type="button"
-                onClick={() => { setTicketWidth(width as any); playSound('click'); }}
+                onClick={() => {
+                  setTicketWidth(width as any);
+                  playSound('click');
+                }}
                 className={`flex-1 py-1.5 font-bold text-xs rounded-xl border-2 transition-all cursor-pointer ${
                   ticketWidth === width
                     ? 'border-indigo-500 bg-indigo-50 text-indigo-900'
@@ -241,10 +262,15 @@ export default function AppSettings({
             <input
               type="checkbox"
               checked={enableSounds}
-              onChange={(e) => { setEnableSounds(e.target.checked); playSound('success'); }}
+              onChange={(e) => {
+                setEnableSounds(e.target.checked);
+                playSound('success');
+              }}
               className="rounded text-[#58cc02] focus:ring-[#58cc02] h-4 w-4 border-gray-300 cursor-pointer"
             />
-            <span className="text-[10px] font-black text-slate-700 uppercase select-none">Habilitar Efectos Sonoros</span>
+            <span className="text-[10px] font-black text-slate-700 uppercase select-none">
+              Habilitar Efectos Sonoros
+            </span>
           </label>
         </div>
 
@@ -255,7 +281,8 @@ export default function AppSettings({
           </label>
           <div className="flex items-center gap-3 bg-[#fafafa] border p-3 rounded-2xl">
             <div className="font-bold text-xs text-gray-500 max-w-sm">
-              Indica cuántos minutos puede tardar una comanda en preparación antes de marcarse en rojo parpadeante en el KDS.
+              Indica cuántos minutos puede tardar una comanda en preparación antes de marcarse en rojo parpadeante en el
+              KDS.
             </div>
             <div className="relative shrink-0 w-32">
               <input
@@ -266,7 +293,9 @@ export default function AppSettings({
                 onChange={(e) => setKdsDelayMinutes(Number(e.target.value))}
                 className="w-full px-3 py-1.5 bg-white border-2 border-gray-250 text-xs font-black rounded-lg outline-none font-mono text-center text-gray-800"
               />
-              <span className="absolute right-2.5 top-1.5 text-[9px] text-gray-400 font-extrabold pb-0.5 select-none">MINS</span>
+              <span className="absolute right-2.5 top-1.5 text-[9px] text-gray-400 font-extrabold pb-0.5 select-none">
+                MINS
+              </span>
             </div>
           </div>
         </div>
@@ -297,7 +326,6 @@ export default function AppSettings({
             placeholder="Ej: Recuerda registrar tu racha y ganar gemas en nuestra app"
           />
         </div>
-
       </div>
     </div>
   );

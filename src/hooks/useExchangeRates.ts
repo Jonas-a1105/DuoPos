@@ -11,7 +11,7 @@ interface ExchangeRates {
   paralelo: number;
 }
 
-const FALLBACK_RATES: ExchangeRates = { oficial: 53.05, paralelo: 57.10 };
+const FALLBACK_RATES: ExchangeRates = { oficial: 53.05, paralelo: 57.1 };
 
 async function fetchExchangeRates(): Promise<ExchangeRates> {
   const data = await ky

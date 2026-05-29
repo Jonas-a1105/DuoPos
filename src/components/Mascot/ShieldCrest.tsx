@@ -14,13 +14,7 @@ interface ShieldCrestProps {
   className?: string;
 }
 
-const ShieldCrest: React.FC<ShieldCrestProps> = ({
-  level = 1,
-  rank,
-  size = 80,
-  animate = true,
-  className = ''
-}) => {
+const ShieldCrest: React.FC<ShieldCrestProps> = ({ level = 1, rank, size = 80, animate = true, className = '' }) => {
   // Determinar rango automáticamente si no se provee de forma explícita
   let computedRank: ShieldRank = 'bronze';
   if (rank) {
@@ -48,7 +42,7 @@ const ShieldCrest: React.FC<ShieldCrestProps> = ({
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        overflow: 'visible'
+        overflow: 'visible',
       }}
     >
       <svg
@@ -105,8 +99,25 @@ const ShieldCrest: React.FC<ShieldCrestProps> = ({
         {/* ─── ANILLOS ORBITALES (Rango Master Pro únicamente) ─── */}
         {computedRank === 'master' && (
           <g className="shield-rotate-ring" opacity="0.8">
-            <circle cx="60" cy="70" r="54" fill="none" stroke="url(#neonCyanPurpleGrad)" strokeWidth="1.5" strokeDasharray="10, 8, 4, 8" />
-            <circle cx="60" cy="70" r="57" fill="none" stroke="#10b981" strokeWidth="0.8" strokeDasharray="30, 20" opacity="0.5" />
+            <circle
+              cx="60"
+              cy="70"
+              r="54"
+              fill="none"
+              stroke="url(#neonCyanPurpleGrad)"
+              strokeWidth="1.5"
+              strokeDasharray="10, 8, 4, 8"
+            />
+            <circle
+              cx="60"
+              cy="70"
+              r="57"
+              fill="none"
+              stroke="#10b981"
+              strokeWidth="0.8"
+              strokeDasharray="30, 20"
+              opacity="0.5"
+            />
             {/* Pequeñas esferas flotantes en el anillo */}
             <circle cx="114" cy="70" r="3" fill="#10b981" />
             <circle cx="6" cy="70" r="3" fill="#8b5cf6" />
@@ -148,7 +159,13 @@ const ShieldCrest: React.FC<ShieldCrestProps> = ({
         {/* ─── CORONA DEL ESCUDO (Rango Master Pro) ─── */}
         {computedRank === 'master' && (
           <g transform="translate(42, -5)">
-            <path d="M4 14 L8 2 L18 10 L28 2 L32 14 Z" fill="#fbbf24" stroke="#d97706" strokeWidth="1.2" strokeLinejoin="round" />
+            <path
+              d="M4 14 L8 2 L18 10 L28 2 L32 14 Z"
+              fill="#fbbf24"
+              stroke="#d97706"
+              strokeWidth="1.2"
+              strokeLinejoin="round"
+            />
             <rect x="3" y="13" width="30" height="3" rx="1" fill="#f59e0b" stroke="#d97706" strokeWidth="0.8" />
             <circle cx="8" cy="2" r="1.5" fill="#ef4444" />
             <circle cx="18" cy="10" r="1.2" fill="#3b82f6" />
@@ -167,19 +184,19 @@ const ShieldCrest: React.FC<ShieldCrestProps> = ({
             computedRank === 'bronze'
               ? 'url(#bronzeShieldGrad)'
               : computedRank === 'silver'
-              ? 'url(#silverShieldGrad)'
-              : computedRank === 'gold'
-              ? 'url(#goldShieldGrad)'
-              : 'url(#masterShieldGrad)'
+                ? 'url(#silverShieldGrad)'
+                : computedRank === 'gold'
+                  ? 'url(#goldShieldGrad)'
+                  : 'url(#masterShieldGrad)'
           }
           stroke={
             computedRank === 'bronze'
               ? '#8b4513'
               : computedRank === 'silver'
-              ? '#475569'
-              : computedRank === 'gold'
-              ? '#d97706'
-              : '#047857'
+                ? '#475569'
+                : computedRank === 'gold'
+                  ? '#d97706'
+                  : '#047857'
           }
           strokeWidth="3.5"
           strokeLinejoin="round"
@@ -193,10 +210,10 @@ const ShieldCrest: React.FC<ShieldCrestProps> = ({
             computedRank === 'bronze'
               ? '#ffd8a8'
               : computedRank === 'silver'
-              ? '#f8fafc'
-              : computedRank === 'gold'
-              ? '#fef08a'
-              : '#a7f3d0'
+                ? '#f8fafc'
+                : computedRank === 'gold'
+                  ? '#fef08a'
+                  : '#a7f3d0'
           }
           strokeWidth="1.2"
           opacity="0.65"
@@ -212,7 +229,14 @@ const ShieldCrest: React.FC<ShieldCrestProps> = ({
             <circle cx="92" cy="48" r="3" fill="#ef4444" stroke="#7f1d1d" strokeWidth="0.8" />
             <circle cx="91" cy="47" r="0.8" fill="white" opacity="0.6" />
             {/* Gema central inferior */}
-            <circle cx="60" cy="108" r="3" fill={computedRank === 'gold' ? '#3b82f6' : '#8b5cf6'} stroke="#1d4ed8" strokeWidth="0.8" />
+            <circle
+              cx="60"
+              cy="108"
+              r="3"
+              fill={computedRank === 'gold' ? '#3b82f6' : '#8b5cf6'}
+              stroke="#1d4ed8"
+              strokeWidth="0.8"
+            />
           </g>
         )}
 
@@ -228,7 +252,17 @@ const ShieldCrest: React.FC<ShieldCrestProps> = ({
           <polygon points="78,38 74,34 70,38" fill="#ef4444" />
 
           {/* Monograma de Texto del Nivel en la base */}
-          <text x="60" y="101" textAnchor="middle" fontSize="10" fontWeight="900" fill="white" stroke="#000" strokeWidth="0.5" letterSpacing="0.5">
+          <text
+            x="60"
+            y="101"
+            textAnchor="middle"
+            fontSize="10"
+            fontWeight="900"
+            fill="white"
+            stroke="#000"
+            strokeWidth="0.5"
+            letterSpacing="0.5"
+          >
             Lvl {level}
           </text>
         </g>

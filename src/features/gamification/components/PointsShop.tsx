@@ -25,7 +25,9 @@ interface PointsShopProps {
 }
 
 export default function PointsShop({ user, onUpdateUser, licenseDetails }: PointsShopProps) {
-  const [activeStoreCategory, setActiveStoreCategory] = useState<'all' | 'skin' | 'accessory' | 'title' | 'powerup'>('all');
+  const [activeStoreCategory, setActiveStoreCategory] = useState<'all' | 'skin' | 'accessory' | 'title' | 'powerup'>(
+    'all',
+  );
 
   const currentGems = user.gems ?? 0;
   const unlockedSkinsList = user.unlockedSkins || [];
@@ -42,7 +44,7 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
       rarity: 'comun',
       accentClass: 'from-green-400 to-[#58cc02]',
       value: 'standard',
-      levelRequired: 1
+      levelRequired: 1,
     },
     {
       id: 'skin-galaxy',
@@ -54,7 +56,7 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
       rarity: 'raro',
       accentClass: 'from-violet-600 to-indigo-900',
       value: 'dark-galaxy',
-      levelRequired: 1
+      levelRequired: 1,
     },
     {
       id: 'skin-cyberpunk',
@@ -66,7 +68,7 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
       rarity: 'epico',
       accentClass: 'from-pink-500 to-cyan-500',
       value: 'neon-cyberpunk',
-      levelRequired: 1
+      levelRequired: 1,
     },
     {
       id: 'skin-emerald',
@@ -78,7 +80,7 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
       rarity: 'legendario',
       accentClass: 'from-[#0d5c3a] to-yellow-600',
       value: 'emerald-palace',
-      levelRequired: 1
+      levelRequired: 1,
     },
     {
       id: 'skin-bubblegum',
@@ -90,7 +92,7 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
       rarity: 'raro',
       accentClass: 'from-pink-300 to-[#ff4b93]',
       value: 'bubblegum-cute',
-      levelRequired: 1
+      levelRequired: 1,
     },
     {
       id: 'skin-retro',
@@ -102,7 +104,7 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
       rarity: 'raro',
       accentClass: 'from-amber-600 to-stone-850',
       value: 'retro-8bit',
-      levelRequired: 5
+      levelRequired: 5,
     },
     {
       id: 'skin-gold',
@@ -114,7 +116,7 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
       rarity: 'legendario',
       accentClass: 'from-yellow-500 to-yellow-600',
       value: 'executive-gold',
-      levelRequired: 8
+      levelRequired: 8,
     },
     {
       id: 'skin-ocean',
@@ -126,7 +128,7 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
       rarity: 'comun',
       accentClass: 'from-cyan-600 to-sky-900',
       value: 'deep-ocean',
-      levelRequired: 3
+      levelRequired: 3,
     },
     // Accessories for the Mascot
     {
@@ -138,7 +140,7 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
       icon: '🎩',
       rarity: 'comun',
       accentClass: 'from-stone-600 to-slate-800',
-      levelRequired: 1
+      levelRequired: 1,
     },
     {
       id: 'accessory-glasses',
@@ -149,7 +151,7 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
       icon: '😎',
       rarity: 'comun',
       accentClass: 'from-yellow-400 to-amber-500',
-      levelRequired: 1
+      levelRequired: 1,
     },
     {
       id: 'accessory-corona',
@@ -160,7 +162,7 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
       icon: '👑',
       rarity: 'epico',
       accentClass: 'from-yellow-350 to-amber-500',
-      levelRequired: 4
+      levelRequired: 4,
     },
     {
       id: 'accessory-traje',
@@ -171,7 +173,7 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
       icon: '🕴️',
       rarity: 'raro',
       accentClass: 'from-gray-700 to-zinc-900',
-      levelRequired: 2
+      levelRequired: 2,
     },
     {
       id: 'accessory-capa',
@@ -182,7 +184,7 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
       icon: '🦸',
       rarity: 'legendario',
       accentClass: 'from-red-500 to-blue-600',
-      levelRequired: 5
+      levelRequired: 5,
     },
     // Powerups / Buffers
     {
@@ -194,7 +196,7 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
       icon: '🧊',
       rarity: 'comun',
       accentClass: 'from-sky-300 to-[#1cb0f6]',
-      levelRequired: 1
+      levelRequired: 1,
     },
     {
       id: 'power-xpboost',
@@ -205,20 +207,24 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
       icon: '🧪',
       rarity: 'raro',
       accentClass: 'from-[#ff4b93] to-purple-600',
-      levelRequired: 1
-    }
+      levelRequired: 1,
+    },
   ];
 
   const handleBuyItem = (item: StoreItem) => {
     if (item.levelRequired && user.level < item.levelRequired) {
       playSound('error');
-      toast.error(`Necesitas ser nivel ${item.levelRequired} para canjear este artículo. Nivel actual: ${user.level}`, { title: 'Nivel Insuficiente 🔒' });
+      toast.error(`Necesitas ser nivel ${item.levelRequired} para canjear este artículo. Nivel actual: ${user.level}`, {
+        title: 'Nivel Insuficiente 🔒',
+      });
       return;
     }
 
     if (currentGems < item.cost) {
       playSound('error');
-      toast.error(`Gemas insuficientes. Necesitas ${item.cost} Gemas (Tienes ${currentGems})`, { title: 'Tienda Bloqueada 🔒' });
+      toast.error(`Gemas insuficientes. Necesitas ${item.cost} Gemas (Tienes ${currentGems})`, {
+        title: 'Tienda Bloqueada 🔒',
+      });
       return;
     }
 
@@ -227,13 +233,23 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
       if (item.id === 'skin-cyberpunk' || item.id === 'skin-emerald' || item.id === 'skin-gold') {
         if (licenseDetails.tier !== 'pro') {
           playSound('error');
-          toast.error(`La Skin "${item.title}" requiere el Plan Pro. Actualiza tu plan en Ajustes > Planes.`, { title: 'Plan Pro Requerido 🔒' });
+          toast.error(`La Skin "${item.title}" requiere el Plan Pro. Actualiza tu plan en Ajustes > Planes.`, {
+            title: 'Plan Pro Requerido 🔒',
+          });
           return;
         }
-      } else if (item.id === 'skin-galaxy' || item.id === 'skin-bubblegum' || item.id === 'skin-retro' || item.id === 'skin-ocean') {
+      } else if (
+        item.id === 'skin-galaxy' ||
+        item.id === 'skin-bubblegum' ||
+        item.id === 'skin-retro' ||
+        item.id === 'skin-ocean'
+      ) {
         if (licenseDetails.tier === 'free') {
           playSound('error');
-          toast.error(`La Skin "${item.title}" requiere el Plan Standard o Pro. Actualiza tu plan en Ajustes > Planes.`, { title: 'Plan Standard o Pro Requerido 🔒' });
+          toast.error(
+            `La Skin "${item.title}" requiere el Plan Standard o Pro. Actualiza tu plan en Ajustes > Planes.`,
+            { title: 'Plan Standard o Pro Requerido 🔒' },
+          );
           return;
         }
       }
@@ -248,36 +264,40 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
       nextUser = {
         ...nextUser,
         unlockedSkins: nextUnlockedSkins,
-        activeSkin: item.value
+        activeSkin: item.value,
       };
-      toast.success(`Se ha comprado la Skin layout "${item.title}". ¡Equipada automáticamente!`, { title: 'Tienda DuoPOS 🛍️' });
-    } 
-    else if (item.category === 'accessory') {
+      toast.success(`Se ha comprado la Skin layout "${item.title}". ¡Equipada automáticamente!`, {
+        title: 'Tienda DuoPOS 🛍️',
+      });
+    } else if (item.category === 'accessory') {
       const nextUnlockedAccessories = [...(user.unlockedAccessories || []), item.id];
       nextUser = {
         ...nextUser,
         unlockedAccessories: nextUnlockedAccessories,
-        activeAccessory: item.id
+        activeAccessory: item.id,
       };
-      toast.success(`Se ha comprado el accesorio "${item.title}". ¡Equipado automáticamente! 🦉✨`, { title: 'Tienda DuoPOS 🛍️' });
-    }
-    else if (item.category === 'title' && item.value) {
+      toast.success(`Se ha comprado el accesorio "${item.title}". ¡Equipado automáticamente! 🦉✨`, {
+        title: 'Tienda DuoPOS 🛍️',
+      });
+    } else if (item.category === 'title' && item.value) {
       nextUser = {
         ...nextUser,
-        levelTitle: item.value
+        levelTitle: item.value,
       };
       toast.success(`Establecido nuevo Rango Titular: "${item.title}" ✨`, { title: 'Rango Actualizado ✨' });
-    }
-    else if (item.id === 'power-streak') {
+    } else if (item.id === 'power-streak') {
       const nextSavedCount = (user.dailyStreakSavedCount ?? 0) + 1;
       nextUser = {
         ...nextUser,
-        dailyStreakSavedCount: nextSavedCount
+        dailyStreakSavedCount: nextSavedCount,
       };
-      toast.success('¡Has comprado 1 Congelador de Racha ❄️! Te protegerá automáticamente.', { title: 'Escudo Activado 🧊' });
-    }
-    else if (item.id === 'power-xpboost') {
-      toast.success('Poción de Doble XP comprada. ¡Tus siguientes 3 ventas otorgarán el doble de puntos!', { title: 'Booster de Fila 🧪' });
+      toast.success('¡Has comprado 1 Congelador de Racha ❄️! Te protegerá automáticamente.', {
+        title: 'Escudo Activado 🧊',
+      });
+    } else if (item.id === 'power-xpboost') {
+      toast.success('Poción de Doble XP comprada. ¡Tus siguientes 3 ventas otorgarán el doble de puntos!', {
+        title: 'Booster de Fila 🧪',
+      });
       localStorage.setItem('duo_pos_xp_booster_charges', '3');
     }
 
@@ -289,7 +309,7 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
     playSound('click');
     const nextUser: User = {
       ...user,
-      activeSkin: item.value
+      activeSkin: item.value,
     };
     onUpdateUser(nextUser);
     toast.info(`Tema cambiado a: "${item.title}"`, { title: 'Personalización Visual 🔄' });
@@ -300,18 +320,40 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
     const isCurrentlyEquipped = user.activeAccessory === item.id;
     const nextUser: User = {
       ...user,
-      activeAccessory: isCurrentlyEquipped ? '' : item.id
+      activeAccessory: isCurrentlyEquipped ? '' : item.id,
     };
     onUpdateUser(nextUser);
-    toast.info(isCurrentlyEquipped ? `Accesorio desequipado 🦉` : `Accesorio equipado: "${item.title}" 🦉✨`, { title: 'Personalización Visual 🔄' });
+    toast.info(isCurrentlyEquipped ? `Accesorio desequipado 🦉` : `Accesorio equipado: "${item.title}" 🦉✨`, {
+      title: 'Personalización Visual 🔄',
+    });
   };
 
   const getRarityBadge = (rarity: StoreItem['rarity']) => {
     switch (rarity) {
-      case 'comun': return <span className="text-[8px] bg-gray-100 text-gray-700 px-1.5 py-0.5 border border-gray-200 rounded font-black uppercase">Común</span>;
-      case 'raro': return <span className="text-[8px] bg-purple-100 text-purple-700 px-1.5 py-0.5 border border-purple-200 rounded font-black uppercase">Raro</span>;
-      case 'epico': return <span className="text-[8px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 border border-indigo-200 rounded font-black uppercase">Épico</span>;
-      case 'legendario': return <span className="text-[8px] bg-yellow-100 text-amber-800 px-1.5 py-0.5 border border-amber-300 rounded font-black uppercase animate-pulse">Legendario</span>;
+      case 'comun':
+        return (
+          <span className="text-[8px] bg-gray-100 text-gray-700 px-1.5 py-0.5 border border-gray-200 rounded font-black uppercase">
+            Común
+          </span>
+        );
+      case 'raro':
+        return (
+          <span className="text-[8px] bg-purple-100 text-purple-700 px-1.5 py-0.5 border border-purple-200 rounded font-black uppercase">
+            Raro
+          </span>
+        );
+      case 'epico':
+        return (
+          <span className="text-[8px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 border border-indigo-200 rounded font-black uppercase">
+            Épico
+          </span>
+        );
+      case 'legendario':
+        return (
+          <span className="text-[8px] bg-yellow-100 text-amber-800 px-1.5 py-0.5 border border-amber-300 rounded font-black uppercase animate-pulse">
+            Legendario
+          </span>
+        );
     }
   };
 
@@ -319,10 +361,13 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
     <div className="space-y-6 text-left">
       <div className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-3xl p-5 text-white flex flex-col sm:flex-row items-center justify-between gap-5 border-b-[6px] border-amber-800 shadow-md">
         <div className="space-y-1 text-center sm:text-left">
-          <span className="bg-amber-800/55 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-wider">Tienda de Compras Oficial</span>
+          <span className="bg-amber-800/55 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
+            Tienda de Compras Oficial
+          </span>
           <h3 className="text-2xl font-black tracking-tight">Utiliza tus gemas de racha DuoPOS</h3>
           <p className="text-xs text-amber-100 font-semibold max-w-xl">
-            Al canjear estas recompensas, cambiará de inmediato la apariencia visual del sistema, desbloquearás flairs especiales visibles en tu perfil y activarás multiplicadores de experiencia en transacciones.
+            Al canjear estas recompensas, cambiará de inmediato la apariencia visual del sistema, desbloquearás flairs
+            especiales visibles en tu perfil y activarás multiplicadores de experiencia en transacciones.
           </p>
         </div>
 
@@ -339,12 +384,15 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
           { id: 'skin', label: 'Temas 🎨' },
           { id: 'accessory', label: 'Accesorios Duo 🦉' },
           { id: 'title', label: 'Títulos 📜' },
-          { id: 'powerup', label: 'Potenciadores ⚡' }
-        ].map(cat => (
+          { id: 'powerup', label: 'Potenciadores ⚡' },
+        ].map((cat) => (
           <button
             key={cat.id}
             type="button"
-            onClick={() => { playSound('click'); setActiveStoreCategory(cat.id as any); }}
+            onClick={() => {
+              playSound('click');
+              setActiveStoreCategory(cat.id as any);
+            }}
             className={`pb-2.5 px-2 text-xs font-black uppercase tracking-wider border-b-4 transition-all cursor-pointer shrink-0 ${
               activeStoreCategory === cat.id
                 ? 'border-[#58cc02] text-[#58cc02]'
@@ -359,12 +407,13 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
       {/* List items segmented by style panels */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {storeItems
-          .filter(item => activeStoreCategory === 'all' || item.category === activeStoreCategory)
+          .filter((item) => activeStoreCategory === 'all' || item.category === activeStoreCategory)
           .map((item) => {
             const isPurchasedSkin = item.category === 'skin' && unlockedSkinsList.includes(item.id);
             const isEquippedSkin = item.category === 'skin' && user.activeSkin === item.value;
             const isEquippedTitle = item.category === 'title' && user.levelTitle === item.value;
-            const isPurchasedAccessory = item.category === 'accessory' && (user.unlockedAccessories || []).includes(item.id);
+            const isPurchasedAccessory =
+              item.category === 'accessory' && (user.unlockedAccessories || []).includes(item.id);
             const isEquippedAccessory = item.category === 'accessory' && user.activeAccessory === item.id;
             const isStreakFreezeOwned = item.id === 'power-streak' && (user.dailyStreakSavedCount ?? 0) > 0;
 
@@ -380,7 +429,12 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
                   isPlanLocked = true;
                   planRequiredName = 'Plan Pro';
                 }
-              } else if (item.id === 'skin-galaxy' || item.id === 'skin-bubblegum' || item.id === 'skin-retro' || item.id === 'skin-ocean') {
+              } else if (
+                item.id === 'skin-galaxy' ||
+                item.id === 'skin-bubblegum' ||
+                item.id === 'skin-retro' ||
+                item.id === 'skin-ocean'
+              ) {
                 if (licenseDetails.tier === 'free') {
                   isPlanLocked = true;
                   planRequiredName = 'Standard o Pro';
@@ -389,7 +443,7 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
             }
 
             return (
-              <div 
+              <div
                 key={item.id}
                 className={`bg-white border-2 border-gray-250 border-b-6 rounded-3xl p-4 flex flex-col justify-between hover:border-gray-300 transition-all shadow-sm relative ${isLevelLocked ? 'opacity-80' : ''}`}
               >
@@ -400,13 +454,15 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
                 )}
 
                 <div className="space-y-3">
-                  <div className={`h-24 w-full rounded-2xl bg-gradient-to-tr ${item.accentClass} flex items-center justify-center text-4xl shadow-inner relative border border-white/20 overflow-hidden ${isLevelLocked ? 'grayscale opacity-75' : ''}`}>
+                  <div
+                    className={`h-24 w-full rounded-2xl bg-gradient-to-tr ${item.accentClass} flex items-center justify-center text-4xl shadow-inner relative border border-white/20 overflow-hidden ${isLevelLocked ? 'grayscale opacity-75' : ''}`}
+                  >
                     <div className="absolute inset-0 bg-black/5 opacity-10 pointer-events-none" />
-                    <span className="transform hover:scale-110 duration-200 transition-all select-none">{item.icon}</span>
-                    
-                    <div className="absolute top-2 left-2">
-                      {getRarityBadge(item.rarity)}
-                    </div>
+                    <span className="transform hover:scale-110 duration-200 transition-all select-none">
+                      {item.icon}
+                    </span>
+
+                    <div className="absolute top-2 left-2">{getRarityBadge(item.rarity)}</div>
 
                     {item.category === 'skin' && (
                       <span className="absolute bottom-2 right-2 bg-black/40 text-white font-black text-[7.5px] tracking-wider px-2 py-0.5 rounded uppercase">
@@ -496,7 +552,10 @@ export default function PointsShop({ user, onUpdateUser, licenseDetails }: Point
                       type="button"
                       onClick={() => {
                         playSound('error');
-                        toast.error(`La recompensa "${item.title}" requiere el plan ${planRequiredName}. Actualiza tu licencia en Ajustes > Planes.`, { title: 'Plan Requerido 🔒' });
+                        toast.error(
+                          `La recompensa "${item.title}" requiere el plan ${planRequiredName}. Actualiza tu licencia en Ajustes > Planes.`,
+                          { title: 'Plan Requerido 🔒' },
+                        );
                       }}
                       className="bg-gray-100 border border-gray-200 text-gray-400 font-black text-[9px] uppercase tracking-wider py-1.5 px-3 rounded-xl cursor-not-allowed flex items-center gap-1"
                     >

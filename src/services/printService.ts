@@ -62,7 +62,7 @@ export const DEFAULT_HARDWARE_SETTINGS: HardwareDeviceSettings = {
     baudRate: 9600,
     unit: 'kg',
     stabilizationDelayMs: 400,
-    mockWeightOverride: 0.350,
+    mockWeightOverride: 0.35,
     autoTare: false,
   },
   thermalPrinter: {
@@ -93,29 +93,29 @@ export function generateScaleProtocolBytes(
   weight: number,
   unit: 'kg' | 'lb',
   model: 'torrey' | 'bizerba' | 'cas' | 'mettler',
-  isStable: boolean = true
+  isStable: boolean = true,
 ): string {
   const formattedWeight = weight.toFixed(3); // e.g. "0.350"
-  
+
   switch (model) {
     case 'torrey':
       // Torrey Protocol: "0.350 kg ST\r" or "0.350  kg  ST\r"
       return `${formattedWeight} ${unit} ${isStable ? 'ST' : 'US'}\r`;
-    
+
     case 'bizerba':
       // Bizerba Protocol: "\x02001A0.350\x03\r\n"
       return `0201${formattedWeight}${unit === 'kg' ? 'K' : 'L'}\r\n`;
-      
+
     case 'cas':
       // CAS Protocol: "ST,GS,  0.350,kg\r\n" or "US,GS,  0.350,kg\r\n"
       const paddedCAS = formattedWeight.padStart(7, ' ');
       return `${isStable ? 'ST' : 'US'},GS,${paddedCAS},${unit}\r\n`;
-      
+
     case 'mettler':
       // Mettler Toledo SICS Protocol: "S S      0.350 kg\r\n"
       const paddedMettler = formattedWeight.padStart(9, ' ');
       return `S S ${paddedMettler} ${unit}\r\n`;
-      
+
     default:
       return `${formattedWeight}\r`;
   }
@@ -149,7 +149,7 @@ export function generateRawEscPos(
       signatureBase64?: string;
     };
   },
-  settings: HardwareDeviceSettings['thermalPrinter']
+  settings: HardwareDeviceSettings['thermalPrinter'],
 ): string {
   const isWidth80 = settings.paperWidth === '80mm';
   const widthChars = isWidth80 ? 42 : 32;
@@ -161,10 +161,10 @@ export function generateRawEscPos(
   const center = `${esc}a\x01`; // Align center
   const left = `${esc}a\x00`; // Align left
   const right = `${esc}a\x02`; // Align right
-  
+
   const boldOn = `${esc}E\x01`;
   const boldOff = `${esc}E\x00`;
-  
+
   const sizeLarge = `${esc}!\x18`; // Double width & height
   const sizeNormal = `${esc}!\x00`; // Normal
 
@@ -174,14 +174,14 @@ export function generateRawEscPos(
 
   let out = '';
   out += init;
-  
+
   // Header
   out += center + boldOn + sizeLarge + `${receiptData.companyName.toUpperCase()}\n` + sizeNormal + boldOff;
   out += `RFC: ${receiptData.taxId}\n`;
   out += `CP: 06700 | Sucursal Principal\n`;
   out += `${receiptData.date}\n`;
   out += divider + '\n';
-  
+
   // If fiscal invoice details exist
   if (receiptData.invoiceNo) {
     out += center + boldOn + `COMPROBANTE FISCAL DIGITAL (CFDI 4.0)\n` + boldOff + left;
@@ -221,11 +221,11 @@ export function generateRawEscPos(
   out += divider + '\n';
 
   // Items
-  receiptData.items.forEach(it => {
+  receiptData.items.forEach((it) => {
     const qtyStr = it.qty.toFixed(2);
     const priceStr = `$${it.price.toFixed(2)}`;
     const lineTotalStr = `$${it.total.toFixed(2)}`;
-    
+
     if (isWidth80) {
       // 42 character spacing:
       // desc (18) + qty (6) + unit (8) + total (10)

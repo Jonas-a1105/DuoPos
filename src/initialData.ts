@@ -9,91 +9,91 @@ export const DEFAULT_PRODUCTS: Product[] = [
   {
     id: 'prod-1',
     name: 'Café de la Racha (Espresso)',
-    price: 3.50,
-    cost: 1.20,
+    price: 3.5,
+    cost: 1.2,
     stock: 25,
     category: 'Bebidas',
     emoji: '☕',
     description: 'Conserva tu racha despierta y energética.',
-    barcode: '7501000100018'
+    barcode: '7501000100018',
   },
   {
     id: 'prod-2',
     name: 'Poción de Vida Extra',
-    price: 5.00,
-    cost: 1.50,
+    price: 5.0,
+    cost: 1.5,
     stock: 12,
     category: 'Consumibles',
     emoji: '🧪',
     description: 'Restaura un corazón perdido durante tus turnos de caja.',
-    barcode: '7501000100025'
+    barcode: '7501000100025',
   },
   {
     id: 'prod-3',
     name: 'Donas Góticas de Mika',
     price: 2.75,
-    cost: 0.80,
+    cost: 0.8,
     stock: 8,
     category: 'Postres',
     emoji: '🍩',
     description: 'Glaseado oscuro, fría por dentro. Mika asegura que no tienen veneno.',
-    barcode: '7501000100032'
+    barcode: '7501000100032',
   },
   {
     id: 'prod-4',
     name: 'Merchandising Peluche de Aero',
-    price: 25.00,
-    cost: 10.00,
+    price: 25.0,
+    cost: 10.0,
     stock: 4,
     category: 'Merch',
     emoji: '🐦',
     description: 'Te recordará que hagas tus misiones de almacén diariamente. Con ojos que te siguen.',
-    barcode: '7501000100049'
+    barcode: '7501000100049',
   },
   {
     id: 'prod-5',
     name: 'Manzana de la Sabiduría',
-    price: 1.50,
-    cost: 0.40,
+    price: 1.5,
+    cost: 0.4,
     stock: 50,
     category: 'Bebidas',
     emoji: '🍎',
     description: 'Fruta fresca de los huertos directos de StockMaster Pro.',
-    barcode: '7501000100056'
+    barcode: '7501000100056',
   },
   {
     id: 'prod-6',
     name: 'Zumo Entusiasta de Zoe',
-    price: 4.00,
-    cost: 1.50,
+    price: 4.0,
+    cost: 1.5,
     stock: 20,
     category: 'Bebidas',
     emoji: '🥤',
     description: 'Mezcla ultra vibrante de frutas tropicales con 300% de cafeína.',
-    barcode: '7501000100063'
+    barcode: '7501000100063',
   },
   {
     id: 'prod-7',
     name: 'Barra Energética de Kael',
-    price: 3.00,
-    cost: 1.00,
+    price: 3.0,
+    cost: 1.0,
     stock: 15,
     category: 'Consumibles',
     emoji: '🍫',
     description: 'Proteína pura para aguantar cinco horas seguidas cobrando sin pestañear.',
-    barcode: '7501000100070'
+    barcode: '7501000100070',
   },
   {
     id: 'prod-8',
     name: 'Gorra Oficial de StockMaster Pro',
-    price: 15.00,
-    cost: 6.00,
+    price: 15.0,
+    cost: 6.0,
     stock: 6,
     category: 'Merch',
     emoji: '🧢',
     description: 'Lúcela en tu tienda para un bonus del 15% de respeto vecinal.',
-    barcode: '7501000100087'
-  }
+    barcode: '7501000100087',
+  },
 ];
 
 export const CATEGORIES = ['Todos', 'Bebidas', 'Postres', 'Consumibles', 'Merch'];
@@ -102,7 +102,7 @@ export interface Character {
   id: string;
   name: string;
   avatar: string; // Emoji representing the layout character
-  color: string;  // Primary Hex color matching their theme
+  color: string; // Primary Hex color matching their theme
   bgColor: string; // Bg color class for UI
   borderColor: string; // Border color class for 3D buttons
   textColor: string;
@@ -126,7 +126,7 @@ export const DUO_CHARACTERS: Record<string, Character> = {
     loginQuote: '¡Hola! Ya es hora de abrir caja. Recuerda: ¡Cinco ventas hoy para encender el fuego del fénix! 👀',
     saleQuote: '¡Fantástica venta! Has ganado XP. Estoy muy orgulloso... por ahora.',
     failQuote: '¿Cerraste el carrito sin vender? Recuerda que el fénix resurge con acción constante.',
-    idleQuote: 'Haz tu racha diaria de contabilidad. ¡Es solo 5 minutos al día!'
+    idleQuote: 'Haz tu racha diaria de contabilidad. ¡Es solo 5 minutos al día!',
   },
   lily: {
     id: 'lily',
@@ -140,7 +140,7 @@ export const DUO_CHARACTERS: Record<string, Character> = {
     loginQuote: 'Buenas... Supongo que tenemos que vender cosas a humanos hoy. Qué remedio.',
     saleQuote: 'Alguien pagó dinero real por esto. Interesante... supongo.',
     failQuote: 'Qué mal. Menos mal que no tengo sentimientos para decepcionarme.',
-    idleQuote: 'Si me quedo quieta en la esquina, los clientes quizás no me vean.'
+    idleQuote: 'Si me quedo quieta en la esquina, los clientes quizás no me vean.',
   },
   zari: {
     id: 'zari',
@@ -154,7 +154,7 @@ export const DUO_CHARACTERS: Record<string, Character> = {
     loginQuote: '¡HOLA! ¡QUÉ EMOCIÓN! ¡Hoy vamos a superar todos los récords de ventas globales! 🎉',
     saleQuote: '¡OMG! ¡Increíble! ¡Eres una máquina de facturar! ¡Choca esos cinco! 💥',
     failQuote: '¡Oh no! No te preocupes, ¡la próxima venta será de un millón de dólares! ¡Sí se puede!',
-    idleQuote: '¿Deberíamos sugerirles que agreguen una dona? ¡Las donas son geniales! 😍'
+    idleQuote: '¿Deberíamos sugerirles que agreguen una dona? ¡Las donas son geniales! 😍',
   },
   eddy: {
     id: 'eddy',
@@ -168,7 +168,7 @@ export const DUO_CHARACTERS: Record<string, Character> = {
     loginQuote: '¡¡A calentar esos dedos!! Hoy nos toca levantar pesas de dinero. ¡Vamos equipo! 💪',
     saleQuote: '¡Qué ritmo! ¡Estás quemando calorías financieras a otro nivel! ¡Upa!',
     failQuote: 'Un tropiezo no es nada, sacúdete el polvo y haz diez lagartijas comerciales.',
-    idleQuote: '¿Sabías que mover cajas de refrescos trabaja increíble los hombros?'
+    idleQuote: '¿Sabías que mover cajas de refrescos trabaja increíble los hombros?',
   },
   junior: {
     id: 'junior',
@@ -182,8 +182,8 @@ export const DUO_CHARACTERS: Record<string, Character> = {
     loginQuote: '¡Hola! ¿Me dejas presionar el botón de cobrar? ¡Prometo no romper nada!',
     saleQuote: '¡Wooow! ¿Eso vale todo ese dinero? ¡Eres rico! ¿Me compras un peluche?',
     failQuote: '¡Oops! ¿El cliente se arrepintió? ¿Puedo jugar con la caja registradora ahora?',
-    idleQuote: 'Papá dice que si vendo diez manzanas podré tener mi propia sucursal.'
-  }
+    idleQuote: 'Papá dice que si vendo diez manzanas podré tener mi propia sucursal.',
+  },
 };
 
 export const DEFAULT_CUSTOMERS = [
@@ -194,16 +194,28 @@ export const DEFAULT_CUSTOMERS = [
     email: 'oscar.paints@duomail.com',
     gems: 150,
     purchasesCount: 16,
-    totalSpent: 125.50,
+    totalSpent: 125.5,
     registeredAt: '2026-01-10T14:30:00Z',
     league: 'Bronce' as const,
-    creditLimit: 300.00,
-    creditUsed: 54.50,
+    creditLimit: 300.0,
+    creditUsed: 54.5,
     creditHistory: [
-      { id: 'chhist-1', amount: 80.00, type: 'charge' as const, date: '2026-05-15T12:00:00Z', notes: 'Compra de Material Artístico en mostrador' },
-      { id: 'chhist-2', amount: 30.00, type: 'pay' as const, date: '2026-05-20T15:30:00Z', notes: 'Abono en efectivo realizado por Oscar' },
-      { id: 'chhist-3', amount: 4.50, type: 'charge' as const, date: '2026-05-22T08:15:00Z', notes: 'Café matutino' }
-    ]
+      {
+        id: 'chhist-1',
+        amount: 80.0,
+        type: 'charge' as const,
+        date: '2026-05-15T12:00:00Z',
+        notes: 'Compra de Material Artístico en mostrador',
+      },
+      {
+        id: 'chhist-2',
+        amount: 30.0,
+        type: 'pay' as const,
+        date: '2026-05-20T15:30:00Z',
+        notes: 'Abono en efectivo realizado por Oscar',
+      },
+      { id: 'chhist-3', amount: 4.5, type: 'charge' as const, date: '2026-05-22T08:15:00Z', notes: 'Café matutino' },
+    ],
   },
   {
     id: 'cust-2',
@@ -212,12 +224,12 @@ export const DEFAULT_CUSTOMERS = [
     email: 'zari.style@duomail.com',
     gems: 320,
     purchasesCount: 22,
-    totalSpent: 420.00,
+    totalSpent: 420.0,
     registeredAt: '2026-02-14T10:15:00Z',
     league: 'Oro' as const,
-    creditLimit: 800.00,
-    creditUsed: 0.00,
-    creditHistory: []
+    creditLimit: 800.0,
+    creditUsed: 0.0,
+    creditHistory: [],
   },
   {
     id: 'cust-3',
@@ -229,12 +241,24 @@ export const DEFAULT_CUSTOMERS = [
     totalSpent: 850.25,
     registeredAt: '2026-02-28T09:00:00Z',
     league: 'Zafiro' as const,
-    creditLimit: 1500.00,
-    creditUsed: 420.00,
+    creditLimit: 1500.0,
+    creditUsed: 420.0,
     creditHistory: [
-      { id: 'chhist-4', amount: 500.00, type: 'charge' as const, date: '2026-05-10T10:00:00Z', notes: 'Pedido mayor de harina de centeno' },
-      { id: 'chhist-5', amount: 80.00, type: 'pay' as const, date: '2026-05-18T11:45:00Z', notes: 'Abono transferencia directa' }
-    ]
+      {
+        id: 'chhist-4',
+        amount: 500.0,
+        type: 'charge' as const,
+        date: '2026-05-10T10:00:00Z',
+        notes: 'Pedido mayor de harina de centeno',
+      },
+      {
+        id: 'chhist-5',
+        amount: 80.0,
+        type: 'pay' as const,
+        date: '2026-05-18T11:45:00Z',
+        notes: 'Abono transferencia directa',
+      },
+    ],
   },
   {
     id: 'cust-4',
@@ -243,12 +267,12 @@ export const DEFAULT_CUSTOMERS = [
     email: 'lucy.classified@duomail.com',
     gems: 1200,
     purchasesCount: 88,
-    totalSpent: 5200.00,
+    totalSpent: 5200.0,
     registeredAt: '2026-03-01T17:45:00Z',
     league: 'Obsidiana' as const,
-    creditLimit: 5000.00,
-    creditUsed: 0.00,
-    creditHistory: []
+    creditLimit: 5000.0,
+    creditUsed: 0.0,
+    creditHistory: [],
   },
   {
     id: 'cust-5',
@@ -257,15 +281,21 @@ export const DEFAULT_CUSTOMERS = [
     email: 'falstaff.bear@duomail.com',
     gems: 45,
     purchasesCount: 3,
-    totalSpent: 45.00,
+    totalSpent: 45.0,
     registeredAt: '2026-04-12T12:00:00Z',
     league: 'Bronce' as const,
-    creditLimit: 250.00,
-    creditUsed: 195.00,
+    creditLimit: 250.0,
+    creditUsed: 195.0,
     creditHistory: [
-      { id: 'chhist-6', amount: 195.00, type: 'charge' as const, date: '2026-05-24T18:30:00Z', notes: 'Compra de Peluches Duo y gorras para sus sobrinos' }
-    ]
-  }
+      {
+        id: 'chhist-6',
+        amount: 195.0,
+        type: 'charge' as const,
+        date: '2026-05-24T18:30:00Z',
+        notes: 'Compra de Peluches Duo y gorras para sus sobrinos',
+      },
+    ],
+  },
 ];
 
 export const DEFAULT_BILLING_SETTINGS: LegalBillingSettings = {
@@ -278,7 +308,7 @@ export const DEFAULT_BILLING_SETTINGS: LegalBillingSettings = {
     { category: 'Cafetería', rate: 16 },
     { category: 'Accesorios', rate: 16 },
     { category: 'Electrónicos', rate: 16 },
-    { category: 'Servicios', rate: 16 }
+    { category: 'Servicios', rate: 16 },
   ],
   taxIncludedInPrice: true,
   companyName: 'StockMaster Pro Academia S.A. de C.V.',
@@ -289,5 +319,5 @@ export const DEFAULT_BILLING_SETTINGS: LegalBillingSettings = {
   invoicePrefix: 'FAC-SM-',
   nextInvoiceNumber: 1530,
   automaticMockInvoicing: false,
-  certifyingAuthority: 'Servicio de Administración Ficticia SAT'
+  certifyingAuthority: 'Servicio de Administración Ficticia SAT',
 };

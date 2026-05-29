@@ -38,9 +38,8 @@ export default function CEDISCenter({
   setStockTransfers,
   onGrantXp,
   suggestedRestocksList,
-  handleBulkDispatchSuggested
+  handleBulkDispatchSuggested,
 }: CEDISCenterProps) {
-  
   // Localized manual transfer states
   const [transferFrom, setTransferFrom] = useState(activeBranchId);
   const [transferTo, setTransferTo] = useState('');
@@ -84,8 +83,8 @@ export default function CEDISCenter({
 
     // Verify stock availability at origin branch
     for (const it of transferItems) {
-      const match = products.find(p => p.id === it.productId);
-      const originStock = match?.branchesStock?.[transferFrom] ?? (match?.stock ?? 0);
+      const match = products.find((p) => p.id === it.productId);
+      const originStock = match?.branchesStock?.[transferFrom] ?? match?.stock ?? 0;
       if (it.quantity <= 0) {
         setTransferError('Las cantidades de traslado deben ser mayores a cero.');
         return;
@@ -98,16 +97,16 @@ export default function CEDISCenter({
 
     setTransferError('');
 
-    const fromB = branches.find(b => b.id === transferFrom)!;
-    const toB = branches.find(b => b.id === transferTo)!;
+    const fromB = branches.find((b) => b.id === transferFrom)!;
+    const toB = branches.find((b) => b.id === transferTo)!;
 
-    const itemsList = transferItems.map(it => {
-      const match = products.find(p => p.id === it.productId)!;
+    const itemsList = transferItems.map((it) => {
+      const match = products.find((p) => p.id === it.productId)!;
       return {
         productId: it.productId,
         name: match.name,
         emoji: match.emoji || '📦',
-        quantity: it.quantity
+        quantity: it.quantity,
       };
     });
 
@@ -121,7 +120,7 @@ export default function CEDISCenter({
       status: 'pending',
       createdAt: new Date().toISOString(),
       notes: transferNotes.trim(),
-      carrier: 'Vehículo Repartidor DuoExpress 🚐'
+      carrier: 'Vehículo Repartidor DuoExpress 🚐',
     };
 
     const updated = [newTransfer, ...stockTransfers];
@@ -131,23 +130,23 @@ export default function CEDISCenter({
     // Reset items form
     setTransferItems([]);
     setTransferNotes('');
-    
+
     onGrantXp(30);
     playSound('success');
-    
+
     const displayId = `TR-${newTransfer.id.slice(0, 8).toUpperCase()}`;
     alert(`💡 Orden de Traspaso ${displayId} generada en borrador "Pendiente".`);
   };
 
   return (
     <div className="space-y-6 animate-fadeIn text-left font-sans">
-      
       <div className="bg-[#1cb0f6] border-2 border-[#1899d6] border-b-8 rounded-3xl p-5 md:p-6 text-white relative overflow-hidden text-left shadow-xs font-sans">
         <h3 className="text-xl font-black uppercase tracking-tight flex items-center gap-1.5">
           <span>🏢</span> Centro de Distribución CEDIS DuoPOS
         </h3>
         <p className="text-xs md:text-sm font-semibold text-blue-550 mt-1 max-w-xl">
-          Abastece la red de tiendas de la corporación. Compila de forma ágil traspasos sugeridos basados en alertas de bajo stock y despliégalos en un solo clic. ¡Gana <strong>+80 XP</strong>!
+          Abastece la red de tiendas de la corporación. Compila de forma ágil traspasos sugeridos basados en alertas de
+          bajo stock y despliégalos en un solo clic. ¡Gana <strong>+80 XP</strong>!
         </p>
       </div>
 
@@ -155,10 +154,15 @@ export default function CEDISCenter({
       {suggestedRestocksList.length > 0 ? (
         <div className="bg-red-50 border-2 border-red-200 rounded-3xl p-5 flex flex-col md:flex-row justify-between items-center gap-4 text-left font-sans">
           <div className="space-y-0.5">
-            <span className="text-[9px] bg-red-200 text-red-900 border border-red-300 font-black px-2 py-0.5 rounded uppercase font-sans">Crisis de Inventarios</span>
-            <h4 className="text-base font-black text-red-950">Se detectaron {suggestedRestocksList.length} alertas deficitarias en locales</h4>
+            <span className="text-[9px] bg-red-200 text-red-900 border border-red-300 font-black px-2 py-0.5 rounded uppercase font-sans">
+              Crisis de Inventarios
+            </span>
+            <h4 className="text-base font-black text-red-950">
+              Se detectaron {suggestedRestocksList.length} alertas deficitarias en locales
+            </h4>
             <p className="text-xs text-red-800 font-bold max-w-lg">
-              Varias sucursales tienen insumos críticos con stock inferior al mínimo. CEDIS tiene fondos suficientes para despachar un envío masivo de resurtido de inmediato.
+              Varias sucursales tienen insumos críticos con stock inferior al mínimo. CEDIS tiene fondos suficientes
+              para despachar un envío masivo de resurtido de inmediato.
             </p>
           </div>
 
@@ -181,41 +185,54 @@ export default function CEDISCenter({
           <ArrowLeftRight size={14} /> Calculadora de Despacho Corporativo (Traspaso Directo)
         </h4>
 
-        <form onSubmit={handleSubmitTransfer} className="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs font-bold font-sans">
+        <form
+          onSubmit={handleSubmitTransfer}
+          className="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs font-bold font-sans"
+        >
           <div className="space-y-4 md:col-span-1">
             <div className="space-y-1 text-left">
               <label className="text-gray-500 block uppercase">Sucursal Origen (Emisor)</label>
-              <select 
+              <select
                 value={transferFrom}
-                onChange={e => { setTransferFrom(e.target.value); playSound('click'); }}
+                onChange={(e) => {
+                  setTransferFrom(e.target.value);
+                  playSound('click');
+                }}
                 className="w-full px-3.5 py-2.5 bg-gray-50 border-2 rounded-xl outline-none"
               >
-                {branches.map(b => (
-                  <option key={b.id} value={b.id}>{b.emoji} {b.name} ({b.city})</option>
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.emoji} {b.name} ({b.city})
+                  </option>
                 ))}
               </select>
             </div>
 
             <div className="space-y-1 text-left">
               <label className="text-gray-500 block uppercase">Sucursal Destino (Receptor)</label>
-              <select 
+              <select
                 value={transferTo}
-                onChange={e => { setTransferTo(e.target.value); playSound('click'); }}
+                onChange={(e) => {
+                  setTransferTo(e.target.value);
+                  playSound('click');
+                }}
                 className="w-full px-3.5 py-2.5 bg-gray-50 border-2 rounded-xl outline-none"
               >
                 <option value="">-- Seleccionar Destino --</option>
-                {branches.map(b => (
-                  <option key={b.id} value={b.id}>{b.emoji} {b.name} ({b.city})</option>
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.emoji} {b.name} ({b.city})
+                  </option>
                 ))}
               </select>
             </div>
 
             <div className="space-y-1 text-left">
               <label className="text-gray-500 block uppercase">Notas de Despacho</label>
-              <textarea 
+              <textarea
                 placeholder="Escriba el motivo, transportista asignado o especificaciones..."
                 value={transferNotes}
-                onChange={e => setTransferNotes(e.target.value)}
+                onChange={(e) => setTransferNotes(e.target.value)}
                 rows={2}
                 className="w-full px-3.5 py-2.5 bg-gray-50 border-2 rounded-xl outline-none font-bold text-xs"
               />
@@ -238,7 +255,9 @@ export default function CEDISCenter({
           <div className="md:col-span-2 space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col justify-between text-left">
             <div className="space-y-2">
               <div className="flex justify-between items-center border-b pb-1">
-                <span className="text-xs uppercase font-black text-gray-400 leading-none">Insumos del Lote Directo</span>
+                <span className="text-xs uppercase font-black text-gray-400 leading-none">
+                  Insumos del Lote Directo
+                </span>
                 <button
                   type="button"
                   onClick={handleAddTransferItem}
@@ -256,29 +275,38 @@ export default function CEDISCenter({
               ) : (
                 <div className="space-y-2 max-h-[180px] overflow-y-auto">
                   {transferItems.map((item, idx) => {
-                    const productMatch = products.find(p => p.id === item.productId);
-                    const originStock = productMatch?.branchesStock?.[transferFrom] ?? (productMatch?.stock ?? 0);
+                    const productMatch = products.find((p) => p.id === item.productId);
+                    const originStock = productMatch?.branchesStock?.[transferFrom] ?? productMatch?.stock ?? 0;
 
                     return (
-                      <div key={idx} className="flex flex-wrap items-center gap-2 bg-white border border-gray-150 p-2 rounded-xl text-left first:mt-0 font-sans">
+                      <div
+                        key={idx}
+                        className="flex flex-wrap items-center gap-2 bg-white border border-gray-150 p-2 rounded-xl text-left first:mt-0 font-sans"
+                      >
                         <select
                           value={item.productId}
-                          onChange={e => handleUpdateTransferItem(idx, e.target.value, item.quantity)}
+                          onChange={(e) => handleUpdateTransferItem(idx, e.target.value, item.quantity)}
                           className="flex-1 min-w-[120px] bg-slate-50 border p-1.5 rounded-lg outline-none font-extrabold text-[11px]"
                         >
-                          {products.map(p => (
-                            <option key={p.id} value={p.id}>{p.emoji} {p.name}</option>
+                          {products.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.emoji} {p.name}
+                            </option>
                           ))}
                         </select>
 
                         <div className="flex items-center gap-1.5 font-sans">
-                          <span className="text-[10px] text-gray-400">Stock Orig: <strong className="text-gray-700 font-extrabold">{originStock}</strong></span>
+                          <span className="text-[10px] text-gray-400">
+                            Stock Orig: <strong className="text-gray-700 font-extrabold">{originStock}</strong>
+                          </span>
                           <input
                             type="number"
                             min={1}
                             max={999}
                             value={item.quantity}
-                            onChange={e => handleUpdateTransferItem(idx, item.productId, Math.max(1, parseInt(e.target.value) || 0))}
+                            onChange={(e) =>
+                              handleUpdateTransferItem(idx, item.productId, Math.max(1, parseInt(e.target.value) || 0))
+                            }
                             className="w-16 bg-slate-50 border text-center p-1 font-mono rounded-lg outline-none font-bold"
                           />
                         </div>
@@ -298,7 +326,9 @@ export default function CEDISCenter({
             </div>
 
             <div className="bg-white p-3 rounded-xl border border-gray-250 text-left font-bold text-[10px] text-indigo-900 leading-normal">
-              ⚡ Las mercancías descontadas en el Origen quedarán retenidas en el estado de "Guía Embarcada" hasta que un dependiente en la sucursal de destino registre el ingreso de bodega, garantizando una doble firma de confirmación fiscal.
+              ⚡ Las mercancías descontadas en el Origen quedarán retenidas en el estado de "Guía Embarcada" hasta que
+              un dependiente en la sucursal de destino registre el ingreso de bodega, garantizando una doble firma de
+              confirmación fiscal.
             </div>
           </div>
         </form>

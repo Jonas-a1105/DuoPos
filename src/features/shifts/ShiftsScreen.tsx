@@ -5,13 +5,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { User, CashShift, Transaction } from '../../types/index';
-import { 
-  Printer, 
-  Clock, 
-  Layers,
-  ArrowUpRight,
-  ArrowDownRight
-} from 'lucide-react';
+import { Printer, Clock, Layers, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { playSound } from '../../services/sounds';
 import { toast } from '../../components/Modal/FlashNotifications';
 
@@ -34,17 +28,16 @@ interface ShiftsScreenProps {
   onGrantXp: (amount: number) => void;
 }
 
-export default function ShiftsScreen({ 
-  user, 
-  transactions, 
-  activeShift, 
+export default function ShiftsScreen({
+  user,
+  transactions,
+  activeShift,
   shiftHistory,
   onOpenShift,
   onCloseShift,
   onAddShiftMovement,
-  onGrantXp
+  onGrantXp,
 }: ShiftsScreenProps) {
-  
   // Tab control: 'current' (active shift) vs 'history' (past shifts)
   const [activeSubTab, setActiveSubTab] = useState<'current' | 'history'>('current');
 
@@ -56,25 +49,26 @@ export default function ShiftsScreen({
   // Filter Transactions for Active Shift to produce precise real-time statistics
   const currentShiftSales = useMemo(() => {
     if (!activeShift) return [];
-    return transactions.filter(t => 
-      t.date >= activeShift.openingTime &&
-      t.branchId === activeShift.branchId &&
-      t.registerId === activeShift.registerId
+    return transactions.filter(
+      (t) =>
+        t.date >= activeShift.openingTime &&
+        t.branchId === activeShift.branchId &&
+        t.registerId === activeShift.registerId,
     );
   }, [transactions, activeShift]);
 
   // Derived shift analytics
   const shiftTotals = useMemo(() => {
     if (!activeShift) return { cashSales: 0, cardSales: 0, pointsSales: 0, totalSales: 0, ticketCount: 0 };
-    
+
     let cashSales = 0;
     let cardSales = 0;
     let pointsSales = 0;
 
-    currentShiftSales.forEach(t => {
+    currentShiftSales.forEach((t) => {
       if (t.isMixedPayment) {
-        cashSales += (t.mixedCashAmount || 0);
-        cardSales += (t.mixedCardAmount || 0);
+        cashSales += t.mixedCashAmount || 0;
+        cardSales += t.mixedCardAmount || 0;
       } else {
         if (t.paymentMethod === 'cash') cashSales += t.total;
         else if (t.paymentMethod === 'card') cardSales += t.total;
@@ -87,7 +81,7 @@ export default function ShiftsScreen({
       cardSales: Number(cardSales.toFixed(2)),
       pointsSales: Number(pointsSales.toFixed(2)),
       totalSales: Number((cashSales + cardSales + pointsSales).toFixed(2)),
-      ticketCount: currentShiftSales.length
+      ticketCount: currentShiftSales.length,
     };
   }, [currentShiftSales, activeShift]);
 
@@ -97,12 +91,14 @@ export default function ShiftsScreen({
     let inFlowFromMovements = 0;
     let outFlowFromMovements = 0;
 
-    activeShift.movements.forEach(m => {
+    activeShift.movements.forEach((m) => {
       if (m.type === 'in') inFlowFromMovements += m.amount;
       else if (m.type === 'out') outFlowFromMovements += m.amount;
     });
 
-    return Number((activeShift.initialCash + shiftTotals.cashSales + inFlowFromMovements - outFlowFromMovements).toFixed(2));
+    return Number(
+      (activeShift.initialCash + shiftTotals.cashSales + inFlowFromMovements - outFlowFromMovements).toFixed(2),
+    );
   }, [activeShift, shiftTotals.cashSales]);
 
   // Simulate ticket printing for open or closed shifts
@@ -117,18 +113,20 @@ export default function ShiftsScreen({
       // Calculate movements
       let shiftInFlow = 0;
       let shiftOutFlow = 0;
-      const movementsRows = shift.movements.map((m, i) => {
-        if (m.type === 'in') shiftInFlow += m.amount;
-        else shiftOutFlow += m.amount;
-        return `
+      const movementsRows = shift.movements
+        .map((m, i) => {
+          if (m.type === 'in') shiftInFlow += m.amount;
+          else shiftOutFlow += m.amount;
+          return `
           <tr>
-            <td style="padding: 2px 0;">${new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} • ${m.reason}</td>
+            <td style="padding: 2px 0;">${new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • ${m.reason}</td>
             <td align="right" style="color: ${m.type === 'in' ? '#58cc02' : '#ff9600'}; font-family: monospace;">
               ${m.type === 'in' ? '+' : '-'}$${m.amount.toFixed(2)}
             </td>
           </tr>
         `;
-      }).join('');
+        })
+        .join('');
 
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=110x110&color=000&data=${encodeURIComponent(`https://duopos.mock/caja?id=${shift.id}&expected=${shift.expectedCash}`)}`;
 
@@ -193,7 +191,9 @@ export default function ShiftsScreen({
                 <td style="padding-top: 4px;">EFECTIVO ESTIMADO EN SISTEMA:</td>
                 <td align="right" style="padding-top: 4px; font-family: monospace;">$${shift.expectedCash.toFixed(2)}</td>
               </tr>
-              ${shift.status === 'closed' ? `
+              ${
+                shift.status === 'closed'
+                  ? `
               <tr style="font-weight: bold; background-color: #f1f1f1;">
                 <td>EFECTIVO FÍSICO ARQUEADO:</td>
                 <td align="right" style="font-family: monospace;">$${shift.actualCash?.toFixed(2)}</td>
@@ -204,16 +204,22 @@ export default function ShiftsScreen({
                   ${(shift.difference || 0) >= 0 ? '+' : ''}${shift.difference?.toFixed(2)}
                 </td>
               </tr>
-              ` : ''}
+              `
+                  : ''
+              }
             </table>
 
-            ${shift.movements.length > 0 ? `
+            ${
+              shift.movements.length > 0
+                ? `
               <div class="separator"></div>
               <strong>HISTORIAL DE ENTRADAS/SALIDAS:</strong>
               <table style="margin-top: 4px; border-collapse: collapse; width: 100%;">
                 ${movementsRows}
               </table>
-            ` : ''}
+            `
+                : ''
+            }
 
             <div class="separator"></div>
             <div class="text-center" style="margin: 8px 0;">
@@ -237,14 +243,13 @@ export default function ShiftsScreen({
         </html>
       `);
       printWindow.document.close();
-    } catch(e) {
+    } catch (e) {
       console.log('Printing error:', e);
     }
   };
 
   return (
     <div className="space-y-6 animate-fadeIn font-sans p-1 md:p-3 pb-12">
-      
       {/* 1. SECTION TITLES */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-2 border-gray-100 pb-4">
         <div className="text-left">
@@ -260,22 +265,24 @@ export default function ShiftsScreen({
         <div className="flex bg-[#e5e5e5]/40 p-1 rounded-2xl border-2 border-gray-200 shadow-3xs self-stretch md:self-auto">
           <button
             type="button"
-            onClick={() => { setActiveSubTab('current'); playSound('click'); }}
+            onClick={() => {
+              setActiveSubTab('current');
+              playSound('click');
+            }}
             className={`flex-1 md:flex-initial py-2 px-4 rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer transition-all ${
-              activeSubTab === 'current'
-                ? 'bg-[#1cb0f6] text-white shadow-xs'
-                : 'text-gray-500 hover:text-gray-700'
+              activeSubTab === 'current' ? 'bg-[#1cb0f6] text-white shadow-xs' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             Turno Activo 🔑
           </button>
           <button
             type="button"
-            onClick={() => { setActiveSubTab('history'); playSound('click'); }}
+            onClick={() => {
+              setActiveSubTab('history');
+              playSound('click');
+            }}
             className={`flex-1 md:flex-initial py-2 px-4 rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer transition-all ${
-              activeSubTab === 'history'
-                ? 'bg-[#1cb0f6] text-white shadow-xs'
-                : 'text-gray-500 hover:text-gray-700'
+              activeSubTab === 'history' ? 'bg-[#1cb0f6] text-white shadow-xs' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             Historial de Arqueos 📊
@@ -285,16 +292,10 @@ export default function ShiftsScreen({
 
       {activeSubTab === 'current' && (
         <div className="space-y-6">
-          
           {!activeShift ? (
-            <ShiftOpeningCard
-              onOpenShift={onOpenShift}
-              onGrantXp={onGrantXp}
-            />
+            <ShiftOpeningCard onOpenShift={onOpenShift} onGrantXp={onGrantXp} />
           ) : (
-            
             <div className="space-y-6">
-              
               {/* Active Operator Banner */}
               <div className="bg-white border-2 border-gray-200 border-b-[6px] rounded-3xl p-5 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-left">
                 <div className="flex items-center gap-4">
@@ -306,16 +307,15 @@ export default function ShiftsScreen({
                       <span className="bg-[#e5f6ff] text-[#1cb0f6] text-[9px] font-black uppercase py-0.5 px-1.5 rounded-md border border-[#1cb0f6]/10">
                         Caja Abierta
                       </span>
-                      <span className="text-xs text-gray-400 font-extrabold font-mono">
-                        ID: {activeShift.id}
-                      </span>
+                      <span className="text-xs text-gray-400 font-extrabold font-mono">ID: {activeShift.id}</span>
                     </div>
                     <h3 className="text-lg font-black text-gray-800 mt-1 uppercase">
                       Cajero: {activeShift.employeeName}
                     </h3>
                     <p className="text-xs text-gray-405 font-bold flex items-center gap-1 mt-0.5">
                       <Clock size={12} className="text-gray-400" />
-                      Iniciado el {new Date(activeShift.openingTime).toLocaleDateString()} a las {new Date(activeShift.openingTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      Iniciado el {new Date(activeShift.openingTime).toLocaleDateString()} a las{' '}
+                      {new Date(activeShift.openingTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 </div>
@@ -323,7 +323,10 @@ export default function ShiftsScreen({
                 <div className="flex flex-wrap gap-2 w-full md:w-auto">
                   <button
                     type="button"
-                    onClick={() => { setIsMoveModalOpen(true); playSound('click'); }}
+                    onClick={() => {
+                      setIsMoveModalOpen(true);
+                      playSound('click');
+                    }}
                     className="flex-1 md:flex-initial bg-amber-500 text-white border-b-4 border-amber-700 hover:bg-amber-400 active:translate-y-0.5 active:border-b-0 py-2.5 px-4 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-wider flex items-center justify-center gap-1 cursor-pointer"
                   >
                     <Layers size={14} /> Registrar Movimiento
@@ -339,7 +342,10 @@ export default function ShiftsScreen({
 
                   <button
                     type="button"
-                    onClick={() => { setIsCloseModalOpen(true); playSound('click'); }}
+                    onClick={() => {
+                      setIsCloseModalOpen(true);
+                      playSound('click');
+                    }}
                     className="w-full md:w-auto bg-red-500 text-white border-b-4 border-red-700 hover:bg-red-400 active:translate-y-0.5 active:border-b-0 py-2.5 px-5 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-wider flex items-center justify-center gap-1 cursor-pointer"
                   >
                     🔒 Cerrar & Balancear Caja
@@ -356,7 +362,6 @@ export default function ShiftsScreen({
 
               {/* Operations Logs List */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
                 {/* Cash Movements log */}
                 <div className="bg-white border-2 border-gray-200 border-b-[6px] rounded-3xl p-5 md:p-6 space-y-4 text-left">
                   <div className="flex justify-between items-center border-b pb-3">
@@ -364,7 +369,9 @@ export default function ShiftsScreen({
                       <h4 className="text-base font-black text-gray-800 uppercase flex items-center gap-1">
                         📦 Movimientos de Efectivo
                       </h4>
-                      <p className="text-[10px] text-gray-400 font-black uppercase mt-0.5">Entradas manuales y retiros de seguridad</p>
+                      <p className="text-[10px] text-gray-400 font-black uppercase mt-0.5">
+                        Entradas manuales y retiros de seguridad
+                      </p>
                     </div>
                     <span className="text-[10px] font-black bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md border border-amber-250 uppercase leading-none">
                       {activeShift.movements.length} registros
@@ -375,37 +382,52 @@ export default function ShiftsScreen({
                     <div className="py-12 text-center text-gray-450 text-xs font-bold space-y-2">
                       <p className="text-gray-400 text-2xl">💸</p>
                       <p>No se han registrado entradas o salidas extraordinarias de efectivo en este turno.</p>
-                      <p className="text-[10px] text-[#9c9c9c]">Utiliza el botón "Registrar Movimiento" para agregar cambio o reportar pago de gastos menores.</p>
+                      <p className="text-[10px] text-[#9c9c9c]">
+                        Utiliza el botón "Registrar Movimiento" para agregar cambio o reportar pago de gastos menores.
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
                       {activeShift.movements.map((move, i) => (
-                        <div key={move.id || i} className="bg-gray-50 hover:bg-gray-100 border border-gray-200 p-3 rounded-2xl flex items-center justify-between transition-colors">
+                        <div
+                          key={move.id || i}
+                          className="bg-gray-50 hover:bg-gray-100 border border-gray-200 p-3 rounded-2xl flex items-center justify-between transition-colors"
+                        >
                           <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-xl border ${
-                              move.type === 'in' 
-                                ? 'bg-green-50 border-green-200 text-[#58cc02]' 
-                                : 'bg-amber-50 border-amber-200 text-amber-500'
-                            }`}>
+                            <div
+                              className={`p-2 rounded-xl border ${
+                                move.type === 'in'
+                                  ? 'bg-green-50 border-green-200 text-[#58cc02]'
+                                  : 'bg-amber-50 border-amber-200 text-amber-500'
+                              }`}
+                            >
                               {move.type === 'in' ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
                             </div>
                             <div>
                               <span className="text-xs font-black text-gray-800 flex items-center gap-2">
                                 <span>{move.reason}</span>
-                                <span className={`text-[8px] font-black uppercase px-1 py-0.5 rounded ${
-                                  move.type === 'in' ? 'bg-green-150 text-[#3c9e01]' : 'bg-amber-150 text-amber-800'
-                                }`}>
+                                <span
+                                  className={`text-[8px] font-black uppercase px-1 py-0.5 rounded ${
+                                    move.type === 'in' ? 'bg-green-150 text-[#3c9e01]' : 'bg-amber-150 text-amber-800'
+                                  }`}
+                                >
                                   {move.type === 'in' ? 'Entrada' : 'Salida'}
                                 </span>
                               </span>
                               <p className="text-[9px] text-[#9c9c9c] font-medium leading-none mt-1">
-                                Hora: {new Date(move.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                Hora:{' '}
+                                {new Date(move.timestamp).toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
                               </p>
                             </div>
                           </div>
-                          
+
                           <div className="text-right">
-                            <span className={`text-sm font-black font-mono ${move.type === 'in' ? 'text-[#3c9e01]' : 'text-amber-600'}`}>
+                            <span
+                              className={`text-sm font-black font-mono ${move.type === 'in' ? 'text-[#3c9e01]' : 'text-amber-600'}`}
+                            >
                               {move.type === 'in' ? '+' : '-'}${move.amount.toFixed(2)}
                             </span>
                           </div>
@@ -413,17 +435,16 @@ export default function ShiftsScreen({
                       ))}
                     </div>
                   )}
-
                 </div>
 
                 {/* Shift sales list */}
                 <div className="bg-white border-2 border-gray-200 border-b-[6px] rounded-3xl p-5 md:p-6 space-y-4 text-left">
                   <div className="flex justify-between items-center border-b pb-3">
                     <div>
-                      <h4 className="text-base font-black text-gray-800 uppercase">
-                        🧾 Ventas del Turno Actual
-                      </h4>
-                      <p className="text-[10px] text-gray-400 font-black uppercase mt-0.5">Auditoría en tiempo real de transacciones</p>
+                      <h4 className="text-base font-black text-gray-800 uppercase">🧾 Ventas del Turno Actual</h4>
+                      <p className="text-[10px] text-gray-400 font-black uppercase mt-0.5">
+                        Auditoría en tiempo real de transacciones
+                      </p>
                     </div>
                     <span className="text-[10px] font-black bg-[#e5f6ff] text-[#1cb0f6] px-2 py-0.5 rounded-md border border-[#1cb0f6]/20 uppercase">
                       {currentShiftSales.length} cobrados
@@ -434,57 +455,71 @@ export default function ShiftsScreen({
                     <div className="py-12 text-center text-gray-450 text-xs font-bold space-y-2">
                       <p className="text-gray-400 text-2xl">🛒</p>
                       <p>Aún no se registran cobros en este turno.</p>
-                      <p className="text-[10px] text-[#9c9c9c]">Las ventas ingresadas en la pantalla "Vender" se vincularán automáticamente aquí.</p>
+                      <p className="text-[10px] text-[#9c9c9c]">
+                        Las ventas ingresadas en la pantalla "Vender" se vincularán automáticamente aquí.
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
                       {currentShiftSales.map((txn) => (
-                        <div key={txn.id} className="bg-gray-50 border border-gray-200 hover:bg-gray-100 p-3 rounded-2xl flex items-center justify-between transition-all">
+                        <div
+                          key={txn.id}
+                          className="bg-gray-50 border border-gray-200 hover:bg-gray-100 p-3 rounded-2xl flex items-center justify-between transition-all"
+                        >
                           <div>
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-xs font-black text-gray-800 uppercase block">FL: {txn.id.substring(txn.id.indexOf('-') + 1)}</span>
-                              <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md border text-white ${
-                                txn.isMixedPayment
-                                  ? 'bg-purple-500 border-purple-600'
-                                  : txn.paymentMethod === 'cash' 
-                                    ? 'bg-[#58cc02] border-[#3c9e01]' 
+                              <span className="text-xs font-black text-gray-800 uppercase block">
+                                FL: {txn.id.substring(txn.id.indexOf('-') + 1)}
+                              </span>
+                              <span
+                                className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-md border text-white ${
+                                  txn.isMixedPayment
+                                    ? 'bg-purple-500 border-purple-600'
+                                    : txn.paymentMethod === 'cash'
+                                      ? 'bg-[#58cc02] border-[#3c9e01]'
+                                      : txn.paymentMethod === 'card'
+                                        ? 'bg-[#1cb0f6] border-[#1899d6]'
+                                        : 'bg-yellow-500 border-yellow-600'
+                                }`}
+                              >
+                                {txn.isMixedPayment
+                                  ? 'Mixto 💰💳'
+                                  : txn.paymentMethod === 'cash'
+                                    ? 'Efectivo 💵'
                                     : txn.paymentMethod === 'card'
-                                      ? 'bg-[#1cb0f6] border-[#1899d6]'
-                                      : 'bg-yellow-500 border-yellow-600'
-                              }`}>
-                                {txn.isMixedPayment ? 'Mixto 💰💳' : txn.paymentMethod === 'cash' ? 'Efectivo 💵' : txn.paymentMethod === 'card' ? 'Electrónico' : 'Puntos 💎'}
+                                      ? 'Electrónico'
+                                      : 'Puntos 💎'}
                               </span>
                             </div>
                             <p className="text-[9px] text-gray-450 font-bold mt-1.5">
-                              {new Date(txn.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} • {txn.items.length} artículos cobrados
-                              {txn.isMixedPayment && ` (Efe: $${(txn.mixedCashAmount || 0).toFixed(2)} | Tar: $${(txn.mixedCardAmount || 0).toFixed(2)})`}
+                              {new Date(txn.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} •{' '}
+                              {txn.items.length} artículos cobrados
+                              {txn.isMixedPayment &&
+                                ` (Efe: $${(txn.mixedCashAmount || 0).toFixed(2)} | Tar: $${(txn.mixedCardAmount || 0).toFixed(2)})`}
                             </p>
                           </div>
 
                           <div className="text-right">
-                            <span className="text-xs font-black font-mono block text-gray-850">${txn.total.toFixed(2)}</span>
-                            <span className="text-[8px] text-gray-400 font-extrabold uppercase leading-none block mt-0.5">+{txn.xpGained} XP</span>
+                            <span className="text-xs font-black font-mono block text-gray-850">
+                              ${txn.total.toFixed(2)}
+                            </span>
+                            <span className="text-[8px] text-gray-400 font-extrabold uppercase leading-none block mt-0.5">
+                              +{txn.xpGained} XP
+                            </span>
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
-
                 </div>
-
               </div>
-
             </div>
           )}
-
         </div>
       )}
 
       {activeSubTab === 'history' && (
-        <ShiftHistoryTab
-          shiftHistory={shiftHistory}
-          onOpenReport={(hist) => setSelectedHistReport(hist)}
-        />
+        <ShiftHistoryTab shiftHistory={shiftHistory} onOpenReport={(hist) => setSelectedHistReport(hist)} />
       )}
 
       {/* MODAL WINDOWS OVERLAYS */}
@@ -509,7 +544,6 @@ export default function ShiftsScreen({
         onClose={() => setSelectedHistReport(null)}
         onPrint={printShiftReceipt}
       />
-
     </div>
   );
 }

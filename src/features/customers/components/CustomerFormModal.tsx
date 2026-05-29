@@ -6,7 +6,13 @@ interface CustomerFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   editingCustomer: Customer | null;
-  onAddCustomer: (customer: Omit<Customer, 'id' | 'registeredAt' | 'purchasesCount' | 'totalSpent' | 'gems' | 'league'> & { creditLimit?: number; creditUsed?: number; creditHistory?: any[] }) => void;
+  onAddCustomer: (
+    customer: Omit<Customer, 'id' | 'registeredAt' | 'purchasesCount' | 'totalSpent' | 'gems' | 'league'> & {
+      creditLimit?: number;
+      creditUsed?: number;
+      creditHistory?: any[];
+    },
+  ) => void;
   onUpdateCustomer: (customer: Customer) => void;
   onGrantXp: (amount: number) => void;
 }
@@ -17,7 +23,7 @@ export default function CustomerFormModal({
   editingCustomer,
   onAddCustomer,
   onUpdateCustomer,
-  onGrantXp
+  onGrantXp,
 }: CustomerFormModalProps) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -55,19 +61,19 @@ export default function CustomerFormModal({
         email,
         creditLimit: parsedLimit,
         creditUsed: editingCustomer.creditUsed !== undefined ? editingCustomer.creditUsed : 0,
-        creditHistory: editingCustomer.creditHistory || []
+        creditHistory: editingCustomer.creditHistory || [],
       };
       onUpdateCustomer(updated);
       playSound('success');
     } else {
       // Add mode
-      onAddCustomer({ 
-        name, 
-        phone, 
+      onAddCustomer({
+        name,
+        phone,
         email,
         creditLimit: parsedLimit,
         creditUsed: 0,
-        creditHistory: []
+        creditHistory: [],
       });
       playSound('levelup');
       onGrantXp(25); // Gamified registry task!
@@ -81,7 +87,10 @@ export default function CustomerFormModal({
       <div className="bg-white border-2 border-gray-200 border-b-8 rounded-3xl max-w-sm w-full p-6 space-y-4 relative shadow-2xl">
         <button
           type="button"
-          onClick={() => { onClose(); playSound('click'); }}
+          onClick={() => {
+            onClose();
+            playSound('click');
+          }}
           className="absolute right-4 top-4 text-gray-400 hover:text-gray-650 rounded-full hover:bg-gray-100 p-1 bg-gray-50 border cursor-pointer font-black text-xs h-7 w-7 flex items-center justify-center select-none"
         >
           ✕

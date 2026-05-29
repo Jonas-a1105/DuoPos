@@ -1,16 +1,15 @@
 /**
  * supabaseSync.ts — Motor de sincronización Local-First para DuoPOS
- * 
+ *
  * Filosofía: localStorage PRIMERO (instantáneo, funciona offline),
  * Supabase DESPUÉS (persistencia en la nube cuando hay internet).
- * 
- * Si Supabase falla o no hay internet, los cambios se acumulan en una 
+ *
+ * Si Supabase falla o no hay internet, los cambios se acumulan en una
  * "cola de pendientes" y se sincronizan automáticamente cuando vuelve la conexión.
  */
 
 import { supabase, isSupabaseConfigured } from '../config/supabaseClient';
 import { db } from './db';
-
 
 // ─── IndexedDB Async Storage Adapters (Dexie.js) ─────────────────────────────
 export async function getLocalData(key: string): Promise<any> {
@@ -52,9 +51,9 @@ export function generateUUID(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
   }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 }
@@ -102,7 +101,7 @@ export function mapProductToDb(p: any): any {
     emoji: p.emoji || '📦',
     description: p.description || '',
     barcode: p.barcode || null,
-    min_stock: p.minStock !== undefined ? Number(p.minStock) : 5
+    min_stock: p.minStock !== undefined ? Number(p.minStock) : 5,
   };
 }
 
@@ -117,7 +116,7 @@ export function mapProductFromDb(db: any): any {
     emoji: db.emoji || '📦',
     description: db.description || '',
     barcode: db.barcode || undefined,
-    minStock: db.min_stock !== undefined ? Number(db.min_stock) : 5
+    minStock: db.min_stock !== undefined ? Number(db.min_stock) : 5,
   };
 }
 
@@ -137,7 +136,7 @@ export function mapCustomerToDb(c: any): any {
     postal_code: c.postalCode || null,
     credit_limit: Number(c.creditLimit || 0),
     credit_used: Number(c.creditUsed || 0),
-    registered_at: c.registeredAt || new Date().toISOString()
+    registered_at: c.registeredAt || new Date().toISOString(),
   };
 }
 
@@ -157,7 +156,7 @@ export function mapCustomerFromDb(db: any): any {
     postalCode: db.postal_code || undefined,
     creditLimit: Number(db.credit_limit || 0),
     creditUsed: Number(db.credit_used || 0),
-    registeredAt: db.registered_at || new Date().toISOString()
+    registeredAt: db.registered_at || new Date().toISOString(),
   };
 }
 
@@ -173,7 +172,7 @@ export function mapSupplierToDb(s: any): any {
     address: s.address || '',
     delivery_days: s.deliveryDays !== undefined ? Number(s.deliveryDays) : 2,
     reliability: s.reliability !== undefined ? Number(s.reliability) : 90,
-    balance: s.balance !== undefined ? Number(s.balance) : 0
+    balance: s.balance !== undefined ? Number(s.balance) : 0,
   };
 }
 
@@ -188,7 +187,7 @@ export function mapSupplierFromDb(db: any): any {
     address: db.address || '',
     deliveryDays: db.delivery_days !== undefined ? Number(db.delivery_days) : 2,
     reliability: db.reliability !== undefined ? Number(db.reliability) : 90,
-    balance: db.balance !== undefined ? Number(db.balance) : 0
+    balance: db.balance !== undefined ? Number(db.balance) : 0,
   };
 }
 
@@ -205,7 +204,7 @@ export function mapPurchaseOrderToDb(po: any): any {
     created_at: po.createdAt || new Date().toISOString(),
     estimated_delivery: po.estimatedDelivery || null,
     received_at: po.receivedAt || null,
-    carrier: po.carrier || ''
+    carrier: po.carrier || '',
   };
 }
 
@@ -223,7 +222,7 @@ export function mapPurchaseOrderFromDb(db: any): any {
     estimatedDelivery: db.estimated_delivery || '',
     receivedAt: db.received_at || undefined,
     carrier: db.carrier || '',
-    items: []
+    items: [],
   };
 }
 
@@ -243,7 +242,7 @@ export function mapShiftToDb(s: any): any {
     sales_count: Number(s.salesCount || 0),
     sales_volume: Number(s.salesVolume || 0),
     branch_id: s.branchId || null,
-    register_id: s.registerId || null
+    register_id: s.registerId || null,
   };
 }
 
@@ -263,7 +262,7 @@ export function mapShiftFromDb(db: any): any {
     salesVolume: Number(db.sales_volume || 0),
     branchId: db.branch_id || undefined,
     registerId: db.register_id || undefined,
-    movements: [] // Stitch loading maps this
+    movements: [], // Stitch loading maps this
   };
 }
 
@@ -274,7 +273,7 @@ export function mapMovementToDb(m: any, shiftId: string): any {
     type: m.type,
     amount: Number(m.amount),
     reason: m.reason || '',
-    timestamp: m.timestamp || new Date().toISOString()
+    timestamp: m.timestamp || new Date().toISOString(),
   };
 }
 
@@ -284,7 +283,7 @@ export function mapMovementFromDb(db: any): any {
     type: db.type,
     amount: Number(db.amount),
     reason: db.reason || '',
-    timestamp: db.timestamp || db.created_at || new Date().toISOString()
+    timestamp: db.timestamp || db.created_at || new Date().toISOString(),
   };
 }
 
@@ -296,7 +295,7 @@ export function mapBranchToDb(b: any): any {
     type: b.type || 'branch',
     emoji: b.emoji || '🏪',
     address: b.address || '',
-    city: b.city || ''
+    city: b.city || '',
   };
 }
 
@@ -306,7 +305,7 @@ export function mapRegisterToDb(r: any): any {
     branch_id: r.branchId,
     name: r.name,
     emoji: r.emoji || '📟',
-    status: r.status || 'active'
+    status: r.status || 'active',
   };
 }
 
@@ -316,7 +315,7 @@ export function mapRegisterFromDb(db: any): any {
     branchId: db.branch_id,
     name: db.name,
     emoji: db.emoji || '📟',
-    status: db.status || 'active'
+    status: db.status || 'active',
   };
 }
 
@@ -378,9 +377,10 @@ export async function syncLoad<T>(
     orderBy?: string;
     ascending?: boolean;
     select?: string;
-  }
+  },
 ): Promise<T[]> {
-  const prefix = table === 'products' ? 'prod' : table === 'customers' ? 'cust' : table === 'cash_shifts' ? 'shift' : 'txn';
+  const prefix =
+    table === 'products' ? 'prod' : table === 'customers' ? 'cust' : table === 'cash_shifts' ? 'shift' : 'txn';
 
   // Pre-load all sub-collections asynchronously in parallel to avoid multiple IndexedDB reads
   const [allCredits, allTxnItems, allMoves, allStItems, allPoItems] = await Promise.all([
@@ -388,13 +388,19 @@ export async function syncLoad<T>(
     getLocalData('duo_pos_transaction_items'),
     getLocalData('duo_pos_shift_movements'),
     getLocalData('duo_pos_stock_transfer_items'),
-    getLocalData('duo_pos_purchase_order_items')
-  ]).then(results => results.map(res => res || []));
+    getLocalData('duo_pos_purchase_order_items'),
+  ]).then((results) => results.map((res) => res || []));
 
   const sanitizeAndMap = (rawItem: any): T => {
     // Si la tabla no requiere UUIDs estrictos en Postgres (ej. text IDs para branches/registers/suppliers/purchase_orders), no usar ensureValidUuid
     let cleanId = rawItem.id;
-    if (table !== 'branches' && table !== 'cash_registers' && table !== 'settings' && table !== 'suppliers' && table !== 'purchase_orders') {
+    if (
+      table !== 'branches' &&
+      table !== 'cash_registers' &&
+      table !== 'settings' &&
+      table !== 'suppliers' &&
+      table !== 'purchase_orders'
+    ) {
       cleanId = ensureValidUuid(rawItem.id, prefix as any);
     }
     let item = { ...rawItem, id: cleanId };
@@ -407,14 +413,16 @@ export async function syncLoad<T>(
     if (table === 'customers') {
       const mapped = 'purchases_count' in item || 'total_spent' in item ? mapCustomerFromDb(item) : item;
       if (mapped.id) {
-        const filteredCredits = allCredits.filter((h: any) => h.customer_id === mapped.id || h.customerId === mapped.id);
+        const filteredCredits = allCredits.filter(
+          (h: any) => h.customer_id === mapped.id || h.customerId === mapped.id,
+        );
         mapped.creditHistory = filteredCredits.map((h: any) => ({
           id: ensureValidUuid(h.id, 'chhist'),
           amount: Number(h.amount),
           type: h.type,
           date: h.date || h.timestamp || new Date().toISOString(),
           notes: h.notes || '',
-          transactionId: h.transaction_id || h.transactionId || null
+          transactionId: h.transaction_id || h.transactionId || null,
         }));
       } else {
         mapped.creditHistory = mapped.creditHistory || [];
@@ -447,11 +455,13 @@ export async function syncLoad<T>(
         registerId: item.register_id || undefined,
         cardPaymentDetails: item.card_payment_details || undefined,
         invoiceData: item.invoice_data || undefined,
-        items: []
+        items: [],
       };
-      
+
       if (mapped.id) {
-        const parentItems = allTxnItems.filter((i: any) => i.transaction_id === mapped.id || i.transactionId === mapped.id);
+        const parentItems = allTxnItems.filter(
+          (i: any) => i.transaction_id === mapped.id || i.transactionId === mapped.id,
+        );
         mapped.items = parentItems.map((i: any) => ({
           productId: i.product_id || i.productId || '',
           name: i.name,
@@ -460,7 +470,7 @@ export async function syncLoad<T>(
           quantity: Number(i.quantity),
           taxRateApplied: Number(i.tax_rate_applied || i.taxRateApplied || 16.0),
           notes: i.notes || undefined,
-          addons: i.addons || undefined
+          addons: i.addons || undefined,
         }));
       }
       return mapped as unknown as T;
@@ -468,7 +478,7 @@ export async function syncLoad<T>(
 
     if (table === 'cash_shifts') {
       const mapped = 'initial_cash' in item ? mapShiftFromDb(item) : item;
-      
+
       if (mapped.id) {
         const parentMoves = allMoves.filter((m: any) => m.shift_id === mapped.id || m.shiftId === mapped.id);
         mapped.movements = parentMoves.map(mapMovementFromDb);
@@ -496,7 +506,7 @@ export async function syncLoad<T>(
         receivedAt: item.received_at || undefined,
         notes: item.notes || '',
         carrier: item.carrier || '',
-        items: []
+        items: [],
       };
 
       if (mapped.id) {
@@ -505,7 +515,7 @@ export async function syncLoad<T>(
           productId: i.product_id || i.productId || '',
           name: i.name,
           emoji: i.emoji || '📦',
-          quantity: Number(i.quantity)
+          quantity: Number(i.quantity),
         }));
       }
       return mapped as unknown as T;
@@ -518,15 +528,17 @@ export async function syncLoad<T>(
 
     if (table === 'purchase_orders') {
       const mapped = 'payment_method' in item || 'supplier_name' in item ? mapPurchaseOrderFromDb(item) : item;
-      
+
       if (mapped.id) {
-        const parentItems = allPoItems.filter((i: any) => i.purchase_order_id === mapped.id || i.purchaseOrderId === mapped.id);
+        const parentItems = allPoItems.filter(
+          (i: any) => i.purchase_order_id === mapped.id || i.purchaseOrderId === mapped.id,
+        );
         mapped.items = parentItems.map((i: any) => ({
           productId: i.product_id || i.productId || '',
           name: i.name,
           emoji: i.emoji || '📦',
           cost: Number(i.cost),
-          quantity: Number(i.quantity)
+          quantity: Number(i.quantity),
         }));
       }
       return mapped as unknown as T;
@@ -551,9 +563,9 @@ export async function syncLoad<T>(
         let mappedData = data.map(sanitizeAndMap);
 
         // Fusión inteligente con la cola de operaciones pendientes localmente
-        const localPending = getPendingQueue().filter(op => op.table === table);
+        const localPending = getPendingQueue().filter((op) => op.table === table);
         if (localPending.length > 0) {
-          localPending.forEach(op => {
+          localPending.forEach((op) => {
             if (op.action === 'delete') {
               const deleteId = op.data.id || op.data[Object.keys(op.data)[0]];
               mappedData = mappedData.filter((item: any) => item.id !== deleteId);
@@ -568,14 +580,14 @@ export async function syncLoad<T>(
             }
           });
         }
-        
+
         // Si estamos cargando clientes, intentar también precargar creditHistory de Supabase
         if (table === 'customers') {
           try {
             const { data: creditsData, error: creditsError } = await supabase
               .from('customer_credit_history')
               .select('*');
-            
+
             if (!creditsError && creditsData) {
               await setLocalData('duo_pos_customer_credits', creditsData);
               mappedData.forEach((cust: any) => {
@@ -586,7 +598,7 @@ export async function syncLoad<T>(
                   type: h.type,
                   date: h.date,
                   notes: h.notes || '',
-                  transactionId: h.transaction_id || null
+                  transactionId: h.transaction_id || null,
                 }));
               });
             }
@@ -598,10 +610,8 @@ export async function syncLoad<T>(
         // Si estamos cargando transacciones, intentar también precargar items de Supabase
         if (table === 'transactions') {
           try {
-            const { data: itemsData, error: itemsError } = await supabase
-              .from('transaction_items')
-              .select('*');
-            
+            const { data: itemsData, error: itemsError } = await supabase.from('transaction_items').select('*');
+
             if (!itemsError && itemsData) {
               await setLocalData('duo_pos_transaction_items', itemsData);
               mappedData.forEach((txn: any) => {
@@ -614,7 +624,7 @@ export async function syncLoad<T>(
                   quantity: Number(i.quantity),
                   taxRateApplied: Number(i.tax_rate_applied || 16.0),
                   notes: i.notes || undefined,
-                  addons: i.addons || undefined
+                  addons: i.addons || undefined,
                 }));
               });
             }
@@ -626,10 +636,8 @@ export async function syncLoad<T>(
         // Si estamos cargando turnos, intentar también precargar movimientos de Supabase
         if (table === 'cash_shifts') {
           try {
-            const { data: movesData, error: movesError } = await supabase
-              .from('cash_movements')
-              .select('*');
-            
+            const { data: movesData, error: movesError } = await supabase.from('cash_movements').select('*');
+
             if (!movesError && movesData) {
               await setLocalData('duo_pos_shift_movements', movesData);
               mappedData.forEach((shift: any) => {
@@ -645,10 +653,8 @@ export async function syncLoad<T>(
         // Si estamos cargando traspasos de stock, precargar items de Supabase
         if (table === 'stock_transfers') {
           try {
-            const { data: stItemsData, error: stItemsError } = await supabase
-              .from('stock_transfer_items')
-              .select('*');
-            
+            const { data: stItemsData, error: stItemsError } = await supabase.from('stock_transfer_items').select('*');
+
             if (!stItemsError && stItemsData) {
               await setLocalData('duo_pos_stock_transfer_items', stItemsData);
               mappedData.forEach((tr: any) => {
@@ -657,7 +663,7 @@ export async function syncLoad<T>(
                   productId: i.product_id || '',
                   name: i.name,
                   emoji: i.emoji || '📦',
-                  quantity: Number(i.quantity)
+                  quantity: Number(i.quantity),
                 }));
               });
             }
@@ -669,10 +675,8 @@ export async function syncLoad<T>(
         // Si estamos cargando órdenes de compra, precargar items de Supabase
         if (table === 'purchase_orders') {
           try {
-            const { data: poItemsData, error: poItemsError } = await supabase
-              .from('purchase_order_items')
-              .select('*');
-            
+            const { data: poItemsData, error: poItemsError } = await supabase.from('purchase_order_items').select('*');
+
             if (!poItemsError && poItemsData) {
               await setLocalData('duo_pos_purchase_order_items', poItemsData);
               mappedData.forEach((po: any) => {
@@ -682,7 +686,7 @@ export async function syncLoad<T>(
                   name: i.name,
                   emoji: i.emoji || '📦',
                   cost: Number(i.cost),
-                  quantity: Number(i.quantity)
+                  quantity: Number(i.quantity),
                 }));
               });
             }
@@ -738,7 +742,7 @@ async function syncCreditHistory(customer: any, isParentSynced: boolean): Promis
       type: historyItem.type,
       date: historyItem.date || new Date().toISOString(),
       notes: historyItem.notes || '',
-      transaction_id: historyItem.transactionId ? ensureValidUuid(historyItem.transactionId, 'txn') : null
+      transaction_id: historyItem.transactionId ? ensureValidUuid(historyItem.transactionId, 'txn') : null,
     };
 
     if (isOnline() && isParentSynced) {
@@ -754,8 +758,8 @@ async function syncCreditHistory(customer: any, isParentSynced: boolean): Promis
 
   // Actualizar caché de créditos localmente
   try {
-    let allCredits = await getLocalData('duo_pos_customer_credits') || [];
-    
+    let allCredits = (await getLocalData('duo_pos_customer_credits')) || [];
+
     const newIds = customer.creditHistory.map((h: any) => ensureValidUuid(h.id, 'chhist'));
     allCredits = allCredits.filter((h: any) => !newIds.includes(ensureValidUuid(h.id, 'chhist')));
 
@@ -766,7 +770,7 @@ async function syncCreditHistory(customer: any, isParentSynced: boolean): Promis
       type: h.type,
       date: h.date || new Date().toISOString(),
       notes: h.notes || '',
-      transaction_id: h.transactionId ? ensureValidUuid(h.transactionId, 'txn') : null
+      transaction_id: h.transactionId ? ensureValidUuid(h.transactionId, 'txn') : null,
     }));
 
     allCredits.push(...mappedCredits);
@@ -785,7 +789,7 @@ export async function syncSave<T extends Record<string, any>>(
   options?: {
     idField?: string;
     mapToDb?: (item: T) => Record<string, any>;
-  }
+  },
 ): Promise<{ success: boolean; error?: string }> {
   const idField = options?.idField || 'id';
 
@@ -799,11 +803,7 @@ export async function syncSave<T extends Record<string, any>>(
     try {
       dbRecord = options?.mapToDb ? options.mapToDb(changedItem) : mapToDbRecord(table, changedItem);
 
-      const { error } = await supabase
-        .from(table)
-        .upsert(dbRecord, { onConflict: idField })
-        .select()
-        .maybeSingle();
+      const { error } = await supabase.from(table).upsert(dbRecord, { onConflict: idField }).select().maybeSingle();
 
       if (error) {
         console.warn(`⚠️ syncSave(${table}): Supabase falló, encolando para después.`, error.message);
@@ -839,7 +839,7 @@ export async function syncInsert<T extends Record<string, any>>(
   newItem: T,
   options?: {
     mapToDb?: (item: T) => Record<string, any>;
-  }
+  },
 ): Promise<{ success: boolean; error?: string }> {
   await setLocalData(localStorageKey, allItems);
 
@@ -851,11 +851,7 @@ export async function syncInsert<T extends Record<string, any>>(
     try {
       dbRecord = options?.mapToDb ? options.mapToDb(newItem) : mapToDbRecord(table, newItem);
 
-      const { error } = await supabase
-        .from(table)
-        .insert(dbRecord)
-        .select()
-        .maybeSingle();
+      const { error } = await supabase.from(table).insert(dbRecord).select().maybeSingle();
 
       if (error) {
         console.warn(`⚠️ syncInsert(${table}): Supabase falló, encolando.`, error.message);
@@ -890,7 +886,7 @@ export async function syncDelete(
   deleteId: string,
   options?: {
     idField?: string;
-  }
+  },
 ): Promise<{ success: boolean; error?: string }> {
   const idField = options?.idField || 'id';
 
@@ -898,12 +894,14 @@ export async function syncDelete(
 
   if (isOnline()) {
     try {
-      const dbDeleteId = table === 'products' ? ensureValidUuid(deleteId, 'prod') : table === 'customers' ? ensureValidUuid(deleteId, 'cust') : deleteId;
-      
-      const { error } = await supabase
-        .from(table)
-        .delete()
-        .eq(idField, dbDeleteId);
+      const dbDeleteId =
+        table === 'products'
+          ? ensureValidUuid(deleteId, 'prod')
+          : table === 'customers'
+            ? ensureValidUuid(deleteId, 'cust')
+            : deleteId;
+
+      const { error } = await supabase.from(table).delete().eq(idField, dbDeleteId);
 
       if (error) {
         console.warn(`⚠️ syncDelete(${table}): Supabase falló, encolando.`, error.message);
@@ -913,7 +911,12 @@ export async function syncDelete(
 
       return { success: true };
     } catch {
-      const dbDeleteId = table === 'products' ? ensureValidUuid(deleteId, 'prod') : table === 'customers' ? ensureValidUuid(deleteId, 'cust') : deleteId;
+      const dbDeleteId =
+        table === 'products'
+          ? ensureValidUuid(deleteId, 'prod')
+          : table === 'customers'
+            ? ensureValidUuid(deleteId, 'cust')
+            : deleteId;
       addToPendingQueue({ table, action: 'delete', data: { [idField]: dbDeleteId } });
       return { success: true, error: 'Sin conexión. Eliminado localmente.' };
     }
@@ -925,13 +928,13 @@ export async function syncDelete(
 // ─── REGISTRAR TRANSACCIÓN COMPLETA (Cabecera + Detalles) ────────────────────────
 export async function syncInsertTransaction(
   txn: any,
-  allTransactions: any[]
+  allTransactions: any[],
 ): Promise<{ success: boolean; error?: string }> {
   await setLocalData('duo_pos_transactions', allTransactions);
 
   try {
-    const allItems = await getLocalData('duo_pos_transaction_items') || [];
-    
+    const allItems = (await getLocalData('duo_pos_transaction_items')) || [];
+
     const dbTxnId = ensureValidUuid(txn.id, 'txn');
     const mappedItems = txn.items.map((item: any) => ({
       id: generateUUID(),
@@ -943,7 +946,7 @@ export async function syncInsertTransaction(
       quantity: Number(item.quantity),
       tax_rate_applied: item.taxRateApplied !== undefined ? Number(item.taxRateApplied) : 16.0,
       notes: item.notes || null,
-      addons: item.addons || null
+      addons: item.addons || null,
     }));
 
     allItems.push(...mappedItems);
@@ -973,7 +976,7 @@ export async function syncInsertTransaction(
       branch_id: txn.branchId || null,
       register_id: txn.registerId || null,
       card_payment_details: txn.cardPaymentDetails || null,
-      invoice_data: txn.invoiceData || null
+      invoice_data: txn.invoiceData || null,
     };
 
     if (isOnline()) {
@@ -1011,7 +1014,7 @@ export async function syncInsertTransaction(
 export async function syncSaveShift(
   shift: any,
   isActive: boolean,
-  allHistory: any[] = []
+  allHistory: any[] = [],
 ): Promise<{ success: boolean; error?: string }> {
   if (isActive) {
     await setLocalData('duo_pos_active_shift', shift);
@@ -1028,8 +1031,8 @@ export async function syncSaveShift(
   const dbShiftId = ensureValidUuid(shift.id, 'shift');
 
   try {
-    let allMoves = await getLocalData('duo_pos_shift_movements') || [];
-    
+    let allMoves = (await getLocalData('duo_pos_shift_movements')) || [];
+
     const mappedMoves = (shift.movements || []).map((m: any) => mapMovementToDb(m, dbShiftId));
 
     const newMoveIds = mappedMoves.map((m: any) => m.id);
@@ -1073,14 +1076,14 @@ export async function syncSaveShift(
 // ─── REGISTRAR TRASPASO DE MERCANCÍA COMPLETO (Cabecera + Items) ───────────────
 export async function syncSaveStockTransfer(
   transfer: any,
-  allTransfers: any[]
+  allTransfers: any[],
 ): Promise<{ success: boolean; error?: string }> {
   await setLocalData('duo_pos_stock_transfers', allTransfers);
 
   const dbTransferId = ensureValidUuid(transfer.id, 'txn');
 
   try {
-    let allItems = await getLocalData('duo_pos_stock_transfer_items') || [];
+    let allItems = (await getLocalData('duo_pos_stock_transfer_items')) || [];
 
     const mappedItems = (transfer.items || []).map((item: any) => ({
       id: generateUUID(),
@@ -1088,7 +1091,7 @@ export async function syncSaveStockTransfer(
       product_id: item.productId ? ensureValidUuid(item.productId, 'prod') : null,
       name: item.name,
       emoji: item.emoji || '📦',
-      quantity: Number(item.quantity)
+      quantity: Number(item.quantity),
     }));
 
     allItems = allItems.filter((i: any) => i.transfer_id !== dbTransferId);
@@ -1104,7 +1107,7 @@ export async function syncSaveStockTransfer(
       shipped_at: transfer.shippedAt || null,
       received_at: transfer.receivedAt || null,
       notes: transfer.notes || '',
-      carrier: transfer.carrier || ''
+      carrier: transfer.carrier || '',
     };
 
     if (isOnline()) {
@@ -1141,14 +1144,14 @@ export async function syncSaveStockTransfer(
 // ─── REGISTRAR ÓRDEN DE COMPRA COMPLETA (Cabecera + Detalles) ─────────────────────
 export async function syncSavePurchaseOrder(
   po: any,
-  allPurchaseOrders: any[]
+  allPurchaseOrders: any[],
 ): Promise<{ success: boolean; error?: string }> {
   await setLocalData('duo_pos_purchase_orders', allPurchaseOrders);
 
   const dbPoId = po.id; // po-1001 o UUID
 
   try {
-    let allItems = await getLocalData('duo_pos_purchase_order_items') || [];
+    let allItems = (await getLocalData('duo_pos_purchase_order_items')) || [];
 
     const mappedItems = (po.items || []).map((item: any) => ({
       id: generateUUID(),
@@ -1157,7 +1160,7 @@ export async function syncSavePurchaseOrder(
       name: item.name,
       emoji: item.emoji || '📦',
       cost: Number(item.cost),
-      quantity: Number(item.quantity)
+      quantity: Number(item.quantity),
     }));
 
     allItems = allItems.filter((i: any) => i.purchase_order_id !== dbPoId);

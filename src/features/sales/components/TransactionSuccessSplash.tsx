@@ -42,16 +42,19 @@ export default function TransactionSuccessSplash({
   const handlePrintEscPosTicket = (txn: Transaction) => {
     playSound('swoosh');
     setPromoMessage('🖨️ [ESC/POS] Enviando binario raw thermal al bus IoT...');
-    toast.info('Generando payload binario ESC/POS para el ticket thermal...', { title: 'Imprimiendo... 🖨️', duration: 1500 });
+    toast.info('Generando payload binario ESC/POS para el ticket thermal...', {
+      title: 'Imprimiendo... 🖨️',
+      duration: 1500,
+    });
     setTimeout(() => {
       const receiptData = {
         companyName: billingSettings.companyName || 'DuoPOS S.A. de C.V.',
         taxId: billingSettings.companyTaxId || 'DUO091218ACC',
-        items: txn.items.map(it => ({
+        items: txn.items.map((it) => ({
           name: it.name,
           qty: it.quantity,
           price: it.price,
-          total: it.price * it.quantity
+          total: it.price * it.quantity,
         })),
         subtotal: txn.subtotal,
         tax: txn.tax,
@@ -61,14 +64,20 @@ export default function TransactionSuccessSplash({
         date: new Date(txn.date).toLocaleString('es-ES'),
         invoiceNo: txn.invoiceData?.invoiceNo,
         uuid: txn.invoiceData?.uuid,
-        cardPaymentDetails: txn.cardPaymentDetails
+        cardPaymentDetails: txn.cardPaymentDetails,
       };
-      
+
       const rawText = generateRawEscPos(receiptData, hardwareSettings.thermalPrinter);
       console.log('ESC/POS payload successfully generated:\n', rawText);
 
-      toast.success('¡Impresión finalizada! Ticket registrado en el Bus IoT. +15 XP ⚡', { title: 'Impresión Exitosa 🖨️', duration: 5000 });
-      toast.info(`Impresión finalizada. Dispositivo: Térmico (${hardwareSettings.thermalPrinter.paperWidth}), Puerto: ${hardwareSettings.thermalPrinter.connectionType.toUpperCase()}. +15 XP ⚡`, { title: 'Impresión ESC/POS 🔌', duration: 5000 });
+      toast.success('¡Impresión finalizada! Ticket registrado en el Bus IoT. +15 XP ⚡', {
+        title: 'Impresión Exitosa 🖨️',
+        duration: 5000,
+      });
+      toast.info(
+        `Impresión finalizada. Dispositivo: Térmico (${hardwareSettings.thermalPrinter.paperWidth}), Puerto: ${hardwareSettings.thermalPrinter.connectionType.toUpperCase()}. +15 XP ⚡`,
+        { title: 'Impresión ESC/POS 🔌', duration: 5000 },
+      );
       onGrantXp(15);
       playSound('levelup');
     }, 800);
@@ -78,10 +87,17 @@ export default function TransactionSuccessSplash({
   const handlePrintReceipt = (txn: Transaction) => {
     try {
       const esc = (s: string | number | undefined | null) =>
-        String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        String(s ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
-        toast.error('⚠️ Pop-up bloqueado. Por favor, permite ventanas emergentes para poder imprimir recibos de facturación.');
+        toast.error(
+          '⚠️ Pop-up bloqueado. Por favor, permite ventanas emergentes para poder imprimir recibos de facturación.',
+        );
         return;
       }
 
@@ -90,9 +106,10 @@ export default function TransactionSuccessSplash({
       const curSymbol = billingSettings?.currencySymbol || '$';
       const curDecimals = billingSettings?.currencyDecimals !== undefined ? billingSettings.currencyDecimals : 2;
 
-      const itemsHtml = txn.items.map(it => {
-        const rateLabel = it.taxRateApplied !== undefined ? ` [Tasa ${it.taxRateApplied}%]` : '';
-        return `
+      const itemsHtml = txn.items
+        .map((it) => {
+          const rateLabel = it.taxRateApplied !== undefined ? ` [Tasa ${it.taxRateApplied}%]` : '';
+          return `
         <tr>
           <td style="padding: 4px 0;">
             ${esc(it.emoji)} ${esc(it.name)} x${it.quantity}
@@ -100,9 +117,11 @@ export default function TransactionSuccessSplash({
           </td>
           <td align="right" style="padding: 4px 0; font-family: monospace;">${curSymbol}${(it.price * it.quantity).toFixed(curDecimals)}</td>
         </tr>
-      `}).join('');
+      `;
+        })
+        .join('');
 
-      const qrUrl = inv 
+      const qrUrl = inv
         ? `https://api.qrserver.com/v1/create-qr-code/?size=100x100&color=000&data=${encodeURIComponent(`https://duopos.mock/verificar?uuid=${inv.uuid}&total=${txn.total}`)}`
         : '';
 
@@ -132,10 +151,14 @@ export default function TransactionSuccessSplash({
           </head>
           <body>
             <div class="text-center header">🦉 ${esc(billingSettings?.companyName || 'Duo Academia S.A. de C.V.')} 🦉</div>
-            ${billingSettings?.customTicketHeader ? `
+            ${
+              billingSettings?.customTicketHeader
+                ? `
             <div class="text-center" style="font-size: 9px; font-weight: bold; margin-bottom: 4px; color: #555; line-height: 1.2;">
               ${esc(billingSettings.customTicketHeader)}
-            </div>` : ''}
+            </div>`
+                : ''
+            }
             <div class="text-center" style="font-size: 9px; font-weight: bold; color: #555;">
               ${esc(billingSettings?.companyAddress || 'Nido Verde #12, Bosque de Duolingo')}<br/>
               CP: ${esc(billingSettings?.companyPostalCode || '06700')} | RFC: ${esc(billingSettings?.companyTaxId || 'DAC120525D10')}
@@ -146,7 +169,9 @@ export default function TransactionSuccessSplash({
             <div><strong>FECHA EMISIÓN:</strong> ${esc(new Date(txn.date).toLocaleString())}</div>
             <div><strong>CAJERO:</strong> ${esc(txn.employeeName.toUpperCase())}</div>
             
-            ${inv ? `
+            ${
+              inv
+                ? `
             <div class="invoice-box">
                <div class="text-center" style="font-weight: bold; text-decoration: underline; margin-bottom: 4px;">FACTURA ELECTRÓNICA LEGAL (SIMULADA)</div>
               <strong>FOLIO FISCAL:</strong> ${esc(inv.invoiceNo)}<br/>
@@ -160,7 +185,9 @@ export default function TransactionSuccessSplash({
               <strong>USO CFDI:</strong> ${esc(inv.useCFDI)}<br/>
               <strong>FORMA PAGO:</strong> ${esc(inv.paymentForm)}
             </div>
-            ` : ''}
+            `
+                : ''
+            }
  
             <div class="separator"></div>
             <table>
@@ -180,11 +207,15 @@ export default function TransactionSuccessSplash({
                 <td>Subtotal (Consumo base):</td>
                 <td align="right">${curSymbol}${txn.subtotal.toFixed(curDecimals)}</td>
               </tr>
-              ${txn.discount > 0 ? `
+              ${
+                txn.discount > 0
+                  ? `
               <tr>
                 <td>Descuentos/Club:</td>
                 <td align="right">-${curSymbol}${txn.discount.toFixed(curDecimals)}</td>
-              </tr>` : ''}
+              </tr>`
+                  : ''
+              }
               <tr>
                 <td>Impuestos desglosados (${billingSettings?.taxName || 'IVA'}):</td>
                 <td align="right">${curSymbol}${txn.tax.toFixed(curDecimals)}</td>
@@ -198,7 +229,9 @@ export default function TransactionSuccessSplash({
             <div class="separator"></div>
             <div class="text-center"><strong>MÉTODO DE COBRO:</strong> ${esc(txn.paymentMethod.toUpperCase())}</div>
             
-            ${txn.cardPaymentDetails ? `
+            ${
+              txn.cardPaymentDetails
+                ? `
             <div class="invoice-box" style="margin-top: 6px; font-size: 8px; line-height: 1.4;">
               <div style="font-weight: bold; text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 2px; margin-bottom: 3px; font-size: 8.5px;">CONEXIÓN INTEGRACIÓN POS</div>
               <strong>SUCURSAL TERMINAL:</strong> ${esc(txn.cardPaymentDetails.terminalId)}<br/>
@@ -208,24 +241,36 @@ export default function TransactionSuccessSplash({
               <strong>COD. AUTORIZACION:</strong> ${esc(txn.cardPaymentDetails.authCode)}<br/>
               <strong>EMV AID:</strong> ${esc(txn.cardPaymentDetails.aid)}<br/>
               <strong>EMV ARQC:</strong> ${esc(txn.cardPaymentDetails.arqc)}<br/>
-              ${txn.cardPaymentDetails.signatureBase64 ? `
+              ${
+                txn.cardPaymentDetails.signatureBase64
+                  ? `
               <div style="text-align: center; margin-top: 6px; text-transform: uppercase;">
                 <span style="font-size: 6.5px; display: block; color: #555; font-weight: bold;">Firma Electrónica Autorizada:</span>
                 <img src="${txn.cardPaymentDetails.signatureBase64}" style="height: 30px; max-width: 120px; border: 1px solid #999; padding: 1px; border-radius: 4px; background-color: #fff; display: inline-block; margin-top: 2px;" />
               </div>
-              ` : ''}
+              `
+                  : ''
+              }
             </div>
-            ` : ''}
+            `
+                : ''
+            }
             
-            ${txn.customerId ? `
+            ${
+              txn.customerId
+                ? `
             <div class="text-center" style="margin-top: 6px; font-weight: bold; font-size: 10px;">
               💎 CLUB DE GEMAS DUOLINGO:<br />
               ${txn.gemsRedeemed ? `Canjeado: -${txn.gemsRedeemed} G` : ''}
               ${txn.gemsRedeemed && txn.gemsGained ? ' | ' : ''}
               ${txn.gemsGained ? `Acumula: +${txn.gemsGained} G` : ''}
-            </div>` : ''}
+            </div>`
+                : ''
+            }
 
-            ${inv ? `
+            ${
+              inv
+                ? `
             <div class="separator"></div>
             <div class="text-center" style="margin-top: 5px;">
               <img src="${qrUrl}" alt="QR SAT" style="width: 80px; height: 80px; display: inline-block;" />
@@ -239,7 +284,9 @@ export default function TransactionSuccessSplash({
                 <span style="font-size: 7px; color: #444;">${esc(billingSettings?.certifyingAuthority || 'SAT Ficticio')}</span>
               </div>
             </div>
-            ` : ''}
+            `
+                : ''
+            }
 
             <div class="reward">
               🎉 ¡PRESTIGIO ADQUIRIDO!<br />Has obtenido +${txn.xpGained} XP de racha
@@ -263,19 +310,24 @@ export default function TransactionSuccessSplash({
 
   // Real-world native share or clipboard backup
   const handleShareReceipt = async (txn: Transaction) => {
-    const shareText = `🦉 DuoPOS Ticket ${txn.id} 🦉\n` +
+    const shareText =
+      `🦉 DuoPOS Ticket ${txn.id} 🦉\n` +
       `---------------------------\n` +
       `Cajero: ${txn.employeeName}\n` +
       `Fecha: ${new Date(txn.date).toLocaleDateString()}\n` +
       `Detalles:\n` +
-      txn.items.map(it => `• ${it.emoji} ${it.name} (x${it.quantity}) - $${(it.price * it.quantity).toFixed(2)}`).join('\n') +
+      txn.items
+        .map((it) => `• ${it.emoji} ${it.name} (x${it.quantity}) - $${(it.price * it.quantity).toFixed(2)}`)
+        .join('\n') +
       `\n---------------------------\n` +
       `Subtotal: $${txn.subtotal.toFixed(2)}\n` +
       (txn.discount > 0 ? `Descuento: -$${txn.discount.toFixed(2)}\n` : '') +
       `Impuestos: $${txn.tax.toFixed(2)}\n` +
       `TOTAL: $${txn.total.toFixed(2)} USD\n` +
       `---------------------------\n` +
-      (txn.customerId ? `💎 Club de Gemas: ${txn.gemsRedeemed ? `Canjeado -${txn.gemsRedeemed}G ` : ''}${txn.gemsGained ? `| Ganado +${txn.gemsGained}G` : ''}\n---------------------------\n` : '') +
+      (txn.customerId
+        ? `💎 Club de Gemas: ${txn.gemsRedeemed ? `Canjeado -${txn.gemsRedeemed}G ` : ''}${txn.gemsGained ? `| Ganado +${txn.gemsGained}G` : ''}\n---------------------------\n`
+        : '') +
       `🏆 Recompensa: +${txn.xpGained} XP extra acumulados!\n` +
       `¡Gracias por tu racha comercial!`;
 
@@ -283,7 +335,7 @@ export default function TransactionSuccessSplash({
       try {
         await navigator.share({
           title: `Ticket DuoPOS - ${txn.id}`,
-          text: shareText
+          text: shareText,
         });
       } catch (err) {
         console.log('Dynamic native sharing canceled by user', err);
@@ -302,22 +354,17 @@ export default function TransactionSuccessSplash({
   return (
     <div className="fixed inset-0 z-50 bg-[#58cc02] flex flex-col items-center justify-center p-4 font-sans animate-zoomIn text-white text-center">
       <div className="max-w-md w-full space-y-6">
-        
         {/* Character Bounces high and cheers */}
         <span className="text-9xl block select-none drop-shadow-lg transform animate-bounce duration-500">
           {activeChar.avatar}
         </span>
 
         <div className="space-y-2 animate-fadeIn">
-          <span className="text-2xl font-black tracking-widest text-[#d2f09d] uppercase">
-            ¡VENTA REALIZADA!
-          </span>
+          <span className="text-2xl font-black tracking-widest text-[#d2f09d] uppercase">¡VENTA REALIZADA!</span>
           <h2 className="text-4xl md:text-5xl font-black leading-tight tracking-tight">
             {activeChar.name === 'Lily' ? 'Ugh, lo lograste.' : '¡Excelente Trabajo!'}
           </h2>
-          <p className="text-white/90 font-black text-sm max-w-xs mx-auto italic pl-4 pr-4">
-            "{activeChar.saleQuote}"
-          </p>
+          <p className="text-white/90 font-black text-sm max-w-xs mx-auto italic pl-4 pr-4">"{activeChar.saleQuote}"</p>
         </div>
 
         {/* Dynamic Receipt Metadata */}
@@ -330,9 +377,7 @@ export default function TransactionSuccessSplash({
           {/* Reward stats */}
           <div className="flex justify-around items-center">
             <div className="flex flex-col items-center">
-              <div className="bg-yellow-400 text-amber-950 p-2.5 rounded-full shadow-md animate-spin-slow">
-                ⭐
-              </div>
+              <div className="bg-yellow-400 text-amber-950 p-2.5 rounded-full shadow-md animate-spin-slow">⭐</div>
               <span className="text-[10px] uppercase font-black text-white/70 tracking-widest mt-1.5">RECOMPENSA</span>
               <span className="text-lg font-black mt-0.5">+{celebrateTxn.xpGained} XP</span>
             </div>
@@ -350,7 +395,7 @@ export default function TransactionSuccessSplash({
             <div className="bg-white/5 border border-white/10 rounded-xl p-2.5 text-xs font-black uppercase text-[#d2f09d] flex items-center justify-between">
               <span>💎 CLUB DE GEMAS:</span>
               <span className="font-mono text-white text-[10px]">
-                {celebrateTxn.gemsRedeemed ? `CANJEADO -${celebrateTxn.gemsRedeemed}G` : ''} 
+                {celebrateTxn.gemsRedeemed ? `CANJEADO -${celebrateTxn.gemsRedeemed}G` : ''}
                 {celebrateTxn.gemsRedeemed && celebrateTxn.gemsGained ? ' | ' : ''}
                 {celebrateTxn.gemsGained ? `GANADO +${celebrateTxn.gemsGained}G` : ''}
               </span>
@@ -362,8 +407,12 @@ export default function TransactionSuccessSplash({
             <div className="bg-yellow-400/20 border-2 border-yellow-450 rounded-2xl p-3 text-xs text-yellow-100 flex items-center gap-2.5 shadow-sm animate-pulse text-left">
               <span className="text-2xl">🔓</span>
               <div>
-                <span className="font-extrabold text-yellow-300 block uppercase text-[10px] tracking-wider leading-none">Cajón de Dinero Simulado Abierto (Click!)</span>
-                <span className="font-semibold block text-[10px] text-white/95 mt-1 animate-fadeIn">El resorte mecánico se ha disparado. Guarda el efectivo recibido y entrega el cambio correspondiente.</span>
+                <span className="font-extrabold text-yellow-300 block uppercase text-[10px] tracking-wider leading-none">
+                  Cajón de Dinero Simulado Abierto (Click!)
+                </span>
+                <span className="font-semibold block text-[10px] text-white/95 mt-1 animate-fadeIn">
+                  El resorte mecánico se ha disparado. Guarda el efectivo recibido y entrega el cambio correspondiente.
+                </span>
               </div>
             </div>
           )}
@@ -426,7 +475,6 @@ export default function TransactionSuccessSplash({
         <span className="text-xs text-white/60 font-black uppercase tracking-widest block">
           DuoPOS • El Cajero Ideal
         </span>
-
       </div>
     </div>
   );

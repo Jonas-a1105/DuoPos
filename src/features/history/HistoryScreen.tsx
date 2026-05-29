@@ -5,7 +5,19 @@
 
 import React, { useState } from 'react';
 import { Transaction, User, LegalBillingSettings } from '../../types';
-import { Search, Calendar, User as UserIcon, DollarSign, RefreshCcw, Landmark, Receipt, Sparkles, Filter, CreditCard, Download } from 'lucide-react';
+import {
+  Search,
+  Calendar,
+  User as UserIcon,
+  DollarSign,
+  RefreshCcw,
+  Landmark,
+  Receipt,
+  Sparkles,
+  Filter,
+  CreditCard,
+  Download,
+} from 'lucide-react';
 import FiscalInspectorModal from '../sales/components/FiscalInspectorModal';
 import { playSound } from '../../services/sounds';
 import { exportTransactionsToExcel } from '../../services/exportService';
@@ -45,16 +57,16 @@ interface HistoryScreenProps {
   billingSettings: LegalBillingSettings;
 }
 
-export default function HistoryScreen({ 
-  transactions, 
-  onRefundTransaction, 
+export default function HistoryScreen({
+  transactions,
+  onRefundTransaction,
   currentUser,
-  billingSettings
+  billingSettings,
 }: HistoryScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMethod, setSelectedMethod] = useState<'All' | 'cash' | 'card' | 'points'>('All');
   const [selectedReceiptId, setSelectedReceiptId] = useState<string | null>(null);
-  
+
   // Custom interactive fiscal state hook
   const [isFiscalInspectorOpen, setIsFiscalInspectorOpen] = useState(false);
 
@@ -64,32 +76,32 @@ export default function HistoryScreen({
   const [pinError, setPinError] = useState('');
 
   // Filter transactions
-  const filteredTransactions = transactions.filter(t => {
-    const matchesSearch = t.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          t.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          t.items.some(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
-    
+  const filteredTransactions = transactions.filter((t) => {
+    const matchesSearch =
+      t.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.items.some((item) => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
     const matchesMethod = selectedMethod === 'All' || t.paymentMethod === selectedMethod;
-    
+
     return matchesSearch && matchesMethod;
   });
 
-  const activeReceipt = transactions.find(t => t.id === selectedReceiptId);
+  const activeReceipt = transactions.find((t) => t.id === selectedReceiptId);
 
   return (
     <div className="space-y-6 animate-fadeIn font-sans p-1 md:p-3 relative pb-12">
-      
       {/* Page Title */}
       <div>
         <h2 className="text-3xl font-black text-gray-800 tracking-tight">Historial de Ventas</h2>
-        <p className="text-gray-400 font-bold text-sm">Audita las transacciones pasadas, emite reembolsos automáticos y supervisa cajeros.</p>
+        <p className="text-gray-400 font-bold text-sm">
+          Audita las transacciones pasadas, emite reembolsos automáticos y supervisa cajeros.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
         {/* Left Side: Audit Log List */}
         <div className="lg:col-span-2 space-y-4">
-          
           {/* Filters Bar card */}
           <div className="bg-white border-2 border-[#e5e5e5] border-b-[6px] rounded-3xl p-4 md:p-5 space-y-3 shadow-none">
             <div className="relative">
@@ -113,13 +125,13 @@ export default function HistoryScreen({
                 { key: 'All', label: 'Todos' },
                 { key: 'cash', label: '💸 Efectivo' },
                 { key: 'card', label: '💳 Tarjeta' },
-                { key: 'points', label: '⭐ Duopuntos' }
-              ].map(opt => (
+                { key: 'points', label: '⭐ Duopuntos' },
+              ].map((opt) => (
                 <button
                   key={opt.key}
                   onClick={() => setSelectedMethod(opt.key as any)}
                   className={`py-1 px-3 rounded-lg font-black text-xs transition-all uppercase cursor-pointer ${
-                    selectedMethod === opt.key 
+                    selectedMethod === opt.key
                       ? 'bg-[#1cb0f6] text-white border-b-2 border-[#1899d6]'
                       : 'bg-white text-gray-500 border-2 border-gray-150 hover:bg-gray-50 active:translate-y-0.5'
                   }`}
@@ -129,7 +141,10 @@ export default function HistoryScreen({
               ))}
               <div className="ml-auto">
                 <button
-                  onClick={() => { playSound('click'); exportTransactionsToExcel(filteredTransactions); }}
+                  onClick={() => {
+                    playSound('click');
+                    exportTransactionsToExcel(filteredTransactions);
+                  }}
                   className="py-1 px-3 rounded-lg font-black text-xs uppercase cursor-pointer bg-[#58cc02] text-white border-b-2 border-[#46a302] hover:bg-[#61e002] active:translate-y-0.5 flex items-center gap-1"
                 >
                   <Download size={12} /> Excel
@@ -144,18 +159,19 @@ export default function HistoryScreen({
               <span className="text-5xl block">📑</span>
               <h3 className="text-xl font-black text-gray-600">No hay ventas registradas</h3>
               <p className="text-gray-400 font-bold text-sm max-w-sm mx-auto">
-                No pudimos localizar ninguna factura que coincida con tus filtros. ¡Comienza a cobrar a tus clientes para poblar esta bitácora!
+                No pudimos localizar ninguna factura que coincida con tus filtros. ¡Comienza a cobrar a tus clientes
+                para poblar esta bitácora!
               </p>
             </div>
           ) : (
             <div className="space-y-3 overflow-y-auto max-h-[500px] pr-1">
-              {filteredTransactions.map(t => {
+              {filteredTransactions.map((t) => {
                 const isSelected = selectedReceiptId === t.id;
                 const formattedDate = new Date(t.date).toLocaleString('es-ES', {
                   day: 'numeric',
                   month: 'short',
                   hour: '2-digit',
-                  minute: '2-digit'
+                  minute: '2-digit',
                 });
 
                 return (
@@ -163,9 +179,7 @@ export default function HistoryScreen({
                     key={t.id}
                     onClick={() => setSelectedReceiptId(t.id)}
                     className={`bg-white border-2 rounded-2xl p-4 transition-all hover:scale-101 cursor-pointer flex flex-col md:flex-row justify-between md:items-center gap-4 ${
-                      isSelected 
-                        ? 'border-[#58cc02] bg-[#f2ffd9] border-b-[6px]' 
-                        : 'border-[#e5e5e5] border-b-4'
+                      isSelected ? 'border-[#58cc02] bg-[#f2ffd9] border-b-[6px]' : 'border-[#e5e5e5] border-b-4'
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -174,9 +188,7 @@ export default function HistoryScreen({
                       </div>
                       <div className="space-y-0.5 min-w-0">
                         <div className="flex flex-wrap items-baseline gap-1.5">
-                          <span className="font-black text-gray-800 text-sm truncate">
-                            ID: {t.id}
-                          </span>
+                          <span className="font-black text-gray-800 text-sm truncate">ID: {t.id}</span>
                           <span className="text-[10px] bg-white border border-gray-200 px-1.5 py-0.2 rounded-md font-bold text-gray-500 uppercase tracking-wider text-[8px] flex items-center gap-0.5">
                             XP: +{t.xpGained} ✨
                           </span>
@@ -188,32 +200,31 @@ export default function HistoryScreen({
                           • <Calendar size={12} /> {formattedDate}
                         </p>
                         <p className="text-xs text-gray-500 font-extrabold truncate italic mt-1 leading-none">
-                          {t.items.map(i => `${i.emoji}${i.name}x${i.quantity}`).join(', ')}
+                          {t.items.map((i) => `${i.emoji}${i.name}x${i.quantity}`).join(', ')}
                         </p>
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between md:justify-end gap-3 flex-shrink-0 border-t md:border-t-0 pt-2 md:pt-0">
                       <div className="text-left md:text-right">
-                        <span className="text-[10px] text-gray-400 font-black uppercase tracking-tight block">Total cobrado</span>
+                        <span className="text-[10px] text-gray-400 font-black uppercase tracking-tight block">
+                          Total cobrado
+                        </span>
                         <span className="text-lg font-black text-gray-800">${t.total.toFixed(2)}</span>
                       </div>
                       <span className="text-gray-300 md:block hidden">▶</span>
                     </div>
-
                   </div>
                 );
               })}
             </div>
           )}
-
         </div>
 
         {/* Right Side: High-fidelity Duolingo Style Active Receipt */}
         <div>
           {activeReceipt ? (
             <div className="bg-white border-2 border-[#e5e5e5] border-b-[8px] rounded-3xl p-5 md:p-6 space-y-5 shadow-sm sticky top-4 animate-scaleUp">
-              
               <div className="text-center pb-4 border-b-2 border-dashed border-gray-200 space-y-2">
                 <span className="text-4xl block animate-bounce">🦉</span>
                 <h3 className="text-xl font-black text-gray-800">Recibo de Racha</h3>
@@ -239,14 +250,20 @@ export default function HistoryScreen({
                 <div className="flex justify-between items-center">
                   <span>Modo de pago:</span>
                   <span className="text-gray-850 font-black uppercase tracking-wider bg-sky-50 border border-sky-200 text-sky-700 px-2 py-0.5 rounded-lg flex items-center gap-1">
-                    {activeReceipt.paymentMethod === 'cash' ? '💸 Efectivo' : activeReceipt.paymentMethod === 'card' ? '💳 Tarjeta' : '⭐ Cupos Duo'}
+                    {activeReceipt.paymentMethod === 'cash'
+                      ? '💸 Efectivo'
+                      : activeReceipt.paymentMethod === 'card'
+                        ? '💳 Tarjeta'
+                        : '⭐ Cupos Duo'}
                   </span>
                 </div>
               </div>
 
               {/* Cart Purchased Items details */}
               <div className="border-t border-b border-gray-150 py-3 space-y-2.5">
-                <span className="text-[10px] text-gray-400 font-black uppercase tracking-wider block">Artículos Facturados:</span>
+                <span className="text-[10px] text-gray-400 font-black uppercase tracking-wider block">
+                  Artículos Facturados:
+                </span>
                 <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
                   {activeReceipt.items.map((it, index) => (
                     <div key={index} className="flex justify-between items-center text-sm font-black text-gray-700">
@@ -258,7 +275,8 @@ export default function HistoryScreen({
                         </div>
                       </div>
                       <span className="text-gray-800 text-xs flex-shrink-0 pl-1">
-                        {it.quantity} unidades • <span className="font-extrabold text-gray-900">${(it.price * it.quantity).toFixed(2)}</span>
+                        {it.quantity} unidades •{' '}
+                        <span className="font-extrabold text-gray-900">${(it.price * it.quantity).toFixed(2)}</span>
                       </span>
                     </div>
                   ))}
@@ -302,22 +320,42 @@ export default function HistoryScreen({
                     <div className="flex items-center gap-1.5">
                       <span className="text-lg">⚖️</span>
                       <div>
-                        <span className="text-xs font-black text-gray-800 leading-none block">Comprobante Fiscal Digital</span>
-                        <span className="text-[9px] font-black text-[#58cc02] uppercase block">Timbrado SAT Activo</span>
+                        <span className="text-xs font-black text-gray-800 leading-none block">
+                          Comprobante Fiscal Digital
+                        </span>
+                        <span className="text-[9px] font-black text-[#58cc02] uppercase block">
+                          Timbrado SAT Activo
+                        </span>
                       </div>
                     </div>
-                    <span className="text-[9px] font-Mono font-black bg-green-100 text-green-700 px-2 py-0.5 rounded-md">CFDI v4.0</span>
+                    <span className="text-[9px] font-Mono font-black bg-green-100 text-green-700 px-2 py-0.5 rounded-md">
+                      CFDI v4.0
+                    </span>
                   </div>
 
                   <div className="flex gap-3">
                     <div className="flex-1 text-[10px] font-mono space-y-1 text-gray-600 bg-white p-3 border rounded-xl shadow-inner">
-                      <p className="truncate"><strong>FOLIO FISCAL:</strong> {activeReceipt.invoiceData.invoiceNo}</p>
-                      <p className="truncate"><strong>UUID:</strong> {activeReceipt.invoiceData.uuid}</p>
-                      <p className="truncate"><strong>RECEPTOR:</strong> {activeReceipt.invoiceData.fiscalName}</p>
-                      <p className="truncate"><strong>RFC:</strong> {activeReceipt.invoiceData.taxId}</p>
-                      <p className="truncate"><strong>REGIMEN:</strong> {activeReceipt.invoiceData.regime}</p>
-                      <p className="truncate"><strong>USO CFDI:</strong> {activeReceipt.invoiceData.useCFDI}</p>
-                      <p className="truncate"><strong>CERTIFICADO:</strong> {activeReceipt.invoiceData.certifiedAt}</p>
+                      <p className="truncate">
+                        <strong>FOLIO FISCAL:</strong> {activeReceipt.invoiceData.invoiceNo}
+                      </p>
+                      <p className="truncate">
+                        <strong>UUID:</strong> {activeReceipt.invoiceData.uuid}
+                      </p>
+                      <p className="truncate">
+                        <strong>RECEPTOR:</strong> {activeReceipt.invoiceData.fiscalName}
+                      </p>
+                      <p className="truncate">
+                        <strong>RFC:</strong> {activeReceipt.invoiceData.taxId}
+                      </p>
+                      <p className="truncate">
+                        <strong>REGIMEN:</strong> {activeReceipt.invoiceData.regime}
+                      </p>
+                      <p className="truncate">
+                        <strong>USO CFDI:</strong> {activeReceipt.invoiceData.useCFDI}
+                      </p>
+                      <p className="truncate">
+                        <strong>CERTIFICADO:</strong> {activeReceipt.invoiceData.certifiedAt}
+                      </p>
                     </div>
                     <div className="shrink-0">
                       <SATQRCode transaction={activeReceipt} billingSettings={billingSettings} size={96} />
@@ -355,7 +393,11 @@ export default function HistoryScreen({
                   <button
                     type="button"
                     onClick={() => {
-                      if (confirm('¿Seguro que deseas reembolsar e invalidar esta venta? Se restituirá automáticamente el stock de cada artículo.')) {
+                      if (
+                        confirm(
+                          '¿Seguro que deseas reembolsar e invalidar esta venta? Se restituirá automáticamente el stock de cada artículo.',
+                        )
+                      ) {
                         onRefundTransaction(activeReceipt.id);
                         setSelectedReceiptId(null);
                       }
@@ -366,7 +408,6 @@ export default function HistoryScreen({
                   </button>
                 )}
               </div>
-
             </div>
           ) : (
             <div className="bg-gray-50 border-2 border-dashed border-[#e5e5e5] rounded-3xl p-8 text-center text-gray-400 font-bold text-sm space-y-2 sticky top-4">
@@ -375,7 +416,6 @@ export default function HistoryScreen({
             </div>
           )}
         </div>
-
       </div>
 
       {/* Supervisor/Manager PIN authorization modal */}
@@ -386,7 +426,8 @@ export default function HistoryScreen({
               <span className="text-4xl">🔐</span>
               <h3 className="text-xl font-black text-gray-800">Aprobación de Gerencia</h3>
               <p className="text-xs text-gray-400 font-bold leading-relaxed">
-                El rol de Cajero no tiene permisos de reembolso. Introduce la clave de supervisor o administrador para continuar.
+                El rol de Cajero no tiene permisos de reembolso. Introduce la clave de supervisor o administrador para
+                continuar.
               </p>
             </div>
 
@@ -397,7 +438,9 @@ export default function HistoryScreen({
             )}
 
             <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase text-gray-400 block tracking-wider">PIN de Desbloqueo (4 números)</label>
+              <label className="text-[10px] font-black uppercase text-gray-400 block tracking-wider">
+                PIN de Desbloqueo (4 números)
+              </label>
               <input
                 type="password"
                 maxLength={4}
@@ -409,7 +452,9 @@ export default function HistoryScreen({
                 }}
                 className="w-full text-center tracking-widest text-2xl py-2 border-2 border-[#e5e5e5] rounded-xl outline-none focus:border-[#1cb0f6] font-mono font-bold text-gray-800"
               />
-              <span className="text-[9px] text-gray-400 font-bold block text-center italic mt-1">Sugerencia: Introduce el código <strong>1234</strong> o <strong>1919</strong></span>
+              <span className="text-[9px] text-gray-400 font-bold block text-center italic mt-1">
+                Sugerencia: Introduce el código <strong>1234</strong> o <strong>1919</strong>
+              </span>
             </div>
 
             <div className="grid grid-cols-2 gap-2 pt-2">
@@ -462,7 +507,6 @@ export default function HistoryScreen({
           onClose={() => setIsFiscalInspectorOpen(false)}
         />
       )}
-
     </div>
   );
 }

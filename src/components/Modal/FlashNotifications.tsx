@@ -28,16 +28,15 @@ export const toast = {
   },
   achievement: (message: string, options?: { title?: string; duration?: number }) => {
     dispatchFlash({ id: Math.random().toString(), message, type: 'achievement', ...options });
-  }
+  },
 };
 
 const dispatchFlash = (n: FlashNotification) => {
-  flashListeners.forEach(listener => listener(n));
+  flashListeners.forEach((listener) => listener(n));
 };
 
 // Make it globally accessible to non-React parts or quick legacy scripts
 if (typeof window !== 'undefined') {
-  
 }
 
 export function FlashNotifications() {
@@ -45,9 +44,9 @@ export function FlashNotifications() {
 
   useEffect(() => {
     const handleAdd = (notification: FlashNotification) => {
-      setNotifications(prev => {
+      setNotifications((prev) => {
         // Prevent duplicate notifications currently on screen to avoid clutter
-        if (prev.some(n => n.message === notification.message && n.title === notification.title)) {
+        if (prev.some((n) => n.message === notification.message && n.title === notification.title)) {
           return prev;
         }
 
@@ -71,7 +70,7 @@ export function FlashNotifications() {
           message: detail.message,
           type: detail.type || 'info',
           title: detail.title,
-          duration: detail.duration
+          duration: detail.duration,
         });
       }
     };
@@ -79,13 +78,13 @@ export function FlashNotifications() {
     window.addEventListener('show-flash', handleEvent);
 
     return () => {
-      flashListeners = flashListeners.filter(l => l !== handleAdd);
+      flashListeners = flashListeners.filter((l) => l !== handleAdd);
       window.removeEventListener('show-flash', handleEvent);
     };
   }, []);
 
   const handleDismiss = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
   return (
@@ -101,7 +100,7 @@ export function FlashNotifications() {
 
 function NotificationCard({
   notification,
-  onDismiss
+  onDismiss,
 }: {
   notification: FlashNotification;
   onDismiss: (id: string) => void;
@@ -124,7 +123,7 @@ function NotificationCard({
       text: 'text-[#1c7b01]',
       titleColor: 'text-[#2b8a0e]',
       icon: <CheckCircle2 className="text-[#58cc02]" size={18} />,
-      emoji: '🔥' // Aero the Phoenix representation!
+      emoji: '🔥', // Aero the Phoenix representation!
     },
     error: {
       bg: 'bg-[#ffedf0]/95 backdrop-blur-md',
@@ -132,7 +131,7 @@ function NotificationCard({
       text: 'text-[#bd1616]',
       titleColor: 'text-[#ea2b2b]',
       icon: <XCircle className="text-[#ff4b4b]" size={18} />,
-      emoji: '❌'
+      emoji: '❌',
     },
     warning: {
       bg: 'bg-[#fff5e6]/95 backdrop-blur-md',
@@ -140,7 +139,7 @@ function NotificationCard({
       text: 'text-[#a66200]',
       titleColor: 'text-[#e67e22]',
       icon: <AlertTriangle className="text-[#ff9600]" size={18} />,
-      emoji: '⚡'
+      emoji: '⚡',
     },
     info: {
       bg: 'bg-[#e6f7ff]/95 backdrop-blur-md',
@@ -148,7 +147,7 @@ function NotificationCard({
       text: 'text-[#005c8a]',
       titleColor: 'text-[#1cb0f6]',
       icon: <Info className="text-[#1cb0f6]" size={18} />,
-      emoji: '🛡️' // Shield Crest representation!
+      emoji: '🛡️', // Shield Crest representation!
     },
     achievement: {
       bg: 'bg-[#f7f0ff]/95 backdrop-blur-md',
@@ -156,8 +155,8 @@ function NotificationCard({
       text: 'text-[#5a008a]',
       titleColor: 'text-[#8e44ad]',
       icon: <Sparkles className="text-[#9b59b6] animate-pulse" size={18} />,
-      emoji: '🏆'
-    }
+      emoji: '🏆',
+    },
   }[type];
 
   return (
@@ -181,12 +180,16 @@ function NotificationCard({
           </h4>
         ) : (
           <h4 className={`text-[10px] font-black uppercase tracking-wider ${config.titleColor} leading-tight`}>
-            {type === 'achievement' ? '¡Logro Desbloqueado!' : type === 'success' ? 'Éxito' : type === 'warning' ? 'Aviso Importante' : 'Notificación'}
+            {type === 'achievement'
+              ? '¡Logro Desbloqueado!'
+              : type === 'success'
+                ? 'Éxito'
+                : type === 'warning'
+                  ? 'Aviso Importante'
+                  : 'Notificación'}
           </h4>
         )}
-        <p className={`text-xs font-semibold mt-0.5 leading-snug ${config.text} break-words`}>
-          {message}
-        </p>
+        <p className={`text-xs font-semibold mt-0.5 leading-snug ${config.text} break-words`}>{message}</p>
       </div>
 
       <button
@@ -204,10 +207,15 @@ function NotificationCard({
           animate={{ width: '0%' }}
           transition={{ duration: duration / 1000, ease: 'linear' }}
           className={`h-full ${
-            type === 'success' ? 'bg-[#58cc02]' :
-            type === 'error' ? 'bg-[#ff4b4b]' :
-            type === 'warning' ? 'bg-[#ff9600]' :
-            type === 'info' ? 'bg-[#1cb0f6]' : 'bg-[#8e44ad]'
+            type === 'success'
+              ? 'bg-[#58cc02]'
+              : type === 'error'
+                ? 'bg-[#ff4b4b]'
+                : type === 'warning'
+                  ? 'bg-[#ff9600]'
+                  : type === 'info'
+                    ? 'bg-[#1cb0f6]'
+                    : 'bg-[#8e44ad]'
           }`}
         />
       </div>

@@ -4,12 +4,33 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  X, Check, RefreshCcw, Wifi, Pocket, Play, Sparkles, Terminal, 
-  HelpCircle, Monitor, Weight, Printer, Barcode, Pocket as CashDrawerIcon, 
-  ChevronRight, Disc, Eye, Settings, ShieldCheck, Download
+import {
+  X,
+  Check,
+  RefreshCcw,
+  Wifi,
+  Pocket,
+  Play,
+  Sparkles,
+  Terminal,
+  HelpCircle,
+  Monitor,
+  Weight,
+  Printer,
+  Barcode,
+  Pocket as CashDrawerIcon,
+  ChevronRight,
+  Disc,
+  Eye,
+  Settings,
+  ShieldCheck,
+  Download,
 } from 'lucide-react';
-import { HardwareDeviceSettings, DEFAULT_HARDWARE_SETTINGS, generateScaleProtocolBytes } from '../../services/printService';
+import {
+  HardwareDeviceSettings,
+  DEFAULT_HARDWARE_SETTINGS,
+  generateScaleProtocolBytes,
+} from '../../services/printService';
 import { playSound } from '../../services/sounds';
 import { toast } from '../../components/Modal/FlashNotifications';
 
@@ -19,26 +40,22 @@ interface HardwareHubModalProps {
   onClose: () => void;
 }
 
-export default function HardwareHubModal({
-  settings,
-  onSaveSettings,
-  onClose
-}: HardwareHubModalProps) {
+export default function HardwareHubModal({ settings, onSaveSettings, onClose }: HardwareHubModalProps) {
   const [activeDriverTab, setActiveDriverTab] = useState<'scale' | 'printer' | 'scanner' | 'drawer'>('scale');
-  
+
   // Local clones
   const [localSettings, setLocalSettings] = useState<HardwareDeviceSettings>({ ...settings });
-  
+
   // Real or simulated ports
   const [isScaleConnected, setIsScaleConnected] = useState(false);
   const [isPrinterConnected, setIsPrinterConnected] = useState(false);
   const [isScannerConnected, setIsScannerConnected] = useState(false);
-  
+
   // Simulation live feeds
   const [scaleSerialFeed, setScaleSerialFeed] = useState<string[]>([]);
-  const [scaleLiveWeight, setScaleLiveWeight] = useState(0.000);
+  const [scaleLiveWeight, setScaleLiveWeight] = useState(0.0);
   const [isWeightStable, setIsWeightStable] = useState(true);
-  
+
   // Print simulation ledger
   const [printedReceiptsSim, setPrintedReceiptsSim] = useState<string[]>([]);
   const [cashDrawerOpenState, setCashDrawerOpenState] = useState(false);
@@ -61,33 +78,42 @@ export default function HardwareHubModal({
         const noise = (Math.random() - 0.5) * 0.004;
         const currentOverride = localSettings.weighingScale.mockWeightOverride;
         const finalWeight = Math.max(0, currentOverride + (isWeightStable ? 0 : noise));
-        
+
         // Protocol string
         const dataStr = generateScaleProtocolBytes(
           finalWeight,
           localSettings.weighingScale.unit,
           localSettings.weighingScale.model,
-          isWeightStable
+          isWeightStable,
         );
-        
+
         setScaleLiveWeight(parseFloat(finalWeight.toFixed(3)));
-        setScaleSerialFeed(prev => [
+        setScaleSerialFeed((prev) => [
           `[${new Date().toLocaleTimeString()}] Ser-RX: ${dataStr.replace('\r', '\\r').replace('\n', '\\n')}`,
-          ...prev.slice(0, 15)
+          ...prev.slice(0, 15),
         ]);
       }, 500);
     }
     return () => clearInterval(scaleInterval);
-  }, [isScaleConnected, isWeightStable, localSettings.weighingScale.mockWeightOverride, localSettings.weighingScale.model, localSettings.weighingScale.unit]);
+  }, [
+    isScaleConnected,
+    isWeightStable,
+    localSettings.weighingScale.mockWeightOverride,
+    localSettings.weighingScale.model,
+    localSettings.weighingScale.unit,
+  ]);
 
   const toggleScaleConnection = () => {
     if (isScaleConnected) {
       setIsScaleConnected(false);
-      setScaleSerialFeed(prev => [`[INFO] Puerto serie ${localSettings.weighingScale.serialPort} CERRADO.`, ...prev]);
+      setScaleSerialFeed((prev) => [`[INFO] Puerto serie ${localSettings.weighingScale.serialPort} CERRADO.`, ...prev]);
       playSound('error');
     } else {
       setIsScaleConnected(true);
-      setScaleSerialFeed([`[INFO] Abriendo puerto serie ${localSettings.weighingScale.serialPort} a ${localSettings.weighingScale.baudRate} baudios...`, `[INFO] Conectado con éxito a Báscula ${localSettings.weighingScale.model.toUpperCase()}.`]);
+      setScaleSerialFeed([
+        `[INFO] Abriendo puerto serie ${localSettings.weighingScale.serialPort} a ${localSettings.weighingScale.baudRate} baudios...`,
+        `[INFO] Conectado con éxito a Báscula ${localSettings.weighingScale.model.toUpperCase()}.`,
+      ]);
       playSound('levelup');
     }
   };
@@ -96,18 +122,18 @@ export default function HardwareHubModal({
     onSaveSettings(localSettings);
     playSound('success');
     // Notification
-     toast.success('🔧 Configuración del hardware comercial aplicada correctamente en el bus local.');
+    toast.success('🔧 Configuración del hardware comercial aplicada correctamente en el bus local.');
   };
 
   // Test Print job execution inside driver simulation
   const triggerTestPrint = () => {
     setIsPrintingJob(true);
     playSound('swoosh');
-    
+
     setTimeout(() => {
       const width = localSettings.thermalPrinter.paperWidth === '80mm' ? 42 : 32;
       const tId = Math.floor(1000 + Math.random() * 9000);
-      
+
       const lines = [
         '='.repeat(width),
         '*** AUTODIAGNOSTICO DE IMPSERORA ***',
@@ -125,16 +151,16 @@ export default function HardwareHubModal({
         `Prueba EAN-13: ||||||||||||||||`,
         `DuoPOS - Racha Comercial Imparable`,
         '='.repeat(width),
-        '\n\n\n'
+        '\n\n\n',
       ];
       if (localSettings.thermalPrinter.cutEnabled) {
         lines.push('[CORTAR PAPEL - GS V 66]');
       }
-      
+
       setPrintedReceiptsSim(lines);
       setIsPrintingJob(false);
       playSound('success');
-      
+
       if (localSettings.thermalPrinter.cashDrawerEnabled) {
         triggerPulseDrawer();
       }
@@ -153,21 +179,18 @@ export default function HardwareHubModal({
   const simulateManualScannerTrigger = (code: string) => {
     if (!code) return;
     playSound('levelup');
-    
-    setScannerHitsLog(prev => [
-      `[SCANNER] Código detectado: "${code}" (Prefijo: none, Sufijo: LF/CR)`,
-      ...prev
-    ]);
-    
+
+    setScannerHitsLog((prev) => [`[SCANNER] Código detectado: "${code}" (Prefijo: none, Sufijo: LF/CR)`, ...prev]);
+
     // Broadcast a keydown event sequence so our global listener processes it!
     let chars = code.split('');
     let index = 0;
-    
+
     const interval = setInterval(() => {
       if (index < chars.length) {
         const keyEvent = new KeyboardEvent('keydown', {
           key: chars[index],
-          bubbles: true
+          bubbles: true,
         });
         window.dispatchEvent(keyEvent);
         index++;
@@ -176,7 +199,7 @@ export default function HardwareHubModal({
         setTimeout(() => {
           const enterEvent = new KeyboardEvent('keydown', {
             key: 'Enter',
-            bubbles: true
+            bubbles: true,
           });
           window.dispatchEvent(enterEvent);
         }, 30);
@@ -187,7 +210,6 @@ export default function HardwareHubModal({
   return (
     <div className="fixed inset-0 z-50 bg-[#141414]/80 backdrop-blur-xs flex items-center justify-center p-4 font-sans animate-fadeIn">
       <div className="bg-white border-2 border-gray-200 border-b-[8px] rounded-3xl w-full max-w-5xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl">
-        
         {/* UPPER BANNER */}
         <div className="bg-[#1e293b] p-4 text-white flex justify-between items-center shrink-0 border-b-2 border-slate-700">
           <div className="flex items-center gap-3">
@@ -195,14 +217,16 @@ export default function HardwareHubModal({
             <div>
               <h3 className="text-lg font-black tracking-tight uppercase flex items-center gap-2">
                 DuoPOS Retail IoT Hardware Bus
-                <span className="bg-emerald-500 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-lg font-mono">Active Drivers</span>
+                <span className="bg-emerald-500 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-lg font-mono">
+                  Active Drivers
+                </span>
               </h3>
               <p className="text-[10px] text-gray-300 font-bold uppercase tracking-wider font-mono">
                 Básculas de Peso • Impresoras ESC/POS • Escáneres Seriales • WebSerial API v1.2
               </p>
             </div>
           </div>
-          
+
           <button
             onClick={onClose}
             className="p-1.5 hover:bg-slate-750 text-slate-400 hover:text-white rounded-xl transition-all cursor-pointer border border-slate-650"
@@ -213,34 +237,70 @@ export default function HardwareHubModal({
 
         {/* WORKSPACE SECTIONS: COLUMN BAR SUBTABS */}
         <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
-          
           {/* LEFT HARDWARE NAVIGATION GUIDE */}
           <div className="w-full md:w-56 bg-slate-50 border-r border-gray-150 p-3 space-y-1.5 shrink-0 overflow-y-auto flex md:flex-col gap-1 md:gap-0">
-            <span className="hidden md:block text-[9px] font-black text-gray-400 uppercase tracking-widest px-2.5 pb-2">Controladores Disponibles</span>
-            
+            <span className="hidden md:block text-[9px] font-black text-gray-400 uppercase tracking-widest px-2.5 pb-2">
+              Controladores Disponibles
+            </span>
+
             {[
-              { id: 'scale', label: 'Báscula RS-232', desc: 'Pesaje de granos y panes', icon: <Weight size={16} />, status: isScaleConnected ? 'CONECTADA' : 'DESCONECTADA', statusColor: isScaleConnected ? 'text-emerald-500' : 'text-gray-400' },
-              { id: 'printer', label: 'Impresora ESC/POS', desc: 'Códigos térmicos y corte', icon: <Printer size={16} />, status: localSettings.thermalPrinter.enabled ? 'SOPORTANTE' : 'APAGADA', statusColor: 'text-indigo-500' },
-              { id: 'scanner', label: 'Escáner Láser EAN', desc: 'Lector de barra USB / HID', icon: <Barcode size={16} />, status: 'CORRIENDO', statusColor: 'text-emerald-500' },
-              { id: 'drawer', label: 'Cajón Monedero', desc: 'RJ11 Impulso Eléctrico', icon: <CashDrawerIcon size={16} />, status: cashDrawerOpenState ? '¡ABIERTO!' : 'CERRADO', statusColor: cashDrawerOpenState ? 'text-rose-500 font-black animate-bounce' : 'text-gray-400' }
-            ].map(tab => {
+              {
+                id: 'scale',
+                label: 'Báscula RS-232',
+                desc: 'Pesaje de granos y panes',
+                icon: <Weight size={16} />,
+                status: isScaleConnected ? 'CONECTADA' : 'DESCONECTADA',
+                statusColor: isScaleConnected ? 'text-emerald-500' : 'text-gray-400',
+              },
+              {
+                id: 'printer',
+                label: 'Impresora ESC/POS',
+                desc: 'Códigos térmicos y corte',
+                icon: <Printer size={16} />,
+                status: localSettings.thermalPrinter.enabled ? 'SOPORTANTE' : 'APAGADA',
+                statusColor: 'text-indigo-500',
+              },
+              {
+                id: 'scanner',
+                label: 'Escáner Láser EAN',
+                desc: 'Lector de barra USB / HID',
+                icon: <Barcode size={16} />,
+                status: 'CORRIENDO',
+                statusColor: 'text-emerald-500',
+              },
+              {
+                id: 'drawer',
+                label: 'Cajón Monedero',
+                desc: 'RJ11 Impulso Eléctrico',
+                icon: <CashDrawerIcon size={16} />,
+                status: cashDrawerOpenState ? '¡ABIERTO!' : 'CERRADO',
+                statusColor: cashDrawerOpenState ? 'text-rose-500 font-black animate-bounce' : 'text-gray-400',
+              },
+            ].map((tab) => {
               const belongs = activeDriverTab === tab.id;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => { setActiveDriverTab(tab.id as any); playSound('click'); }}
+                  onClick={() => {
+                    setActiveDriverTab(tab.id as any);
+                    playSound('click');
+                  }}
                   className={`w-full text-left p-2.5 rounded-2xl border-b-2 font-black text-xs uppercase transition-all flex items-center gap-3 cursor-pointer ${
-                    belongs 
-                      ? 'bg-[#1cb0f6] text-white border-sky-700 shadow-sm' 
+                    belongs
+                      ? 'bg-[#1cb0f6] text-white border-sky-700 shadow-sm'
                       : 'bg-white hover:bg-gray-100/70 border-gray-200 text-gray-600'
                   }`}
                 >
-                  <div className={`p-1.5 rounded-xl ${belongs ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                  <div
+                    className={`p-1.5 rounded-xl ${belongs ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}
+                  >
                     {tab.icon}
                   </div>
                   <div className="flex-1 min-w-0">
                     <span className="block leading-snug">{tab.label}</span>
-                    <span className={`block text-[8px] font-black tracking-widest leading-none mt-0.5 uppercase ${belongs ? 'text-amber-200' : tab.statusColor}`}>
+                    <span
+                      className={`block text-[8px] font-black tracking-widest leading-none mt-0.5 uppercase ${belongs ? 'text-amber-200' : tab.statusColor}`}
+                    >
                       {tab.status}
                     </span>
                   </div>
@@ -262,7 +322,6 @@ export default function HardwareHubModal({
 
           {/* RIGHT VIEW DETAILS */}
           <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/20 space-y-6">
-            
             {/* CONTAINER 1: WEIGHING SCALE DRIVER INTERACTIVE */}
             {activeDriverTab === 'scale' && (
               <div className="space-y-6 animate-fadeIn">
@@ -281,8 +340,8 @@ export default function HardwareHubModal({
                     type="button"
                     onClick={toggleScaleConnection}
                     className={`py-2 px-4 rounded-xl border-b-4 font-black text-xs uppercase transition-all tracking-wider flex items-center gap-2 cursor-pointer ${
-                      isScaleConnected 
-                        ? 'bg-rose-500 text-white border-rose-700 hover:bg-rose-400' 
+                      isScaleConnected
+                        ? 'bg-rose-500 text-white border-rose-700 hover:bg-rose-400'
                         : 'bg-[#58cc02] text-white border-[#3e9301] hover:bg-[#61e002]'
                     }`}
                   >
@@ -294,17 +353,21 @@ export default function HardwareHubModal({
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
                   {/* Left params column */}
                   <div className="lg:col-span-5 bg-white border-2 border-gray-200 rounded-3xl p-4 space-y-4">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[#1cb0f6] block border-b pb-2">Parámetros de Interfaz</span>
-                    
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[#1cb0f6] block border-b pb-2">
+                      Parámetros de Interfaz
+                    </span>
+
                     <div className="space-y-3.5">
                       <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">Modelo / Protocolo Báscula</label>
+                        <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">
+                          Modelo / Protocolo Báscula
+                        </label>
                         <select
                           value={localSettings.weighingScale.model}
                           onChange={(e) => {
                             setLocalSettings({
                               ...localSettings,
-                              weighingScale: { ...localSettings.weighingScale, model: e.target.value as any }
+                              weighingScale: { ...localSettings.weighingScale, model: e.target.value as any },
                             });
                           }}
                           className="w-full bg-gray-50 border-2 border-gray-200 p-2 text-xs font-bold rounded-xl outline-none"
@@ -318,27 +381,31 @@ export default function HardwareHubModal({
 
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
-                          <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">Puerto Serie COM</label>
+                          <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">
+                            Puerto Serie COM
+                          </label>
                           <input
                             type="text"
                             value={localSettings.weighingScale.serialPort}
                             onChange={(e) => {
                               setLocalSettings({
                                 ...localSettings,
-                                weighingScale: { ...localSettings.weighingScale, serialPort: e.target.value }
+                                weighingScale: { ...localSettings.weighingScale, serialPort: e.target.value },
                               });
                             }}
                             className="w-full bg-gray-50 border-2 border-gray-200 p-2 text-xs font-bold rounded-xl font-mono text-center"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">Baudios / Baud Rate</label>
+                          <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">
+                            Baudios / Baud Rate
+                          </label>
                           <select
                             value={localSettings.weighingScale.baudRate}
                             onChange={(e) => {
                               setLocalSettings({
                                 ...localSettings,
-                                weighingScale: { ...localSettings.weighingScale, baudRate: Number(e.target.value) }
+                                weighingScale: { ...localSettings.weighingScale, baudRate: Number(e.target.value) },
                               });
                             }}
                             className="w-full bg-gray-50 border-2 border-gray-200 p-2 text-xs font-bold rounded-xl font-mono text-center"
@@ -353,15 +420,17 @@ export default function HardwareHubModal({
 
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
-                          <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">Unidad de Medida</label>
+                          <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">
+                            Unidad de Medida
+                          </label>
                           <div className="flex gap-1.5 pt-0.5">
-                            {['kg', 'lb'].map(unit => (
+                            {['kg', 'lb'].map((unit) => (
                               <button
                                 key={unit}
                                 onClick={() => {
                                   setLocalSettings({
                                     ...localSettings,
-                                    weighingScale: { ...localSettings.weighingScale, unit: unit as any }
+                                    weighingScale: { ...localSettings.weighingScale, unit: unit as any },
                                   });
                                   playSound('click');
                                 }}
@@ -378,13 +447,18 @@ export default function HardwareHubModal({
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">Filtro Estabilización</label>
+                          <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">
+                            Filtro Estabilización
+                          </label>
                           <select
                             value={localSettings.weighingScale.stabilizationDelayMs}
                             onChange={(e) => {
                               setLocalSettings({
                                 ...localSettings,
-                                weighingScale: { ...localSettings.weighingScale, stabilizationDelayMs: Number(e.target.value) }
+                                weighingScale: {
+                                  ...localSettings.weighingScale,
+                                  stabilizationDelayMs: Number(e.target.value),
+                                },
                               });
                             }}
                             className="w-full bg-gray-50 border-2 border-gray-200 p-1.5 text-xs font-bold rounded-xl text-center"
@@ -395,24 +469,29 @@ export default function HardwareHubModal({
                           </select>
                         </div>
                       </div>
-
                     </div>
                   </div>
 
                   {/* Right interactive Scale simulation panel */}
                   <div className="lg:col-span-7 space-y-4">
-                    
                     {/* PHYSICAL EMULATOR DIAL */}
                     <div className="bg-[#0f172a] rounded-3xl p-5 border-2 border-slate-800 text-white flex flex-col justify-between relative overflow-hidden min-h-[200px] shadow-lg">
-                      
                       {/* Grid background visual */}
                       <div className="absolute inset-0 select-none opacity-10 font-mono pointer-events-none text-[8px] bg-grid" />
 
                       <div className="relative flex justify-between z-10 items-start">
-                        <span className="text-[9px] font-black uppercase text-amber-400 tracking-widest font-mono">LCD WEIGH DIAL TERMINAL</span>
+                        <span className="text-[9px] font-black uppercase text-amber-400 tracking-widest font-mono">
+                          LCD WEIGH DIAL TERMINAL
+                        </span>
                         <div className="flex gap-1">
-                          <span className={`w-2.5 h-2.5 rounded-full block ${isScaleConnected ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} title="Baud Active" />
-                          <span className={`w-2.5 h-2.5 rounded-full block ${isWeightStable ? 'bg-sky-500 text-[6px]' : 'bg-amber-400 animate-bounce'}`} title="Stabilizer Trigger" />
+                          <span
+                            className={`w-2.5 h-2.5 rounded-full block ${isScaleConnected ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}
+                            title="Baud Active"
+                          />
+                          <span
+                            className={`w-2.5 h-2.5 rounded-full block ${isWeightStable ? 'bg-sky-500 text-[6px]' : 'bg-amber-400 animate-bounce'}`}
+                            title="Stabilizer Trigger"
+                          />
                         </div>
                       </div>
 
@@ -426,7 +505,7 @@ export default function HardwareHubModal({
                             <span className="text-xl font-black text-emerald-500 font-mono pl-2 block sm:inline-block">
                               {localSettings.weighingScale.unit.toUpperCase()}
                             </span>
-                            
+
                             <div className="flex justify-center gap-4 mt-2 text-[8px] font-black uppercase tracking-widest text-[#94a3b8] border-t border-slate-700/50 pt-1.5">
                               <span className={isWeightStable ? 'text-sky-400' : ''}>● STABLE</span>
                               <span>● NET: {scaleLiveWeight > 0 ? 'YES' : 'ZERO'}</span>
@@ -450,7 +529,7 @@ export default function HardwareHubModal({
                                 onClick={() => {
                                   setLocalSettings({
                                     ...localSettings,
-                                    weighingScale: { ...localSettings.weighingScale, mockWeightOverride: 0.00}
+                                    weighingScale: { ...localSettings.weighingScale, mockWeightOverride: 0.0 },
                                   });
                                   playSound('click');
                                 }}
@@ -471,21 +550,30 @@ export default function HardwareHubModal({
                               onChange={(e) => {
                                 setLocalSettings({
                                   ...localSettings,
-                                  weighingScale: { ...localSettings.weighingScale, mockWeightOverride: parseFloat(e.target.value) }
+                                  weighingScale: {
+                                    ...localSettings.weighingScale,
+                                    mockWeightOverride: parseFloat(e.target.value),
+                                  },
                                 });
                                 setIsWeightStable(false);
-                                setTimeout(() => setIsWeightStable(true), localSettings.weighingScale.stabilizationDelayMs);
+                                setTimeout(
+                                  () => setIsWeightStable(true),
+                                  localSettings.weighingScale.stabilizationDelayMs,
+                                );
                               }}
                               className="flex-1 accent-amber-500 cursor-pointer h-1.5"
                             />
                             <span className="font-mono text-xs font-black text-amber-400 w-16 text-right">
-                              {localSettings.weighingScale.mockWeightOverride.toFixed(3)} {localSettings.weighingScale.unit}
+                              {localSettings.weighingScale.mockWeightOverride.toFixed(3)}{' '}
+                              {localSettings.weighingScale.unit}
                             </span>
                           </div>
 
                           <div className="flex justify-between items-center text-[8px] text-gray-400 font-bold uppercase mt-1">
                             <span>0.00 kg (Vacía)</span>
-                            <span className="text-amber-500">¿Inestable? Mueve el slider para simular colocación activa</span>
+                            <span className="text-amber-500">
+                              ¿Inestable? Mueve el slider para simular colocación activa
+                            </span>
                             <span>5.00 kg (Capacidad Máx)</span>
                           </div>
                         </div>
@@ -494,18 +582,21 @@ export default function HardwareHubModal({
 
                     {/* SERIAL DATA MONITOR */}
                     <div className="bg-slate-900 rounded-2xl p-3 border border-slate-850 space-y-1.5">
-                      <span className="text-[9px] font-black font-mono text-emerald-500 uppercase tracking-widest block">Console RX Port COM Stream</span>
+                      <span className="text-[9px] font-black font-mono text-emerald-500 uppercase tracking-widest block">
+                        Console RX Port COM Stream
+                      </span>
                       <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 h-28 overflow-y-auto font-mono text-[9px] text-[#4ade80] space-y-1">
                         {scaleSerialFeed.length === 0 ? (
                           <p className="text-slate-500 font-bold italic">Esperando apertura de puerto COM...</p>
                         ) : (
                           scaleSerialFeed.map((feed, i) => (
-                            <p key={i} className="leading-tight">{feed}</p>
+                            <p key={i} className="leading-tight">
+                              {feed}
+                            </p>
                           ))
                         )}
                       </div>
                     </div>
-
                   </div>
                 </div>
               </div>
@@ -527,21 +618,26 @@ export default function HardwareHubModal({
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                  
                   {/* Left columns */}
                   <div className="lg:col-span-5 bg-white border-2 border-gray-200 rounded-3xl p-4 space-y-4">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500 block border-b pb-2">Parámetros del Driver</span>
-                    
+                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500 block border-b pb-2">
+                      Parámetros del Driver
+                    </span>
+
                     <div className="space-y-4">
-                      
                       <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">Método de Conexión Física</label>
+                        <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">
+                          Método de Conexión Física
+                        </label>
                         <select
                           value={localSettings.thermalPrinter.connectionType}
                           onChange={(e) => {
                             setLocalSettings({
                               ...localSettings,
-                              thermalPrinter: { ...localSettings.thermalPrinter, connectionType: e.target.value as any }
+                              thermalPrinter: {
+                                ...localSettings.thermalPrinter,
+                                connectionType: e.target.value as any,
+                              },
                             });
                           }}
                           className="w-full bg-gray-50 border-2 border-gray-200 p-2 text-xs font-bold rounded-xl outline-none"
@@ -555,16 +651,18 @@ export default function HardwareHubModal({
 
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">Ancho de Papel</label>
+                          <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">
+                            Ancho de Papel
+                          </label>
                           <div className="flex gap-1.5 pt-0.5">
-                            {['80mm', '58mm'].map(sz => (
+                            {['80mm', '58mm'].map((sz) => (
                               <button
                                 key={sz}
                                 type="button"
                                 onClick={() => {
                                   setLocalSettings({
                                     ...localSettings,
-                                    thermalPrinter: { ...localSettings.thermalPrinter, paperWidth: sz as any }
+                                    thermalPrinter: { ...localSettings.thermalPrinter, paperWidth: sz as any },
                                   });
                                   playSound('click');
                                 }}
@@ -581,13 +679,15 @@ export default function HardwareHubModal({
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">Densidad DPI</label>
+                          <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">
+                            Densidad DPI
+                          </label>
                           <select
                             value={localSettings.thermalPrinter.dpiDensity}
                             onChange={(e) => {
                               setLocalSettings({
                                 ...localSettings,
-                                thermalPrinter: { ...localSettings.thermalPrinter, dpiDensity: Number(e.target.value) }
+                                thermalPrinter: { ...localSettings.thermalPrinter, dpiDensity: Number(e.target.value) },
                               });
                             }}
                             className="w-full bg-gray-50 border-2 border-gray-200 p-1.5 text-xs font-bold rounded-xl outline-none"
@@ -600,8 +700,10 @@ export default function HardwareHubModal({
                       </div>
 
                       <div className="border-t pt-3.5 space-y-2">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block pb-1">Funciones del Hardware</span>
-                        
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block pb-1">
+                          Funciones del Hardware
+                        </span>
+
                         <label className="flex items-center gap-2.5 cursor-pointer selection-none">
                           <input
                             type="checkbox"
@@ -609,15 +711,19 @@ export default function HardwareHubModal({
                             onChange={(e) => {
                               setLocalSettings({
                                 ...localSettings,
-                                thermalPrinter: { ...localSettings.thermalPrinter, cutEnabled: e.target.checked }
+                                thermalPrinter: { ...localSettings.thermalPrinter, cutEnabled: e.target.checked },
                               });
                               playSound('click');
                             }}
                             className="accent-indigo-600 w-4.5 h-4.5"
                           />
                           <div>
-                            <span className="text-xs font-extrabold text-slate-700 block">Cortador Automático Activado (Auto-Cut)</span>
-                            <span className="text-[9px] text-gray-400 font-bold block max-w-xs">Envía el comando GS V 66 al concluir el ticket</span>
+                            <span className="text-xs font-extrabold text-slate-700 block">
+                              Cortador Automático Activado (Auto-Cut)
+                            </span>
+                            <span className="text-[9px] text-gray-400 font-bold block max-w-xs">
+                              Envía el comando GS V 66 al concluir el ticket
+                            </span>
                           </div>
                         </label>
 
@@ -628,19 +734,25 @@ export default function HardwareHubModal({
                             onChange={(e) => {
                               setLocalSettings({
                                 ...localSettings,
-                                thermalPrinter: { ...localSettings.thermalPrinter, cashDrawerEnabled: e.target.checked }
+                                thermalPrinter: {
+                                  ...localSettings.thermalPrinter,
+                                  cashDrawerEnabled: e.target.checked,
+                                },
                               });
                               playSound('click');
                             }}
                             className="accent-indigo-600 w-4.5 h-4.5"
                           />
                           <div>
-                            <span className="text-xs font-extrabold text-slate-700 block">Apertura de Cajón al Cobrar (RJ11 Kick)</span>
-                            <span className="text-[9px] text-gray-400 font-bold block max-w-xs">Impulso de 24V al puerto DK del cajón por pin 2</span>
+                            <span className="text-xs font-extrabold text-slate-700 block">
+                              Apertura de Cajón al Cobrar (RJ11 Kick)
+                            </span>
+                            <span className="text-[9px] text-gray-400 font-bold block max-w-xs">
+                              Impulso de 24V al puerto DK del cajón por pin 2
+                            </span>
                           </div>
                         </label>
                       </div>
-
                     </div>
                   </div>
 
@@ -660,12 +772,16 @@ export default function HardwareHubModal({
                         <div className="text-center py-12 text-slate-500 font-black italic space-y-3">
                           <span className="text-3xl block select-none">📄</span>
                           <p className="text-xs">No se han enviado trabajos de impresión.</p>
-                          <p className="text-[9px] uppercase tracking-wider text-slate-600">Presiona "Imprimir Autodiagnóstico" abajo</p>
+                          <p className="text-[9px] uppercase tracking-wider text-slate-600">
+                            Presiona "Imprimir Autodiagnóstico" abajo
+                          </p>
                         </div>
                       ) : (
                         <div className="bg-white text-slate-800 p-4 border border-gray-300 shadow-inner max-w-sm mx-auto text-xs font-mono scale-95 origin-top select-all leading-normal">
                           {printedReceiptsSim.map((line, idx) => (
-                            <p key={idx} className="whitespace-pre min-h-[1em]">{line}</p>
+                            <p key={idx} className="whitespace-pre min-h-[1em]">
+                              {line}
+                            </p>
                           ))}
                         </div>
                       )}
@@ -689,9 +805,7 @@ export default function HardwareHubModal({
                         Pulsar Cajón (RJ11) 🪙
                       </button>
                     </div>
-
                   </div>
-
                 </div>
               </div>
             )}
@@ -712,17 +826,21 @@ export default function HardwareHubModal({
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
                   {/* Left Column Config */}
                   <div className="lg:col-span-5 bg-white border-2 border-gray-200 rounded-3xl p-4 space-y-4">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-sky-500 block border-b pb-2">Reglas de Acceso</span>
-                    
+                    <span className="text-[10px] font-black uppercase tracking-widest text-sky-500 block border-b pb-2">
+                      Reglas de Acceso
+                    </span>
+
                     <div className="space-y-3.5">
                       <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">Modo lógico del Escáner</label>
+                        <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">
+                          Modo lógico del Escáner
+                        </label>
                         <select
                           value={localSettings.barcodeScanner.mode}
                           onChange={(e) => {
                             setLocalSettings({
                               ...localSettings,
-                              barcodeScanner: { ...localSettings.barcodeScanner, mode: e.target.value as any }
+                              barcodeScanner: { ...localSettings.barcodeScanner, mode: e.target.value as any },
                             });
                           }}
                           className="w-full bg-gray-50 border-2 border-gray-200 p-2 text-xs font-bold rounded-xl outline-none"
@@ -734,8 +852,10 @@ export default function HardwareHubModal({
                       </div>
 
                       <div className="border-t pt-3.5 space-y-2">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block pb-1">Automatización</span>
-                        
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block pb-1">
+                          Automatización
+                        </span>
+
                         <label className="flex items-center gap-2.5 cursor-pointer selection-none">
                           <input
                             type="checkbox"
@@ -743,15 +863,19 @@ export default function HardwareHubModal({
                             onChange={(e) => {
                               setLocalSettings({
                                 ...localSettings,
-                                barcodeScanner: { ...localSettings.barcodeScanner, autoAdd: e.target.checked }
+                                barcodeScanner: { ...localSettings.barcodeScanner, autoAdd: e.target.checked },
                               });
                               playSound('click');
                             }}
                             className="accent-indigo-600 w-4.5 h-4.5"
                           />
                           <div>
-                            <span className="text-xs font-extrabold text-slate-700 block">Agregar al Carrito de Inmediato</span>
-                            <span className="text-[9px] text-gray-400 font-bold block max-w-xs">Busca el código y lo suma directamente al carrito si hay stock</span>
+                            <span className="text-xs font-extrabold text-slate-700 block">
+                              Agregar al Carrito de Inmediato
+                            </span>
+                            <span className="text-[9px] text-gray-400 font-bold block max-w-xs">
+                              Busca el código y lo suma directamente al carrito si hay stock
+                            </span>
                           </div>
                         </label>
                       </div>
@@ -759,27 +883,29 @@ export default function HardwareHubModal({
                       <div className="bg-sky-50 border border-sky-100 p-3 rounded-2xl text-[10px] text-sky-850 font-bold leading-normal flex gap-1.5 pt-2">
                         <Terminal size={18} className="text-sky-500 shrink-0 mt-0.5" />
                         <p>
-                          <strong>Intercepción Global:</strong> Al estar en emulación de teclado, cualquier disparo del gatillo del escáner físico se intercepta desde la ventana enfocada automáticamente.
+                          <strong>Intercepción Global:</strong> Al estar en emulación de teclado, cualquier disparo del
+                          gatillo del escáner físico se intercepta desde la ventana enfocada automáticamente.
                         </p>
                       </div>
-
                     </div>
                   </div>
 
                   {/* Right Simulated Scanner Device */}
                   <div className="lg:col-span-7 space-y-4">
-                    
                     <div className="bg-[#111827] text-white p-5 border-2 border-gray-800 rounded-3xl space-y-4 shadow-lg min-h-[220px]">
                       <div className="flex justify-between items-center text-[9px] font-black text-sky-400 font-mono">
                         <span>📟 DISPARADOR DIRECTO DE ESCÁNER DE PISTOLA</span>
-                        <span className="bg-green-500 text-white font-mono px-1.5 py-0.5 rounded text-[8px]">ONLINE</span>
+                        <span className="bg-green-500 text-white font-mono px-1.5 py-0.5 rounded text-[8px]">
+                          ONLINE
+                        </span>
                       </div>
 
                       <div className="bg-[#1f2937] p-3 border border-gray-700 rounded-2xl space-y-2 text-center">
                         <p className="text-[10px] font-bold text-gray-300">
-                          Presiona sobre un producto preestablecido para disparar simulated laser pulses (Simular gatillo físico):
+                          Presiona sobre un producto preestablecido para disparar simulated laser pulses (Simular
+                          gatillo físico):
                         </p>
-                        
+
                         <div className="grid grid-cols-2 gap-1.5 pt-1.5">
                           <button
                             type="button"
@@ -840,23 +966,25 @@ export default function HardwareHubModal({
                           Disparar Láser 🔦
                         </button>
                       </div>
-
                     </div>
 
                     {/* SCANNER CONSOLE RX LOGS */}
                     <div className="bg-slate-900 rounded-2xl p-3 border border-slate-850 space-y-1">
-                      <span className="text-[9px] font-black font-mono text-[#1cb0f6] uppercase tracking-widest block">Lecturas de Recinto Recientemente</span>
+                      <span className="text-[9px] font-black font-mono text-[#1cb0f6] uppercase tracking-widest block">
+                        Lecturas de Recinto Recientemente
+                      </span>
                       <div className="bg-slate-950 p-3 h-24 rounded-xl border border-slate-800 font-mono text-[9.5px] text-[#22d3ee] overflow-y-auto space-y-1">
                         {scannerHitsLog.length === 0 ? (
                           <p className="text-slate-500 font-bold italic">Esperando lectura por haz de luz...</p>
                         ) : (
                           scannerHitsLog.map((log, i) => (
-                            <p key={i} className="leading-tight">{log}</p>
+                            <p key={i} className="leading-tight">
+                              {log}
+                            </p>
                           ))
                         )}
                       </div>
                     </div>
-
                   </div>
                 </div>
               </div>
@@ -877,14 +1005,16 @@ export default function HardwareHubModal({
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
                   <div className="lg:col-span-5 bg-white border-2 border-gray-200 rounded-3xl p-4 space-y-4">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-rose-500 block border-b pb-2">Parámetros del Cajón</span>
-                    
+                    <span className="text-[10px] font-black uppercase tracking-widest text-rose-500 block border-b pb-2">
+                      Parámetros del Cajón
+                    </span>
+
                     <div className="space-y-4.5">
                       <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">Puerto de Conexión del Solenoide</label>
-                        <select
-                          className="w-full bg-gray-50 border-2 border-gray-200 p-2 text-xs font-bold rounded-xl outline-none"
-                        >
+                        <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">
+                          Puerto de Conexión del Solenoide
+                        </label>
+                        <select className="w-full bg-gray-50 border-2 border-gray-200 p-2 text-xs font-bold rounded-xl outline-none">
                           <option>RJ11 en Impresora Térmica (LPT1 / DK-Port)</option>
                           <option>Controladora USB Relé Directo de Cajetilla</option>
                           <option>Apertura Manual Segura</option>
@@ -892,10 +1022,10 @@ export default function HardwareHubModal({
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">Código Decimal de Apertura (ESC/POS Drawer Kick)</label>
-                        <select
-                          className="w-full bg-gray-50 border-2 border-gray-200 p-1.5 text-xs font-bold rounded-xl font-mono"
-                        >
+                        <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">
+                          Código Decimal de Apertura (ESC/POS Drawer Kick)
+                        </label>
+                        <select className="w-full bg-gray-50 border-2 border-gray-200 p-1.5 text-xs font-bold rounded-xl font-mono">
                           <option>ESC p 0 25 250 (Pin 2 standard)</option>
                           <option>ESC p 1 25 250 (Pin 5 standard)</option>
                           <option>BEL \x07 (Buzzer de apertura)</option>
@@ -905,17 +1035,19 @@ export default function HardwareHubModal({
                       <div className="bg-red-50 border border-red-100 p-3 rounded-2xl text-[10px] text-red-800 font-bold leading-normal flex gap-1.5 pt-2">
                         <HelpCircle size={18} className="text-red-500 shrink-0 mt-0.5" />
                         <p>
-                          <strong>Medida de Seguridad:</strong> El cajón de dinero registrará cada evento de apertura manual o emergente en el Log del turno actual para proteger el arqueo.
+                          <strong>Medida de Seguridad:</strong> El cajón de dinero registrará cada evento de apertura
+                          manual o emergente en el Log del turno actual para proteger el arqueo.
                         </p>
                       </div>
-
                     </div>
                   </div>
 
                   {/* Drawer visual representation */}
                   <div className="lg:col-span-7 bg-[#27272a] rounded-3xl p-5 border-2 border-[#18181b] block text-white text-center relative overflow-hidden min-h-[250px] shadow-lg flex flex-col justify-between items-center bg-radial">
-                    <span className="text-[10px] font-black uppercase text-rose-400 tracking-widest font-mono">SIMULADOR VISUAL CAJÓN METÁLICO</span>
-                    
+                    <span className="text-[10px] font-black uppercase text-rose-400 tracking-widest font-mono">
+                      SIMULADOR VISUAL CAJÓN METÁLICO
+                    </span>
+
                     {/* Drawer Animation Container */}
                     <div className="my-3 flex flex-col items-center">
                       {cashDrawerOpenState ? (
@@ -924,7 +1056,9 @@ export default function HardwareHubModal({
                           <div className="bg-[#3f3f46] p-6 rounded-2xl border-4 border-[#58cc02] shadow-xl text-center space-y-1.5 relative z-10 w-48 text-gray-100 font-extrabold text-sm uppercase">
                             <span className="text-4xl block select-none">💸</span>
                             <span>¡CAJÓN ABIERTO!</span>
-                            <span className="text-[8px] bg-emerald-100 text-emerald-800 py-0.5 px-2 rounded-full block">IMPULSO RJ11 OK</span>
+                            <span className="text-[8px] bg-emerald-100 text-emerald-800 py-0.5 px-2 rounded-full block">
+                              IMPULSO RJ11 OK
+                            </span>
                           </div>
                         </div>
                       ) : (
@@ -948,14 +1082,11 @@ export default function HardwareHubModal({
                         Enviar Impulso de Solenoide (Apertura Emergencia) 💸
                       </button>
                     </div>
-
                   </div>
                 </div>
               </div>
             )}
-
           </div>
-
         </div>
 
         {/* BOTTOM OPTION CONTROL RAIL */}
@@ -980,7 +1111,6 @@ export default function HardwareHubModal({
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );

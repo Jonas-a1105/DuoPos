@@ -96,7 +96,6 @@ export default function CheckoutWizard({
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fadeIn text-gray-805 font-sans">
       <div className="bg-white border-2 border-gray-200 border-b-8 rounded-3xl max-w-md w-full p-6 space-y-5 relative shadow-2xl">
-        
         <button
           onClick={onClose}
           className="absolute right-4 top-4 text-gray-450 hover:text-gray-600 rounded-full hover:bg-gray-100 p-1 bg-gray-50 border cursor-pointer font-bold select-none h-6 w-6 flex items-center justify-center"
@@ -112,7 +111,8 @@ export default function CheckoutWizard({
           </p>
           <div className="mt-1">
             <span className="text-sm text-indigo-750 font-black uppercase tracking-wider bg-indigo-50 py-1.5 px-3 rounded-2xl border border-indigo-100 inline-block animate-pulse">
-              Total Bs: {totalAmountVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.
+              Total Bs: {totalAmountVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
+              Bs.
             </span>
           </div>
         </div>
@@ -125,14 +125,16 @@ export default function CheckoutWizard({
               { key: 'cash', label: 'Efectivo', icon: '💸' },
               { key: 'card', label: 'Tarjeta', icon: '💳' },
               { key: 'points', label: 'DuoPuntos', icon: '⭐' },
-              { key: 'credit', label: 'Fiado', icon: '📝' }
-            ].map(item => (
+              { key: 'credit', label: 'Fiado', icon: '📝' },
+            ].map((item) => (
               <button
                 key={item.key}
                 type="button"
                 onClick={() => {
                   if (item.key === 'credit' && !selectedCustomer) {
-                    alert('Para cobrar bajo la línea de crédito ("Fiado"), primero debes asociar un cliente en la sección del carrito.');
+                    alert(
+                      'Para cobrar bajo la línea de crédito ("Fiado"), primero debes asociar un cliente en la sección del carrito.',
+                    );
                     return;
                   }
                   setPaymentMethod(item.key as any);
@@ -140,7 +142,7 @@ export default function CheckoutWizard({
                 className={`p-2.5 rounded-2xl border-2 transition-all flex flex-col items-center justify-center border-b-4 cursor-pointer ${
                   paymentMethod === item.key
                     ? 'bg-green-50 border-[#58cc02] scale-102 font-black'
-                    : (item.key === 'credit' && !selectedCustomer)
+                    : item.key === 'credit' && !selectedCustomer
                       ? 'bg-gray-50 border-gray-150 opacity-40 cursor-not-allowed'
                       : 'bg-white border-gray-200 hover:bg-gray-50 active:translate-y-[2px]'
                 }`}
@@ -154,18 +156,29 @@ export default function CheckoutWizard({
 
         {/* Mixed Payment Toggle */}
         <div className="bg-[#fafafa] border border-gray-150 p-3 rounded-2xl flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer select-none text-left" onClick={() => { setIsMixedPayment(!isMixedPayment); playSound('click'); }}>
+          <div
+            className="flex items-center gap-2 cursor-pointer select-none text-left"
+            onClick={() => {
+              setIsMixedPayment(!isMixedPayment);
+              playSound('click');
+            }}
+          >
             <span className="text-xl">🔀</span>
             <div className="text-left">
               <span className="text-[11px] font-black text-gray-800 leading-none block">Registrar como Pago Mixto</span>
-              <span className="text-[9px] font-extrabold text-[#1cb0f6] uppercase tracking-wider block">Combinar Efectivo + Tarjeta</span>
+              <span className="text-[9px] font-extrabold text-[#1cb0f6] uppercase tracking-wider block">
+                Combinar Efectivo + Tarjeta
+              </span>
             </div>
           </div>
           <label className="relative inline-flex items-center cursor-pointer select-none">
             <input
               type="checkbox"
               checked={isMixedPayment}
-              onChange={(e) => { setIsMixedPayment(e.target.checked); playSound('click'); }}
+              onChange={(e) => {
+                setIsMixedPayment(e.target.checked);
+                playSound('click');
+              }}
               className="sr-only peer"
             />
             <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#58cc02]" />
@@ -179,7 +192,7 @@ export default function CheckoutWizard({
               <span>🔀</span>
               <span>Distribución de Pago Mixto</span>
             </div>
-            
+
             <div className="space-y-3">
               {/* Cash Portion */}
               <div className="space-y-1">
@@ -219,7 +232,8 @@ export default function CheckoutWizard({
 
             {/* Info Note banner */}
             <p className="text-[10px] text-[#2c7a02] bg-[#f2ffd4] font-semibold border border-[#ccd9ad] p-2 rounded-lg leading-normal">
-              💡 **Concepto**: Ingresa el monto en efectivo que entrega el cliente. El resto se procesa y reporta como cobro a tarjeta bancaria.
+              💡 **Concepto**: Ingresa el monto en efectivo que entrega el cliente. El resto se procesa y reporta como
+              cobro a tarjeta bancaria.
             </p>
           </div>
         ) : paymentMethod === 'cash' ? (
@@ -228,7 +242,12 @@ export default function CheckoutWizard({
               <div className="flex justify-between items-center">
                 <label className="text-xs font-black uppercase text-gray-550">Efectivo Recibido ($)</label>
                 <span className="text-[10px] text-gray-400 font-bold">
-                  ~ {(cashNum * exchangeRate).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.
+                  ~{' '}
+                  {(cashNum * exchangeRate).toLocaleString('es-VE', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}{' '}
+                  Bs.
                 </span>
               </div>
               <input
@@ -249,7 +268,7 @@ export default function CheckoutWizard({
                 { label: '+$20', val: Math.ceil(totalAmount) + 20 },
                 { label: '$20', val: 20 },
                 { label: '$50', val: 50 },
-                { label: '$100', val: 100 }
+                { label: '$100', val: 100 },
               ].map((bill, index) => {
                 if (bill.val < totalAmount && bill.label.startsWith('$')) return null;
                 return (
@@ -269,9 +288,7 @@ export default function CheckoutWizard({
             <div className="flex flex-col bg-white p-3 rounded-xl border border-gray-150 text-left">
               <div className="flex justify-between items-center w-full">
                 <span className="text-xs font-black uppercase text-gray-400">Cambio Devuelto USD:</span>
-                <span className="font-mono text-lg font-black text-gray-800">
-                  ${changeDue.toFixed(2)}
-                </span>
+                <span className="font-mono text-lg font-black text-gray-800">${changeDue.toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center w-full border-t border-dashed border-gray-100 pt-1.5 mt-1.5">
                 <span className="text-xs font-black uppercase text-gray-400">Cambio en Bs. (VES):</span>
@@ -301,7 +318,7 @@ export default function CheckoutWizard({
                   <span className="text-gray-400 font-black uppercase text-[10px]">Crédito Utilizado:</span>
                   <span className="text-red-650 font-mono">${(selectedCustomer.creditUsed || 0).toFixed(2)}</span>
                 </p>
-                
+
                 <div className="pt-2 border-t border-dashed border-amber-200 flex justify-between items-center text-xs text-amber-955 font-black">
                   <span>Disponible para "Fiado":</span>
                   <span className="font-mono bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-150">
@@ -309,9 +326,10 @@ export default function CheckoutWizard({
                   </span>
                 </div>
 
-                {((selectedCustomer.creditLimit || 0) - (selectedCustomer.creditUsed || 0)) < totalAmount && (
+                {(selectedCustomer.creditLimit || 0) - (selectedCustomer.creditUsed || 0) < totalAmount && (
                   <p className="text-[10px] text-red-500 font-black leading-tight uppercase mt-1">
-                    ⚠️ ATENCIÓN: El total de la compra (${totalAmount.toFixed(2)}) supera el cupo disponible de este cliente.
+                    ⚠️ ATENCIÓN: El total de la compra (${totalAmount.toFixed(2)}) supera el cupo disponible de este
+                    cliente.
                   </p>
                 )}
               </div>
@@ -321,16 +339,22 @@ export default function CheckoutWizard({
           </div>
         ) : paymentMethod === 'points' ? (
           <div className="p-4 bg-blue-50 bg-opacity-80 rounded-2xl border border-blue-200 text-left space-y-2 text-xs font-bold text-gray-700">
-            <p className="text-blue-800 font-black uppercase text-[10px] flex items-center gap-1"><span>⭐</span> Canje por DuoPuntos / Certificados</p>
+            <p className="text-blue-800 font-black uppercase text-[10px] flex items-center gap-1">
+              <span>⭐</span> Canje por DuoPuntos / Certificados
+            </p>
             <p>Se realiza el descuento de puntos de su racha activa.</p>
             {selectedCustomer && (
-              <p className="text-[10px] text-gray-500">Saldo actual de gemas: <strong className="text-green-600">{selectedCustomer.gems} G</strong></p>
+              <p className="text-[10px] text-gray-500">
+                Saldo actual de gemas: <strong className="text-green-600">{selectedCustomer.gems} G</strong>
+              </p>
             )}
           </div>
         ) : (
           <div className="p-4 bg-gray-50 rounded-2xl border text-center font-bold text-xs text-gray-500 space-y-2">
             <p>💳 Modo de cobro electrónico interactivo activado.</p>
-            <p className="text-[10px] text-gray-400 italic font-medium">Desliza la tarjeta o aprueba el cupón NFC en la terminal de pago simlativa.</p>
+            <p className="text-[10px] text-gray-400 italic font-medium">
+              Desliza la tarjeta o aprueba el cupón NFC en la terminal de pago simlativa.
+            </p>
           </div>
         )}
 
@@ -340,16 +364,16 @@ export default function CheckoutWizard({
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="text-xl select-none">🎓</span>
               <div className="min-w-0">
-                <span className="text-[9px] uppercase font-black text-sky-400 block leading-tight">Cliente Premium de la Racha</span>
+                <span className="text-[9px] uppercase font-black text-sky-400 block leading-tight">
+                  Cliente Premium de la Racha
+                </span>
                 <span className="text-gray-800 font-extrabold truncate text-xs block">{selectedCustomer.name}</span>
               </div>
             </div>
 
             <div className="text-right shrink-0 font-extrabold">
               {gemsToRedeem > 0 && (
-                <p className="text-red-500 font-black font-mono text-[10px]">
-                  📉 Canjea: -{gemsToRedeem} Gems
-                </p>
+                <p className="text-red-500 font-black font-mono text-[10px]">📉 Canjea: -{gemsToRedeem} Gems</p>
               )}
               <p className="text-[#58cc02] font-black font-mono text-[10px]">
                 📈 Acumula: +{Math.max(1, Math.floor(totalAmount))} Gems
@@ -361,9 +385,12 @@ export default function CheckoutWizard({
         {/* ADVANCED LEGAL BILLING OPTION ACCORDION */}
         <div className="bg-[#fafafa] border-2 border-gray-150 rounded-2xl p-3.5 space-y-2.5 text-left">
           <div className="flex items-center justify-between">
-            <div 
-              className="flex items-center gap-2 cursor-pointer select-none" 
-              onClick={() => { setRequestLegalInvoice(!requestLegalInvoice); playSound('click'); }}
+            <div
+              className="flex items-center gap-2 cursor-pointer select-none"
+              onClick={() => {
+                setRequestLegalInvoice(!requestLegalInvoice);
+                playSound('click');
+              }}
             >
               <span className="text-xl">⚖️</span>
               <div>
@@ -378,7 +405,10 @@ export default function CheckoutWizard({
               <input
                 type="checkbox"
                 checked={requestLegalInvoice}
-                onChange={(e) => { setRequestLegalInvoice(e.target.checked); playSound('click'); }}
+                onChange={(e) => {
+                  setRequestLegalInvoice(e.target.checked);
+                  playSound('click');
+                }}
                 className="sr-only peer"
               />
               <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#58cc02]" />
@@ -393,10 +423,12 @@ export default function CheckoutWizard({
                   <span className="font-black uppercase tracking-wider block">
                     {isVen ? '📄 Registro de Información Fiscal (RIF)' : '📄 Constancia de Situación Fiscal (CSF)'}
                   </span>
-                  <span className="text-[9px] bg-emerald-105 text-emerald-800 px-1.5 py-0.5 rounded-md font-black font-mono">SIMULADOR OCR</span>
+                  <span className="text-[9px] bg-emerald-105 text-emerald-800 px-1.5 py-0.5 rounded-md font-black font-mono">
+                    SIMULADOR OCR
+                  </span>
                 </div>
                 <p className="text-[9px] text-emerald-700 font-bold leading-tight">
-                  {isVen 
+                  {isVen
                     ? 'Carga de manera simulada el RIF del contribuyente para auto-completar los datos fiscales legalmente.'
                     : 'Carga de manera simulada la constancia del contribuyente para auto-completar los datos fiscales legalmente.'}
                 </p>
@@ -449,13 +481,15 @@ export default function CheckoutWizard({
               </div>
 
               <div className="space-y-1">
-                <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">Denominación o Razón Social *</label>
+                <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">
+                  Denominación o Razón Social *
+                </label>
                 <input
                   type="text"
                   required
                   value={invoiceFiscalName}
                   onChange={(e) => setInvoiceFiscalName(e.target.value)}
-                  placeholder={isVen ? "Ej. DISTRIBUIDORA DUO C.A." : "Ej. OSCAR EL PINTOR S.A."}
+                  placeholder={isVen ? 'Ej. DISTRIBUIDORA DUO C.A.' : 'Ej. OSCAR EL PINTOR S.A.'}
                   className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-black uppercase text-gray-800 focus:border-[#58cc02] outline-none"
                 />
               </div>
@@ -470,19 +504,21 @@ export default function CheckoutWizard({
                     required
                     value={invoiceTaxId}
                     onChange={(e) => setInvoiceTaxId(e.target.value)}
-                    placeholder={isVen ? "J-12345678-9 o V-12345678-9" : "XAXX010101000"}
+                    placeholder={isVen ? 'J-12345678-9 o V-12345678-9' : 'XAXX010101000'}
                     className="w-full px-2.5 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-black uppercase text-gray-800 focus:border-[#58cc02] outline-none font-mono"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">Código Postal Fiscal *</label>
+                  <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">
+                    Código Postal Fiscal *
+                  </label>
                   <input
                     type="text"
                     required
                     value={invoicePostalCode}
                     onChange={(e) => setInvoicePostalCode(e.target.value)}
-                    placeholder={isVen ? "1010" : "06700"}
+                    placeholder={isVen ? '1010' : '06700'}
                     className="w-full px-2.5 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-black text-gray-805 focus:border-[#58cc02] outline-none font-mono"
                   />
                 </div>
@@ -510,9 +546,15 @@ export default function CheckoutWizard({
                     className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-xl text-[10px] font-black text-gray-700 outline-none cursor-pointer"
                   >
                     <option value="601 - General de Ley Personas Morales">601 - General de Ley Personas Morales</option>
-                    <option value="626 - Régimen Simplificado de Confianza (RESICO)">626 - Simplificado de Confianza (RESICO)</option>
-                    <option value="605 - Sueldos y Salarios e Ingresos Asimilados a Salarios">605 - Sueldos y Salarios</option>
-                    <option value="612 - Personas Físicas con Actividades Empresariales">612 - Personas Físicas Empresariales</option>
+                    <option value="626 - Régimen Simplificado de Confianza (RESICO)">
+                      626 - Simplificado de Confianza (RESICO)
+                    </option>
+                    <option value="605 - Sueldos y Salarios e Ingresos Asimilados a Salarios">
+                      605 - Sueldos y Salarios
+                    </option>
+                    <option value="612 - Personas Físicas con Actividades Empresariales">
+                      612 - Personas Físicas Empresariales
+                    </option>
                     <option value="Sin Obligaciones Fiscales">616 - Sin Obligaciones Fiscales</option>
                   </select>
                 )}
@@ -520,7 +562,9 @@ export default function CheckoutWizard({
 
               {!isVen && (
                 <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-black text-gray-400 block">Uso previsto del CFDI / Factura</label>
+                  <label className="text-[9px] uppercase font-black text-gray-400 block">
+                    Uso previsto del CFDI / Factura
+                  </label>
                   <select
                     value={invoiceUseCFDI}
                     onChange={(e) => setInvoiceUseCFDI(e.target.value)}
@@ -528,7 +572,9 @@ export default function CheckoutWizard({
                   >
                     <option value="G01 - Adquisición de mercancías">G01 - Adquisición de mercancías</option>
                     <option value="G03 - Gastos en general">G03 - Gastos en general</option>
-                    <option value="D01 - Honorarios médicos, dentales y gastos hospitalarios">D01 - Gastos Médicos/Hospitalarios</option>
+                    <option value="D01 - Honorarios médicos, dentales y gastos hospitalarios">
+                      D01 - Gastos Médicos/Hospitalarios
+                    </option>
                     <option value="S01 - Sin efectos fiscales">S01 - Sin efectos fiscales / Justificante</option>
                   </select>
                 </div>
@@ -546,7 +592,7 @@ export default function CheckoutWizard({
           >
             Volver
           </button>
-          
+
           <button
             type="button"
             onClick={() => submitCheckout()}
@@ -555,7 +601,6 @@ export default function CheckoutWizard({
             Registrar Venta
           </button>
         </div>
-
       </div>
     </div>
   );

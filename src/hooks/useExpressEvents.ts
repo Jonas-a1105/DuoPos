@@ -38,10 +38,10 @@ export function useExpressEvents() {
         const nextCount = activeEvent.currentCount + 1;
         if (nextCount >= activeEvent.targetCount) {
           playSound('levelup');
-          toast.achievement(
-            `¡RETO CUMPLIDO! 🏆 Ganaste +${activeEvent.gemsReward} gemas por "${activeEvent.title}".`,
-            { title: 'Reto Express Completado 🎉', duration: 6000 },
-          );
+          toast.achievement(`¡RETO CUMPLIDO! 🏆 Ganaste +${activeEvent.gemsReward} gemas por "${activeEvent.title}".`, {
+            title: 'Reto Express Completado 🎉',
+            duration: 6000,
+          });
           if (user) {
             const updatedUser = {
               ...user,

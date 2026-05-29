@@ -6,27 +6,32 @@
 import { Transaction, LegalBillingSettings, Product } from '../types';
 
 function escapeXml(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 }
 
 /**
  * Resolves the official SAT Catalogs for CFDI 4.0 compliance.
  */
 export const SAT_PRODUCTS_MAP: Record<string, string> = {
-  'cafetería': '50201708', // Bebidas de café
-  'postres': '50181900',   // Pan dulce, pasteles
-  'snack': '50192100',     // Aperitivos
-  'oficina': '44122000',   // Útiles de oficina
-  'servicios': '80141628', // Servicios de distribución o academia
-  'cursos': '86101700',    // Educación o adiestramiento
+  cafetería: '50201708', // Bebidas de café
+  postres: '50181900', // Pan dulce, pasteles
+  snack: '50192100', // Aperitivos
+  oficina: '44122000', // Útiles de oficina
+  servicios: '80141628', // Servicios de distribución o academia
+  cursos: '86101700', // Educación o adiestramiento
 };
 
 export const SAT_UNITS_MAP: Record<string, { code: string; label: string }> = {
-  'H87': { code: 'H87', label: 'Pieza' },
-  'E48': { code: 'E48', label: 'Unidad de servicio' },
-  'XBX': { code: 'XBX', label: 'Caja' },
-  'LTR': { code: 'LTR', label: 'Litro' },
-  'KGM': { code: 'KGM', label: 'Kilogramo' },
+  H87: { code: 'H87', label: 'Pieza' },
+  E48: { code: 'E48', label: 'Unidad de servicio' },
+  XBX: { code: 'XBX', label: 'Caja' },
+  LTR: { code: 'LTR', label: 'Litro' },
+  KGM: { code: 'KGM', label: 'Kilogramo' },
 };
 
 /**
@@ -39,7 +44,7 @@ export function getClaveProdServ(category: string, productName: string): string 
   if (SAT_PRODUCTS_MAP[normalizedCat]) {
     return SAT_PRODUCTS_MAP[normalizedCat];
   }
-  
+
   if (normalizedName.includes('café') || normalizedName.includes('bebida') || normalizedName.includes('latte')) {
     return '50201708';
   }
@@ -66,15 +71,13 @@ export function calculateItemTax(
   price: number,
   quantity: number,
   category: string,
-  settings: LegalBillingSettings
+  settings: LegalBillingSettings,
 ): TaxBreakdown {
   // Find applicable tax rate
-  const override = settings?.categoryOverrides?.find(
-    (o) => o.category.toLowerCase() === category?.toLowerCase()
-  );
+  const override = settings?.categoryOverrides?.find((o) => o.category.toLowerCase() === category?.toLowerCase());
   const taxRate = override ? override.rate : (settings?.generalTaxRate ?? 16);
   const taxDecimal = taxRate / 100;
-  
+
   const subtotalLine = price * quantity;
 
   if (settings?.taxIncludedInPrice) {
@@ -103,13 +106,13 @@ export function calculateItemTax(
 export function generateCFDI40XML(txn: Transaction, settings: LegalBillingSettings): string {
   if (!txn.invoiceData) return '';
   const inv = txn.invoiceData;
-  
+
   if (!settings.companyTaxId) return '';
   const emisorRfc = settings.companyTaxId;
   const emisorNombre = escapeXml((settings.companyName || '').toUpperCase());
   const emisorRegimeCode = settings.companyRegime ? settings.companyRegime.split(' ')[0] : '601';
   const emisorPostalCode = settings.companyPostalCode || '06700';
-  
+
   const receptorRfc = escapeXml(inv.taxId.toUpperCase());
   const receptorNombre = escapeXml(inv.fiscalName.toUpperCase());
   const receptorRegimeCode = inv.regime ? inv.regime.split(' ')[0] : '601';
@@ -118,36 +121,38 @@ export function generateCFDI40XML(txn: Transaction, settings: LegalBillingSettin
   const formaPagoCode = inv.paymentForm ? inv.paymentForm.split(' ')[0] : '01';
 
   // Calculate items XML block
-  const conceptosXMLLines = txn.items.map((it) => {
-    // Resolve ClaveProdServ dynamically based on some context or hardcoded
-    const claveProdServ = getClaveProdServ(it.emoji || '', it.name);
-    
-    // We assume tax override or standard tax rate applied in transaction details
-    const ratePercentage = it.taxRateApplied !== undefined ? it.taxRateApplied : (settings.generalTaxRate ?? 16);
-    const rateDecimal = (ratePercentage / 100).toFixed(6);
-    
-    // Exact SAT Math
-    const totalLine = it.price * it.quantity;
-    let base = totalLine;
-    let impuesto = 0;
-    
-    if (settings.taxIncludedInPrice) {
-      base = totalLine / (1 + (ratePercentage / 100));
-      impuesto = totalLine - base;
-    } else {
-      impuesto = totalLine * (ratePercentage / 100);
-    }
+  const conceptosXMLLines = txn.items
+    .map((it) => {
+      // Resolve ClaveProdServ dynamically based on some context or hardcoded
+      const claveProdServ = getClaveProdServ(it.emoji || '', it.name);
 
-    const valorUnitario = settings.taxIncludedInPrice ? (it.price / (1 + (ratePercentage / 100))) : it.price;
+      // We assume tax override or standard tax rate applied in transaction details
+      const ratePercentage = it.taxRateApplied !== undefined ? it.taxRateApplied : (settings.generalTaxRate ?? 16);
+      const rateDecimal = (ratePercentage / 100).toFixed(6);
 
-    return `    <cfdi:Concepto ClaveProdServ="${escapeXml(claveProdServ)}" Cantidad="${it.quantity.toFixed(2)}" ClaveUnidad="H87" Unidad="Pieza" Descripcion="${escapeXml(it.name.toUpperCase())}" ValorUnitario="${valorUnitario.toFixed(2)}" Importe="${base.toFixed(2)}" ObjetoImp="02">
+      // Exact SAT Math
+      const totalLine = it.price * it.quantity;
+      let base = totalLine;
+      let impuesto = 0;
+
+      if (settings.taxIncludedInPrice) {
+        base = totalLine / (1 + ratePercentage / 100);
+        impuesto = totalLine - base;
+      } else {
+        impuesto = totalLine * (ratePercentage / 100);
+      }
+
+      const valorUnitario = settings.taxIncludedInPrice ? it.price / (1 + ratePercentage / 100) : it.price;
+
+      return `    <cfdi:Concepto ClaveProdServ="${escapeXml(claveProdServ)}" Cantidad="${it.quantity.toFixed(2)}" ClaveUnidad="H87" Unidad="Pieza" Descripcion="${escapeXml(it.name.toUpperCase())}" ValorUnitario="${valorUnitario.toFixed(2)}" Importe="${base.toFixed(2)}" ObjetoImp="02">
       <cfdi:Impuestos>
         <cfdi:Traslados>
           <cfdi:Traslado Base="${base.toFixed(2)}" Impuesto="002" TipoFactor="Tasa" TasaOCuota="${rateDecimal}" Importe="${impuesto.toFixed(2)}"/>
         </cfdi:Traslados>
       </cfdi:Impuestos>
     </cfdi:Concepto>`;
-  }).join('\n');
+    })
+    .join('\n');
 
   // Overall calculations
   const totalImpuestosTrasladados = txn.tax;
@@ -229,7 +234,7 @@ export function getSATQrUrl(txn: Transaction, emisorTaxId: string): string {
   const tt = txn.total.toFixed(2);
   const id = inv.uuid;
   const fe = inv.satSignature ? inv.satSignature.substring(inv.satSignature.length - 8) : '00000000';
-  
+
   return `https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?id=${id}&re=${re}&rr=${rr}&tt=${tt}&fe=${fe}`;
 }
 
@@ -246,15 +251,18 @@ export interface ConstanciaPayload {
 
 export function parseMockConstancia(text: string): ConstanciaPayload | null {
   const normalized = text.toUpperCase();
-  
+
   // Try to match RFC (MX: 4 letters, 6 digits, 3 homoclave characters)
   const rfcMatch = normalized.match(/[A-Z&Ñ]{3,4}\d{6}[A-Z\d]{3}/);
   const rfc = rfcMatch ? rfcMatch[0] : '';
-  
+
   // Try to match Código Postal (5 digits)
-  const cpMatch = normalized.match(/CÓDIGO POSTAL:?\s*(\d{5})/) || normalized.match(/CP:?\s*(\d{5})/) || normalized.match(/\b\d{5}\b/);
+  const cpMatch =
+    normalized.match(/CÓDIGO POSTAL:?\s*(\d{5})/) ||
+    normalized.match(/CP:?\s*(\d{5})/) ||
+    normalized.match(/\b\d{5}\b/);
   const cp = cpMatch ? cpMatch[1] || cpMatch[0] : '';
-  
+
   // Try to extract regime code or default to RESICO or General
   let regime = '626 - Régimen Simplificado de Confianza (RESICO)';
   if (normalized.includes('GENERAL DE LEY') || normalized.includes('601')) {
@@ -266,30 +274,32 @@ export function parseMockConstancia(text: string): ConstanciaPayload | null {
   } else if (normalized.includes('ARRENDAMIENTO') || normalized.includes('606')) {
     regime = '606 - Arrendamiento';
   }
-  
+
   // Try to parse some name. Let's look for "DENOMINACIÓN" or "NOMBRE"
   let fiscalName = '';
-  const nameMatch = normalized.match(/DENOMINACIÓN O RAZÓN SOCIAL:\s*([A-Z\s,]+)\n/i) || 
-                    normalized.match(/NOMBRE\(S\):\s*([A-Z\s]+)\n/i) ||
-                    normalized.match(/DENOMINACIÓN:\s*([A-Z\s,]+)/);
+  const nameMatch =
+    normalized.match(/DENOMINACIÓN O RAZÓN SOCIAL:\s*([A-Z\s,]+)\n/i) ||
+    normalized.match(/NOMBRE\(S\):\s*([A-Z\s]+)\n/i) ||
+    normalized.match(/DENOMINACIÓN:\s*([A-Z\s,]+)/);
   if (nameMatch) {
     fiscalName = nameMatch[1].trim();
   } else {
     // Split into words, search for common elements
     if (rfc) {
-      fiscalName = rfc.startsWith('XAXX') || rfc.startsWith('XEXX') ? 'PÚBLICO EN GENERAL' : 'CLIENTE FACTURADO S.A. DE C.V.';
+      fiscalName =
+        rfc.startsWith('XAXX') || rfc.startsWith('XEXX') ? 'PÚBLICO EN GENERAL' : 'CLIENTE FACTURADO S.A. DE C.V.';
     }
   }
-  
+
   if (!rfc && !fiscalName) {
     return null;
   }
-  
+
   return {
     fiscalName: fiscalName || 'JUAN PÉREZ LÓPEZ',
     taxId: rfc || 'XAXX010101000',
     regime,
-    postalCode: cp || '06700'
+    postalCode: cp || '06700',
   };
 }
 
@@ -323,20 +333,22 @@ DIRECCION: CP ${txn.invoiceData?.postalCode || '1010'}
 ================================================
 CANT  DESCRIPCION             PRECIO      TOTAL
 ------------------------------------------------
-${txn.items.map(it => {
-  const nameTrunc = it.name.substring(0, 20).padEnd(20, ' ');
-  const cantStr = it.quantity.toFixed(1).padStart(4, ' ');
-  const priceStr = it.price.toFixed(2).padStart(8, ' ');
-  const lineTotal = (it.price * it.quantity).toFixed(2).padStart(9, ' ');
-  return `${cantStr}  ${nameTrunc} ${priceStr} ${lineTotal}`;
-}).join('\n')}
+${txn.items
+  .map((it) => {
+    const nameTrunc = it.name.substring(0, 20).padEnd(20, ' ');
+    const cantStr = it.quantity.toFixed(1).padStart(4, ' ');
+    const priceStr = it.price.toFixed(2).padStart(8, ' ');
+    const lineTotal = (it.price * it.quantity).toFixed(2).padStart(9, ' ');
+    return `${cantStr}  ${nameTrunc} ${priceStr} ${lineTotal}`;
+  })
+  .join('\n')}
 ------------------------------------------------
 SUBTOTAL: ${txn.subtotal.toFixed(2).padStart(30, ' ')}
 DESCUENTO: ${txn.discount.toFixed(2).padStart(29, ' ')}
 IVA GENERAL (16%): ${txn.tax.toFixed(2).padStart(22, ' ')}
 ${isCashUSD ? `IGTF (3% EFECTIVO USD): ${igtfAmount.toFixed(2).padStart(18, ' ')}` : ''}
 ------------------------------------------------
-TOTAL FACTURA: ${(grandTotal).toFixed(2).padStart(25, ' ')}
+TOTAL FACTURA: ${grandTotal.toFixed(2).padStart(25, ' ')}
 ================================================
 METODO DE PAGO: ${txn.paymentMethod === 'cash' ? 'EFECTIVO (USD)' : txn.paymentMethod === 'card' ? 'TRANSFERENCIA / DEBITO' : 'OTROS'}
 NRO REGISTRO FISCAL: SENIAT-IMPFISCAL-DPG120525D10

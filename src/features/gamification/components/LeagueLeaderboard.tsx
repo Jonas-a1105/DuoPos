@@ -19,26 +19,41 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
 
   const getLeagueIcon = (tier: string) => {
     switch (tier) {
-      case 'bronce': return '🥉';
-      case 'plata': return '🥈';
-      case 'oro': return '🥇';
-      case 'zafiro': return '🔷';
-      case 'rubi': return '🔺';
-      case 'esmeralda': return '🟢';
-      case 'diamante': return '💎';
-      case 'obsidiana': return '♠️';
-      default: return '🛡️';
+      case 'bronce':
+        return '🥉';
+      case 'plata':
+        return '🥈';
+      case 'oro':
+        return '🥇';
+      case 'zafiro':
+        return '🔷';
+      case 'rubi':
+        return '🔺';
+      case 'esmeralda':
+        return '🟢';
+      case 'diamante':
+        return '💎';
+      case 'obsidiana':
+        return '♠️';
+      default:
+        return '🛡️';
     }
   };
 
   const getAvatarEmoji = (avatar: string) => {
     switch (avatar) {
-      case 'duo': return '🦉';
-      case 'lily': return '👧';
-      case 'zari': return '💅';
-      case 'eddy': return '🏃‍♂️';
-      case 'junior': return '👦';
-      default: return '🦉';
+      case 'duo':
+        return '🦉';
+      case 'lily':
+        return '👧';
+      case 'zari':
+        return '💅';
+      case 'eddy':
+        return '🏃‍♂️';
+      case 'junior':
+        return '👦';
+      default:
+        return '🦉';
     }
   };
 
@@ -58,21 +73,37 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
       { name: 'Bari el Panda 🐼', avatar: 'duo' },
       { name: 'Cari el Koala 🐨', avatar: 'duo' },
       { name: 'Duo Ayudante 🦉', avatar: 'duo' },
-      { name: 'Pato el Pato 🦆', avatar: 'duo' }
+      { name: 'Pato el Pato 🦆', avatar: 'duo' },
     ];
 
     const shuffledNames = [...duolingoNames].sort(() => 0.5 - Math.random()).slice(0, 14);
 
     let baseMultiplier = 1;
     switch (tier) {
-      case 'bronce': baseMultiplier = 1; break;
-      case 'plata': baseMultiplier = 1.5; break;
-      case 'oro': baseMultiplier = 2; break;
-      case 'zafiro': baseMultiplier = 2.5; break;
-      case 'rubi': baseMultiplier = 3; break;
-      case 'esmeralda': baseMultiplier = 3.5; break;
-      case 'diamante': baseMultiplier = 4; break;
-      case 'obsidiana': baseMultiplier = 5; break;
+      case 'bronce':
+        baseMultiplier = 1;
+        break;
+      case 'plata':
+        baseMultiplier = 1.5;
+        break;
+      case 'oro':
+        baseMultiplier = 2;
+        break;
+      case 'zafiro':
+        baseMultiplier = 2.5;
+        break;
+      case 'rubi':
+        baseMultiplier = 3;
+        break;
+      case 'esmeralda':
+        baseMultiplier = 3.5;
+        break;
+      case 'diamante':
+        baseMultiplier = 4;
+        break;
+      case 'obsidiana':
+        baseMultiplier = 5;
+        break;
     }
 
     return shuffledNames.map((item, idx) => {
@@ -82,7 +113,7 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
         name: item.name,
         avatar: item.avatar,
         weeklyXp: randomXp,
-        league: tier as any
+        league: tier as any,
       };
     });
   };
@@ -101,11 +132,11 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
         }
       } catch (e) {}
     }
-    
+
     const newParticipants = generateLeagueParticipants(currentTier);
     const data = {
       tier: currentTier,
-      participants: newParticipants
+      participants: newParticipants,
     };
     localStorage.setItem('duo_pos_weekly_league', JSON.stringify(data));
     return data;
@@ -118,14 +149,14 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
       avatar: user.avatar || 'duo',
       weeklyXp: user.weeklyXp ?? 0,
       league: user.employeeLeague || 'bronce',
-      isCurrentUser: true
+      isCurrentUser: true,
     };
 
     const filteredSimulated = leagueData.participants
-      .filter(p => p.id !== userParticipant.id)
-      .map(p => ({ ...p, isCurrentUser: false }));
+      .filter((p) => p.id !== userParticipant.id)
+      .map((p) => ({ ...p, isCurrentUser: false }));
     const combined = [...filteredSimulated, userParticipant];
-    
+
     return combined.sort((a, b) => b.weeklyXp - a.weeklyXp);
   }, [leagueData, user.weeklyXp, user.employeeLeague, user.username, user.avatar, user.id]);
 
@@ -135,14 +166,14 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
       const resultDate = new Date();
       resultDate.setDate(now.getDate() + ((7 - now.getDay()) % 7 || 7));
       resultDate.setHours(0, 0, 0, 0);
-      
+
       const diffMs = resultDate.getTime() - now.getTime();
       if (diffMs <= 0) return 'Quedan 0s';
-      
+
       const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-      
+
       return `${days}d ${hours}h ${minutes}m`;
     };
 
@@ -160,7 +191,7 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
     let nextLevel = user.level;
     let nextTitle = user.levelTitle;
     let didLevelUp = false;
-    
+
     let neededXp = nextLevel * 100;
     while (nextXp >= neededXp) {
       nextXp -= neededXp;
@@ -168,7 +199,7 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
       neededXp = nextLevel * 100;
       didLevelUp = true;
     }
-    
+
     if (didLevelUp) {
       const titles = [
         'Monolingüe Comercial 🦉',
@@ -177,7 +208,7 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
         'Experto en Finanzas 🥇',
         'Duo Maestro Glorioso 👑',
         'Dios del Escáner de Barras ⚡',
-        'Socio Corporativo de Duo 💎'
+        'Socio Corporativo de Duo 💎',
       ];
       nextTitle = titles[Math.min(nextLevel - 1, titles.length - 1)];
       toast.achievement(`¡Subiste al nivel ${nextLevel}! Título: ${nextTitle}`, { title: '¡NIVEL ALCANZADO! 🎉' });
@@ -188,24 +219,24 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
       xp: nextXp,
       level: nextLevel,
       levelTitle: nextTitle,
-      weeklyXp: (user.weeklyXp ?? 0) + addedXp
+      weeklyXp: (user.weeklyXp ?? 0) + addedXp,
     };
     onUpdateUser(updatedUser);
     toast.success('¡Se simularon +50 XP semanales! Mira tu posición en la tabla.', { title: 'Simulación de XP' });
   };
 
   const handleSimulateLeagueEnd = () => {
-    const userRankIndex = sortedLeaderboard.findIndex(p => p.isCurrentUser);
+    const userRankIndex = sortedLeaderboard.findIndex((p) => p.isCurrentUser);
     const rank = userRankIndex + 1;
-    
+
     const currentTier = user.employeeLeague || 'bronce';
     const tierOrder = ['bronce', 'plata', 'oro', 'zafiro', 'rubi', 'esmeralda', 'diamante', 'obsidiana'];
     const currentTierIndex = tierOrder.indexOf(currentTier);
-    
+
     let nextTier = currentTier as any;
     let message = '';
     let status = 'safe';
-    
+
     if (rank <= 5) {
       if (currentTierIndex < tierOrder.length - 1) {
         nextTier = tierOrder[currentTierIndex + 1];
@@ -230,23 +261,23 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
       message = `Terminaste en el puesto #${rank} (Zona Segura). ¡Te mantienes en la Liga ${currentTier.toUpperCase()}! Sigue sumando XP. 🛡️`;
       playSound('click');
     }
-    
+
     const updatedUser: User = {
       ...user,
       employeeLeague: nextTier,
-      weeklyXp: 0
+      weeklyXp: 0,
     };
-    
+
     const newParticipants = generateLeagueParticipants(nextTier);
     const data = {
       tier: nextTier,
-      participants: newParticipants
+      participants: newParticipants,
     };
     localStorage.setItem('duo_pos_weekly_league', JSON.stringify(data));
     setLeagueData(data);
-    
+
     onUpdateUser(updatedUser);
-    
+
     if (status === 'promo') {
       toast.achievement(message, { title: '¡ASCENSO CONSEGUIDO! ⚔️' });
     } else if (status === 'demote') {
@@ -265,17 +296,22 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
             {getLeagueIcon(user.employeeLeague || 'bronce')}
           </div>
           <div className="space-y-1">
-            <span className="bg-indigo-850/55 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-wider">Liga de Cajeros Semanal</span>
+            <span className="bg-indigo-850/55 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
+              Liga de Cajeros Semanal
+            </span>
             <h3 className="text-2xl font-black tracking-tight">Liga {capitalize(user.employeeLeague || 'bronce')}</h3>
             <p className="text-xs text-indigo-100 font-semibold max-w-xl">
-              Competencia entre cajeros de la sucursal. Los 5 primeros ascienden de división y los 5 últimos descienden. ¡Suma XP con cada venta y cobra tu racha!
+              Competencia entre cajeros de la sucursal. Los 5 primeros ascienden de división y los 5 últimos descienden.
+              ¡Suma XP con cada venta y cobra tu racha!
             </p>
           </div>
         </div>
 
         {/* Countdown widget */}
         <div className="bg-white/15 border border-white/20 p-3 px-4.5 rounded-2xl flex flex-col items-center md:items-end justify-center shrink-0">
-          <span className="text-[10px] font-black text-indigo-200 uppercase tracking-widest leading-none">PRÓXIMO REINICIO</span>
+          <span className="text-[10px] font-black text-indigo-200 uppercase tracking-widest leading-none">
+            PRÓXIMO REINICIO
+          </span>
           <span className="text-lg font-black font-mono tracking-tight mt-1 flex items-center gap-1.5">
             ⏱️ {countdownStr}
           </span>
@@ -297,7 +333,7 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
               {sortedLeaderboard.map((participant, index) => {
                 const rank = index + 1;
                 const isUser = participant.isCurrentUser;
-                
+
                 // Zone formatting
                 let zoneBg = '';
                 let rankBadge = '';
@@ -313,26 +349,36 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
                 }
 
                 return (
-                  <div 
-                    key={participant.id} 
+                  <div
+                    key={participant.id}
                     className={`flex items-center justify-between p-3.5 transition-all rounded-xl my-1.5 ${zoneBg} ${
-                      isUser ? 'ring-2 ring-indigo-400 bg-indigo-50/40 border border-indigo-250 font-extrabold shadow-sm' : ''
+                      isUser
+                        ? 'ring-2 ring-indigo-400 bg-indigo-50/40 border border-indigo-250 font-extrabold shadow-sm'
+                        : ''
                     }`}
                   >
                     {/* Rank and Identity */}
                     <div className="flex items-center gap-3">
-                      <span className={`h-6.5 w-6.5 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${rankBadge}`}>
+                      <span
+                        className={`h-6.5 w-6.5 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${rankBadge}`}
+                      >
                         {rank}
                       </span>
-                      
+
                       <div className="bg-white border border-gray-200 p-1.5 h-10 w-10 rounded-xl flex items-center justify-center text-xl shadow-xs select-none">
                         {getAvatarEmoji(participant.avatar)}
                       </div>
 
                       <div className="space-y-0.5 text-left">
-                        <span className={`text-xs text-gray-800 tracking-tight flex items-center gap-1.5 ${isUser ? 'font-black text-indigo-950 text-sm' : 'font-bold'}`}>
+                        <span
+                          className={`text-xs text-gray-800 tracking-tight flex items-center gap-1.5 ${isUser ? 'font-black text-indigo-950 text-sm' : 'font-bold'}`}
+                        >
                           {participant.name}
-                          {isUser && <span className="bg-indigo-650 text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded">TÚ</span>}
+                          {isUser && (
+                            <span className="bg-indigo-650 text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded">
+                              TÚ
+                            </span>
+                          )}
                         </span>
                         <span className="text-[10px] text-gray-400 font-extrabold flex items-center gap-1">
                           {rank <= 5 ? (
@@ -371,7 +417,8 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
               <div className="flex items-start gap-2.5">
                 <span className="text-green-500 text-sm mt-0.5">🔺</span>
                 <p>
-                  <strong>Zona de Ascenso (Top 5)</strong>: Finaliza la semana aquí para subir de liga y conseguir un ascenso de división 🏆✨.
+                  <strong>Zona de Ascenso (Top 5)</strong>: Finaliza la semana aquí para subir de liga y conseguir un
+                  ascenso de división 🏆✨.
                 </p>
               </div>
               <div className="flex items-start gap-2.5">
@@ -383,7 +430,8 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
               <div className="flex items-start gap-2.5">
                 <span className="text-red-500 text-sm mt-0.5">🔻</span>
                 <p>
-                  <strong>Zona de Descenso (Bottom 5)</strong>: Si estás por encima de la liga Bronce, bajarás de división al cierre de la semana ⚠️.
+                  <strong>Zona de Descenso (Bottom 5)</strong>: Si estás por encima de la liga Bronce, bajarás de
+                  división al cierre de la semana ⚠️.
                 </p>
               </div>
             </div>
@@ -395,7 +443,8 @@ export default function LeagueLeaderboard({ user, onUpdateUser }: LeagueLeaderbo
               <span>🕹️ Herramientas de Liga</span>
             </h4>
             <p className="text-xs text-indigo-955/70 font-semibold leading-normal">
-              Utiliza los simuladores de liga para probar instantáneamente la animación y progresión de las divisiones semanales:
+              Utiliza los simuladores de liga para probar instantáneamente la animación y progresión de las divisiones
+              semanales:
             </p>
             <div className="flex flex-col gap-2.5 pt-1">
               <button

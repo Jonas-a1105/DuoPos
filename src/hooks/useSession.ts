@@ -13,7 +13,9 @@ export function useSession() {
     if (!!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
       return; // Clerk handles session via ClerkSessionSync component
     }
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         try {
           const { data: userProfile, error } = await supabase
@@ -140,6 +142,16 @@ export function useSession() {
   const logoutUser = async () => {
     setUser(null);
     localStorage.removeItem('duo_pos_active_user');
+
+    // Sign out from Clerk if configured and available
+    if (!!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY && (window as any).Clerk) {
+      try {
+        await (window as any).Clerk.signOut();
+      } catch (err) {
+        console.error('Error signing out of Clerk:', err);
+      }
+    }
+
     await supabase.auth.signOut();
     setShowLanding(true);
   };

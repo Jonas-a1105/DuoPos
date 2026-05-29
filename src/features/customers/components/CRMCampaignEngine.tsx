@@ -10,41 +10,39 @@ interface CRMCampaignEngineProps {
   onGrantXp: (amount: number) => void;
 }
 
-export default function CRMCampaignEngine({
-  customers,
-  onUpdateCustomer,
-  onGrantXp
-}: CRMCampaignEngineProps) {
+export default function CRMCampaignEngine({ customers, onUpdateCustomer, onGrantXp }: CRMCampaignEngineProps) {
   const [crmSegment, setCrmSegment] = useState<'all' | 'vip' | 'debtors' | 'inactive' | 'gem_rich'>('all');
   const [crmTemplate, setCrmTemplate] = useState<string>('reminder');
   const [crmMsg, setCrmMsg] = useState<string>(
-    '⚠️ Recordatorio Amistoso DuoPOS: Estimado cliente, cuenta con un saldo pendiente de pago. Puede abonarlo en caja con efectivo, tarjeta o canjeando sus DuoPuntos acumulados. ¡Siga con su racha de compras hoy! 🦉'
+    '⚠️ Recordatorio Amistoso DuoPOS: Estimado cliente, cuenta con un saldo pendiente de pago. Puede abonarlo en caja con efectivo, tarjeta o canjeando sus DuoPuntos acumulados. ¡Siga con su racha de compras hoy! 🦉',
   );
   const [crmChannel, setCrmChannel] = useState<'whatsapp' | 'sms' | 'email'>('whatsapp');
   const [crmBroadcasting, setCrmBroadcasting] = useState<boolean>(false);
   const [crmBroadcastProgress, setCrmBroadcastProgress] = useState<number>(0);
-  const [crmBroadcastHistory, setCrmBroadcastHistory] = useState<{ id: string, date: string, campaign: string, targetCount: number, channel: string, rewardsInjected: number }[]>([
+  const [crmBroadcastHistory, setCrmBroadcastHistory] = useState<
+    { id: string; date: string; campaign: string; targetCount: number; channel: string; rewardsInjected: number }[]
+  >([
     {
       id: 'crmhist-1',
-      date: new Date(Date.now() - 24*3600*1000).toISOString(),
+      date: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
       campaign: 'Incentivo de Racha (+50 Gemas Gratis) 🦉',
       targetCount: 3,
       channel: 'WhatsApp Web Bot',
-      rewardsInjected: 150
+      rewardsInjected: 150,
     },
     {
       id: 'crmhist-2',
-      date: new Date(Date.now() - 3*24*3600*1000).toISOString(),
+      date: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
       campaign: 'Aviso de Abono a Línea de Crédito 💸',
       targetCount: 2,
       channel: 'SMS Directo',
-      rewardsInjected: 0
-    }
+      rewardsInjected: 0,
+    },
   ]);
 
   // CRM Segmentation computations
   const segmentedCRMCustomers = useMemo(() => {
-    return customers.filter(c => {
+    return customers.filter((c) => {
       if (crmSegment === 'vip') {
         return c.league === 'Obsidiana' || c.league === 'Esmeralda' || c.league === 'Rubí' || c.totalSpent >= 500;
       }
@@ -65,13 +63,17 @@ export default function CRMCampaignEngine({
     setCrmTemplate(tmplKey);
     let messageText = '';
     if (tmplKey === 'reminder') {
-      messageText = '⚠️ Recordatorio Amistoso DuoPOS: Estimado cliente, cuenta con un saldo pendiente de pago de $__DEB__. Puede abonarlo en caja con efectivo, tarjeta o canjeando sus DuoPuntos acumulados. ¡Siga con su racha de compras hoy! 🦉';
+      messageText =
+        '⚠️ Recordatorio Amistoso DuoPOS: Estimado cliente, cuenta con un saldo pendiente de pago de $__DEB__. Puede abonarlo en caja con efectivo, tarjeta o canjeando sus DuoPuntos acumulados. ¡Siga con su racha de compras hoy! 🦉';
     } else if (tmplKey === 'vip_perk') {
-      messageText = '💎 BENEFICIO EXCLUSIVO VIP: Hemos activado un multiplicador de 2.5x gemas en todas tus compras de esta semana por pertenecer a nuestra Liga de Honor. ¡Pasa hoy por tu punto de venta! ⚡';
+      messageText =
+        '💎 BENEFICIO EXCLUSIVO VIP: Hemos activado un multiplicador de 2.5x gemas en todas tus compras de esta semana por pertenecer a nuestra Liga de Honor. ¡Pasa hoy por tu punto de venta! ⚡';
     } else if (tmplKey === 'gift_gems') {
-      messageText = '🎁 REGALO DUOPOS DE RACHA: ¡Felicidades! Queremos premiar tu constancia obsequiándote +100 GEMAS extra directamente a tu cuenta de cliente para canjear en nuestro catálogo de premios. 🦉🍩';
+      messageText =
+        '🎁 REGALO DUOPOS DE RACHA: ¡Felicidades! Queremos premiar tu constancia obsequiándote +100 GEMAS extra directamente a tu cuenta de cliente para canjear en nuestro catálogo de premios. 🦉🍩';
     } else if (tmplKey === 'reactivation') {
-      messageText = '👋 ¡Te extrañamos en el POS! Presenta este mensaje directo en tu próxima compra y obtén un cupón de 10% de descuento automático. ¡Mantener activa tu racha es muy fácil! ⭐';
+      messageText =
+        '👋 ¡Te extrañamos en el POS! Presenta este mensaje directo en tu próxima compra y obtén un cupón de 10% de descuento automático. ¡Mantener activa tu racha es muy fácil! ⭐';
     }
     setCrmMsg(messageText);
     playSound('click');
@@ -82,41 +84,43 @@ export default function CRMCampaignEngine({
       toast.warning('⚠️ No hay clientes en este segmento para destinatarios de la campaña.');
       return;
     }
-    
+
     setCrmBroadcasting(true);
     setCrmBroadcastProgress(0);
     playSound('swoosh');
-    
+
     // Simulate broadcasting process step-by-step
     const interval = setInterval(() => {
       setCrmBroadcastProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
-          
+
           // Campaign logic execution on finish
           let rewardsApplied = 0;
           if (crmTemplate === 'gift_gems') {
             // Apply actual gift of 100 Gems to each client in the active segment!
-            segmentedCRMCustomers.forEach(cust => {
+            segmentedCRMCustomers.forEach((cust) => {
               const updatedCust: Customer = {
                 ...cust,
-                gems: cust.gems + 100
+                gems: cust.gems + 100,
               };
               onUpdateCustomer(updatedCust);
             });
             rewardsApplied = segmentedCRMCustomers.length * 100;
           }
-          
+
           // Add record to simulated campaign log history
-          const campaignName = 
-            crmTemplate === 'reminder' ? 'Recordatorio de Deuda (Amigable)' :
-            crmTemplate === 'vip_perk' ? 'Promoción VIP 2.5x Multiplicador' :
-            crmTemplate === 'gift_gems' ? 'Inyección Masiva de Gemas (+100 G)' :
-            'Campaña de Reactivación de Clientes';
-          
-          const channelName = 
-            crmChannel === 'whatsapp' ? 'WhatsApp Web Bot' :
-            crmChannel === 'sms' ? 'SMS Directo' : 'Email de Racha';
+          const campaignName =
+            crmTemplate === 'reminder'
+              ? 'Recordatorio de Deuda (Amigable)'
+              : crmTemplate === 'vip_perk'
+                ? 'Promoción VIP 2.5x Multiplicador'
+                : crmTemplate === 'gift_gems'
+                  ? 'Inyección Masiva de Gemas (+100 G)'
+                  : 'Campaña de Reactivación de Clientes';
+
+          const channelName =
+            crmChannel === 'whatsapp' ? 'WhatsApp Web Bot' : crmChannel === 'sms' ? 'SMS Directo' : 'Email de Racha';
 
           const newLog = {
             id: `crmhist-${Date.now()}`,
@@ -124,15 +128,17 @@ export default function CRMCampaignEngine({
             campaign: `${campaignName} 🚀`,
             targetCount: segmentedCRMCustomers.length,
             channel: channelName,
-            rewardsInjected: rewardsApplied
+            rewardsInjected: rewardsApplied,
           };
 
-          setCrmBroadcastHistory(prevHist => [newLog, ...prevHist]);
+          setCrmBroadcastHistory((prevHist) => [newLog, ...prevHist]);
           setCrmBroadcasting(false);
-          
+
           playSound('levelup');
           onGrantXp(100); // 100 XP gained for large-scale marketing action!
-          toast.success(`🎉 ¡Campaña enviada con éxito! Se transmitió a ${segmentedCRMCustomers.length} clientes. Ganaste +100 XP.`);
+          toast.success(
+            `🎉 ¡Campaña enviada con éxito! Se transmitió a ${segmentedCRMCustomers.length} clientes. Ganaste +100 XP.`,
+          );
           return 100;
         }
         return prev + 25; // advance 25% each step
@@ -150,7 +156,8 @@ export default function CRMCampaignEngine({
             <span>Motor CRM Avanzado & Inteligencia de Difusión</span>
           </div>
           <p className="text-xs text-indigo-100 leading-relaxed font-bold">
-            Segmenta elegantemente a tus clientes basándote en su comportamiento de compra, saldos por cobrar o gemas acumuladas. Lanza campañas promocionales para reactivar ventas.
+            Segmenta elegantemente a tus clientes basándote en su comportamiento de compra, saldos por cobrar o gemas
+            acumuladas. Lanza campañas promocionales para reactivar ventas.
           </p>
         </div>
         <div className="shrink-0 flex items-center gap-1.5 bg-white text-indigo-950 border-2 border-indigo-200 py-1.5 px-3 rounded-2xl font-black text-xs">
@@ -167,7 +174,9 @@ export default function CRMCampaignEngine({
               <span className="text-xl">🛠️</span>
               <div className="text-left">
                 <h3 className="text-xs font-black uppercase text-gray-750">Configurador de Campaña de Marketing</h3>
-                <p className="text-[9px] text-gray-400 font-bold uppercase">Define el público objetivo, plantilla de mensaje y canal de salida</p>
+                <p className="text-[9px] text-gray-400 font-bold uppercase">
+                  Define el público objetivo, plantilla de mensaje y canal de salida
+                </p>
               </div>
             </div>
 
@@ -177,7 +186,10 @@ export default function CRMCampaignEngine({
                   <Zap size={14} className="animate-bounce" /> Transmitiendo Campaña en Tiempo Real...
                 </p>
                 <div className="w-full bg-indigo-100 h-4 rounded-full overflow-hidden border">
-                  <div className="bg-indigo-600 h-full rounded-full transition-all duration-300" style={{ width: `${crmBroadcastProgress}%` }} />
+                  <div
+                    className="bg-indigo-600 h-full rounded-full transition-all duration-300"
+                    style={{ width: `${crmBroadcastProgress}%` }}
+                  />
                 </div>
                 <span className="text-[10px] text-indigo-500 font-bold block">{crmBroadcastProgress}% Procesado</span>
               </div>
@@ -191,14 +203,36 @@ export default function CRMCampaignEngine({
                 </label>
                 <select
                   value={crmSegment}
-                  onChange={(e) => { setCrmSegment(e.target.value as any); playSound('click'); }}
+                  onChange={(e) => {
+                    setCrmSegment(e.target.value as any);
+                    playSound('click');
+                  }}
                   className="w-full bg-white border-2 border-gray-200 border-b-4 rounded-xl px-3 py-2 font-bold text-xs select-none outline-none focus:border-[#a435f0] text-gray-700 cursor-pointer"
                 >
                   <option value="all">Filtro: Todos los Clientes ({customers.length})</option>
-                  <option value="vip">Filtro: Liga Honor (Rubí, Esmeralda, Obsidiana) ({customers.filter(c => c.league === 'Rubí' || c.league === 'Esmeralda' || c.league === 'Obsidiana' || c.totalSpent >= 500).length})</option>
-                  <option value="debtors">Filtro: Clientes con Deuda Activa ("Fiados") ({customers.filter(c => (c.creditUsed || 0) > 0).length})</option>
-                  <option value="inactive">Filtro: Inactivos / Pasivos (≤ 1 compra) ({customers.filter(c => c.purchasesCount <= 1).length})</option>
-                  <option value="gem_rich">Filtro: Rancheros de Gemas (≥ 300 G) ({customers.filter(c => c.gems >= 300).length})</option>
+                  <option value="vip">
+                    Filtro: Liga Honor (Rubí, Esmeralda, Obsidiana) (
+                    {
+                      customers.filter(
+                        (c) =>
+                          c.league === 'Rubí' ||
+                          c.league === 'Esmeralda' ||
+                          c.league === 'Obsidiana' ||
+                          c.totalSpent >= 500,
+                      ).length
+                    }
+                    )
+                  </option>
+                  <option value="debtors">
+                    Filtro: Clientes con Deuda Activa ("Fiados") (
+                    {customers.filter((c) => (c.creditUsed || 0) > 0).length})
+                  </option>
+                  <option value="inactive">
+                    Filtro: Inactivos / Pasivos (≤ 1 compra) ({customers.filter((c) => c.purchasesCount <= 1).length})
+                  </option>
+                  <option value="gem_rich">
+                    Filtro: Rancheros de Gemas (≥ 300 G) ({customers.filter((c) => c.gems >= 300).length})
+                  </option>
                 </select>
               </div>
 
@@ -211,12 +245,15 @@ export default function CRMCampaignEngine({
                   {[
                     { key: 'whatsapp', label: 'WhatsApp', icon: '💬' },
                     { key: 'sms', label: 'SMS Directo', icon: '📱' },
-                    { key: 'email', label: 'Email Racha', icon: '✉️' }
+                    { key: 'email', label: 'Email Racha', icon: '✉️' },
                   ].map((item) => (
                     <button
                       key={item.key}
                       type="button"
-                      onClick={() => { setCrmChannel(item.key as any); playSound('click'); }}
+                      onClick={() => {
+                        setCrmChannel(item.key as any);
+                        playSound('click');
+                      }}
                       className={`py-2 px-1.5 border-2 border-b-4 rounded-xl font-bold text-[9px] uppercase tracking-wide cursor-pointer transition-all ${
                         crmChannel === item.key
                           ? 'bg-indigo-650 border-indigo-800 text-white'
@@ -241,7 +278,7 @@ export default function CRMCampaignEngine({
                   { key: 'reminder', label: 'Alerta Deuda 💸' },
                   { key: 'vip_perk', label: 'Impulso VIP 💎' },
                   { key: 'gift_gems', label: 'Regalo Gemas 🎁' },
-                  { key: 'reactivation', label: 'Descuento 🏷️' }
+                  { key: 'reactivation', label: 'Descuento 🏷️' },
                 ].map((tmpl) => (
                   <button
                     key={tmpl.key}
@@ -307,8 +344,11 @@ export default function CRMCampaignEngine({
                   Ningún cliente cumple las condiciones de segmentación activa de racha.
                 </p>
               ) : (
-                segmentedCRMCustomers.map(c => (
-                  <div key={c.id} className="flex justify-between items-center text-xs p-1.5 bg-slate-50 border rounded-xl font-bold">
+                segmentedCRMCustomers.map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex justify-between items-center text-xs p-1.5 bg-slate-50 border rounded-xl font-bold"
+                  >
                     <span className="truncate max-w-[120px] text-gray-700 font-extrabold">{c.name}</span>
                     <div className="flex gap-1.5 items-center shrink-0 font-mono text-[10px]">
                       {c.creditUsed && c.creditUsed > 0 ? (
@@ -332,7 +372,10 @@ export default function CRMCampaignEngine({
             </h3>
             <div className="space-y-2 max-h-56 overflow-y-auto pr-1 text-left">
               {crmBroadcastHistory.map((log) => (
-                <div key={log.id} className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-2xl text-xs font-bold text-left space-y-1">
+                <div
+                  key={log.id}
+                  className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-2xl text-xs font-bold text-left space-y-1"
+                >
                   <div className="flex justify-between text-[8px] text-indigo-900 uppercase font-black">
                     <span>{log.channel}</span>
                     <span>{new Date(log.date).toLocaleDateString()}</span>

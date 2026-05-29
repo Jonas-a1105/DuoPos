@@ -26,14 +26,14 @@ export const playSound = (type: 'click' | 'success' | 'kaching' | 'levelup' | 'e
         const gain = ctx.createGain();
         osc.connect(gain);
         gain.connect(ctx.destination);
-        
+
         osc.type = 'sine';
         osc.frequency.setValueAtTime(580, now);
         osc.frequency.exponentialRampToValueAtTime(120, now + 0.08);
-        
+
         gain.gain.setValueAtTime(0.06, now);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-        
+
         osc.start(now);
         osc.stop(now + 0.09);
         break;
@@ -47,10 +47,10 @@ export const playSound = (type: 'click' | 'success' | 'kaching' | 'levelup' | 'e
         gain1.connect(ctx.destination);
         osc1.type = 'sine';
         osc1.frequency.setValueAtTime(523.25, now);
-        
+
         gain1.gain.setValueAtTime(0.12, now);
         gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
-        
+
         osc1.start(now);
         osc1.stop(now + 0.15);
 
@@ -61,11 +61,11 @@ export const playSound = (type: 'click' | 'success' | 'kaching' | 'levelup' | 'e
         gain2.connect(ctx.destination);
         osc2.type = 'sine';
         osc2.frequency.setValueAtTime(783.99, now + 0.09);
-        
+
         gain2.gain.setValueAtTime(0, now + 0.09);
         gain2.gain.linearRampToValueAtTime(0.12, now + 0.11);
         gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
-        
+
         osc2.start(now + 0.09);
         osc2.stop(now + 0.3);
         break;
@@ -111,20 +111,20 @@ export const playSound = (type: 'click' | 'success' | 'kaching' | 'levelup' | 'e
       }
       case 'levelup': {
         // Energetic victory arpeggio: Do - Mi - Sol - Do (Arpegio Triunfal)
-        const notes = [261.63, 329.63, 392.00, 523.25];
+        const notes = [261.63, 329.63, 392.0, 523.25];
         notes.forEach((freq, idx) => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.connect(gain);
           gain.connect(ctx.destination);
-          
+
           osc.type = 'sine';
           osc.frequency.setValueAtTime(freq, now + idx * 0.11);
-          
+
           gain.gain.setValueAtTime(0, now + idx * 0.11);
           gain.gain.linearRampToValueAtTime(0.15, now + idx * 0.11 + 0.02);
           gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.11 + 0.22);
-          
+
           osc.start(now + idx * 0.11);
           osc.stop(now + idx * 0.11 + 0.26);
         });
@@ -165,10 +165,10 @@ export const playSound = (type: 'click' | 'success' | 'kaching' | 'levelup' | 'e
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(380, now);
         osc.frequency.exponentialRampToValueAtTime(70, now + 0.16);
-        
+
         gain.gain.setValueAtTime(0.12, now);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.16);
-        
+
         osc.start(now);
         osc.stop(now + 0.18);
         break;

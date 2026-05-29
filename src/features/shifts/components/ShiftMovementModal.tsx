@@ -15,7 +15,7 @@ export default function ShiftMovementModal({
   onClose,
   computedExpectedCash,
   onAddShiftMovement,
-  onGrantXp
+  onGrantXp,
 }: ShiftMovementModalProps) {
   const [moveType, setMoveType] = useState<'in' | 'out'>('in');
   const [moveAmount, setMoveAmount] = useState('');
@@ -33,7 +33,9 @@ export default function ShiftMovementModal({
     }
 
     if (moveType === 'out' && amt > computedExpectedCash) {
-      setMovementFeedback(`⛔ Fondos insuficientes. No puedes extraer más del efectivo real en caja ($${computedExpectedCash.toFixed(2)})`);
+      setMovementFeedback(
+        `⛔ Fondos insuficientes. No puedes extraer más del efectivo real en caja ($${computedExpectedCash.toFixed(2)})`,
+      );
       return;
     }
 
@@ -52,11 +54,12 @@ export default function ShiftMovementModal({
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-3xs flex items-center justify-center p-4">
       <div className="bg-white border-2 border-gray-200 border-b-8 rounded-3xl p-6 max-w-sm w-full space-y-4 animate-scaleUp text-gray-855 shadow-xl">
         <div className="flex justify-between items-center border-b pb-2">
-          <h3 className="text-lg font-black text-gray-800 uppercase tracking-tight">
-            📥 Registrar Movimiento Caja
-          </h3>
-          <button 
-            onClick={() => { onClose(); playSound('click'); }}
+          <h3 className="text-lg font-black text-gray-800 uppercase tracking-tight">📥 Registrar Movimiento Caja</h3>
+          <button
+            onClick={() => {
+              onClose();
+              playSound('click');
+            }}
             className="text-[#9c9c9c] hover:text-gray-500 text-lg font-black p-1 cursor-pointer font-sans"
           >
             ✕
@@ -64,29 +67,30 @@ export default function ShiftMovementModal({
         </div>
 
         <form onSubmit={handleSubmitMovement} className="space-y-4 text-xs text-left">
-          
           {/* Type Switcher */}
           <div className="space-y-1">
             <span className="text-[10px] uppercase font-black text-[#555] block">Dirección del Efectivo</span>
             <div className="grid grid-cols-2 gap-2 bg-gray-55 p-1.5 rounded-2xl border-2 border-gray-200">
               <button
                 type="button"
-                onClick={() => { setMoveType('in'); playSound('click'); }}
+                onClick={() => {
+                  setMoveType('in');
+                  playSound('click');
+                }}
                 className={`py-2 rounded-xl text-xs font-black uppercase transition-all tracking-wider flex items-center justify-center gap-1 cursor-pointer ${
-                  moveType === 'in' 
-                    ? 'bg-green-500 text-white shadow-xs' 
-                    : 'text-gray-500 hover:bg-gray-105'
+                  moveType === 'in' ? 'bg-green-500 text-white shadow-xs' : 'text-gray-500 hover:bg-gray-105'
                 }`}
               >
                 📥 Entrada (Sencillo)
               </button>
               <button
                 type="button"
-                onClick={() => { setMoveType('out'); playSound('click'); }}
+                onClick={() => {
+                  setMoveType('out');
+                  playSound('click');
+                }}
                 className={`py-2 rounded-xl text-xs font-black uppercase transition-all tracking-wider flex items-center justify-center gap-1 cursor-pointer ${
-                  moveType === 'out' 
-                    ? 'bg-amber-500 text-white shadow-xs' 
-                    : 'text-gray-500 hover:bg-gray-105'
+                  moveType === 'out' ? 'bg-amber-500 text-white shadow-xs' : 'text-gray-500 hover:bg-gray-105'
                 }`}
               >
                 📤 Retiro (Gasto)
@@ -96,13 +100,9 @@ export default function ShiftMovementModal({
 
           {/* Amount input */}
           <div className="space-y-1.5">
-            <label className="text-[10px] uppercase font-black text-gray-500 block">
-              Monto a Registrar ($)
-            </label>
+            <label className="text-[10px] uppercase font-black text-gray-500 block">Monto a Registrar ($)</label>
             <div className="relative">
-              <span className="absolute left-3.5 top-2.5 font-extrabold text-[#58cc02] text-sm leading-none">
-                $
-              </span>
+              <span className="absolute left-3.5 top-2.5 font-extrabold text-[#58cc02] text-sm leading-none">$</span>
               <input
                 type="number"
                 step="0.01"
@@ -118,18 +118,19 @@ export default function ShiftMovementModal({
 
           {/* Preset Buttons */}
           <div className="space-y-1.5">
-            <label className="text-[10px] uppercase font-black text-[#555] block">
-              Conceptos Preestablecidos
-            </label>
+            <label className="text-[10px] uppercase font-black text-[#555] block">Conceptos Preestablecidos</label>
             <div className="flex flex-wrap gap-1.5">
-              {(moveType === 'in' 
+              {(moveType === 'in'
                 ? ['Ingreso de cambio sencillo 💰', 'Ajuste por sustrato extra 📂', 'Fondo adicional']
                 : ['Pago a proveedor menor 📦', 'Retiro de seguridad (Fuerte) 🔒', 'Gasto emergente local 🦉']
-              ).map(label => (
+              ).map((label) => (
                 <button
                   key={label}
                   type="button"
-                  onClick={() => { setMoveReason(label); playSound('click'); }}
+                  onClick={() => {
+                    setMoveReason(label);
+                    playSound('click');
+                  }}
                   className={`text-[9px] py-1.5 px-2.5 rounded-lg border font-black transition-all cursor-pointer ${
                     moveReason === label
                       ? 'bg-[#1cb0f6] text-white border-[#1cb0f6]'
@@ -157,9 +158,7 @@ export default function ShiftMovementModal({
           </div>
 
           {movementFeedback && (
-            <p className="text-[10px] font-black leading-none text-red-500 uppercase mt-2">
-              {movementFeedback}
-            </p>
+            <p className="text-[10px] font-black leading-none text-red-500 uppercase mt-2">{movementFeedback}</p>
           )}
 
           <button
@@ -168,7 +167,6 @@ export default function ShiftMovementModal({
           >
             <Layers size={13} /> Grabar Operación de Arca 📥
           </button>
-
         </form>
       </div>
     </div>

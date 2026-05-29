@@ -9,7 +9,10 @@ export const ProductSchema = z.object({
   emoji: z.string().min(1, 'Selecciona un emoji para el producto'),
   description: z.string().optional().default(''),
   barcode: z.string().optional().default(''),
-  minStock: z.preprocess((val) => (val === '' || val === undefined ? 5 : Number(val)), z.number().int().min(0, 'El stock mínimo no puede ser menor a 0'))
+  minStock: z.preprocess(
+    (val) => (val === '' || val === undefined ? 5 : Number(val)),
+    z.number().int().min(0, 'El stock mínimo no puede ser menor a 0'),
+  ),
 });
 
 export type ProductFormValues = z.infer<typeof ProductSchema>;
@@ -22,7 +25,10 @@ export const CustomerSchema = z.object({
   taxId: z.string().optional().default(''),
   regime: z.string().optional().default(''),
   postalCode: z.string().optional().default(''),
-  creditLimit: z.preprocess((val) => (val === '' || val === undefined ? 0 : Number(val)), z.number().min(0, 'El límite de crédito no puede ser menor a 0'))
+  creditLimit: z.preprocess(
+    (val) => (val === '' || val === undefined ? 0 : Number(val)),
+    z.number().min(0, 'El límite de crédito no puede ser menor a 0'),
+  ),
 });
 
 export type CustomerFormValues = z.infer<typeof CustomerSchema>;
@@ -34,8 +40,14 @@ export const SupplierSchema = z.object({
   email: z.string().optional().default(''),
   category: z.string().min(1, 'La categoría del proveedor es obligatoria'),
   address: z.string().optional().default(''),
-  deliveryDays: z.preprocess((val) => (val === '' || val === undefined ? 3 : Number(val)), z.number().int().min(1, 'Los días de entrega deben ser al menos 1')),
-  reliability: z.preprocess((val) => (val === '' || val === undefined ? 100 : Number(val)), z.number().int().min(0).max(100, 'La confiabilidad debe estar entre 0 y 100'))
+  deliveryDays: z.preprocess(
+    (val) => (val === '' || val === undefined ? 3 : Number(val)),
+    z.number().int().min(1, 'Los días de entrega deben ser al menos 1'),
+  ),
+  reliability: z.preprocess(
+    (val) => (val === '' || val === undefined ? 100 : Number(val)),
+    z.number().int().min(0).max(100, 'La confiabilidad debe estar entre 0 y 100'),
+  ),
 });
 
 export type SupplierFormValues = z.infer<typeof SupplierSchema>;

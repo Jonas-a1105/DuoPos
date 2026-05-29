@@ -34,7 +34,9 @@ export default function RetailControlDeck({
             🛍️
           </span>
           <div className="text-left">
-            <h3 className="font-black text-gray-800 text-sm uppercase leading-none">Simulador de Escáner EAN & Retail</h3>
+            <h3 className="font-black text-gray-800 text-sm uppercase leading-none">
+              Simulador de Escáner EAN & Retail
+            </h3>
             <p className="text-[10px] text-orange-600 font-bold uppercase mt-1 tracking-wider">
               Modo Tienda / Supermercado Activo
             </p>
@@ -49,7 +51,7 @@ export default function RetailControlDeck({
       <div className="bg-slate-900 text-white rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden border-2 border-slate-750 min-h-[110px]">
         {/* Laser Red Horizontal Line */}
         <div className="absolute left-0 right-0 h-0.5 bg-red-500 shadow-[0_0_8px_#ef4444] top-1/2 animate-bounce opacity-80" />
-        
+
         {/* Simulated Barcode lines */}
         <div className="flex gap-1.5 items-end h-10 opacity-40 mb-2">
           <div className="w-1 h-10 bg-white" />
@@ -85,7 +87,7 @@ export default function RetailControlDeck({
             type="button"
             onClick={() => {
               if (!rawBarInput) return;
-              const found = products.find(p => p.barcode === rawBarInput || p.id === rawBarInput);
+              const found = products.find((p) => p.barcode === rawBarInput || p.id === rawBarInput);
               if (found) {
                 simulateBarcodeScan(found);
               } else {
@@ -106,26 +108,29 @@ export default function RetailControlDeck({
             ⚡ Escaneo de Simulación con Un Clic:
           </span>
           <div className="grid grid-cols-2 gap-1.5">
-            {products.filter(p => p.barcode).slice(0, 6).map(prod => (
-              <button
-                key={prod.id}
-                type="button"
-                onClick={() => {
-                  setRawBarInput(prod.barcode || '');
-                  setTimeout(() => {
-                    simulateBarcodeScan(prod);
-                    setRawBarInput('');
-                  }, 320);
-                }}
-                className="bg-white border hover:border-orange-300 p-2 rounded-xl text-left flex items-center gap-2 transition-all cursor-pointer text-[10px] font-bold text-gray-750 group"
-              >
-                <span className="text-sm select-none shrink-0">{prod.emoji}</span>
-                <div className="truncate flex-1">
-                  <p className="truncate leading-tight font-extrabold group-hover:text-orange-600">{prod.name}</p>
-                  <span className="font-mono text-[8px] text-gray-400 font-black block">EAN-{prod.barcode}</span>
-                </div>
-              </button>
-            ))}
+            {products
+              .filter((p) => p.barcode)
+              .slice(0, 6)
+              .map((prod) => (
+                <button
+                  key={prod.id}
+                  type="button"
+                  onClick={() => {
+                    setRawBarInput(prod.barcode || '');
+                    setTimeout(() => {
+                      simulateBarcodeScan(prod);
+                      setRawBarInput('');
+                    }, 320);
+                  }}
+                  className="bg-white border hover:border-orange-300 p-2 rounded-xl text-left flex items-center gap-2 transition-all cursor-pointer text-[10px] font-bold text-gray-750 group"
+                >
+                  <span className="text-sm select-none shrink-0">{prod.emoji}</span>
+                  <div className="truncate flex-1">
+                    <p className="truncate leading-tight font-extrabold group-hover:text-orange-600">{prod.name}</p>
+                    <span className="font-mono text-[8px] text-gray-400 font-black block">EAN-{prod.barcode}</span>
+                  </div>
+                </button>
+              ))}
           </div>
         </div>
       </div>

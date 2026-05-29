@@ -39,7 +39,7 @@ const DEFAULT_BILLING_SETTINGS: LegalBillingSettings = {
     { category: 'Cafetería', rate: 16 },
     { category: 'Accesorios', rate: 16 },
     { category: 'Electrónicos', rate: 16 },
-    { category: 'Servicios', rate: 16 }
+    { category: 'Servicios', rate: 16 },
   ],
   taxIncludedInPrice: true,
   companyName: 'StockMaster Pro Gamified S.A.C.',
@@ -50,9 +50,8 @@ const DEFAULT_BILLING_SETTINGS: LegalBillingSettings = {
   invoicePrefix: 'FACT-A-',
   nextInvoiceNumber: 1001,
   automaticMockInvoicing: false,
-  certifyingAuthority: 'Servicio de Administración Ficticia SAT'
+  certifyingAuthority: 'Servicio de Administración Ficticia SAT',
 };
-
 
 export const useSalesStore = create<SalesState>((set) => ({
   activeBranchId: (() => {
@@ -77,9 +76,9 @@ export const useSalesStore = create<SalesState>((set) => ({
   exchangeRates: (() => {
     try {
       const raw = localStorage.getItem('duo_pos_exchange_rates');
-      return raw ? JSON.parse(raw) : { oficial: 36.50, paralelo: 39.90 };
+      return raw ? JSON.parse(raw) : { oficial: 36.5, paralelo: 39.9 };
     } catch {
-      return { oficial: 36.50, paralelo: 39.90 };
+      return { oficial: 36.5, paralelo: 39.9 };
     }
   })(),
   activeRateType: (() => {
@@ -124,5 +123,5 @@ export const useSalesStore = create<SalesState>((set) => ({
     set({ hardwareSettings });
     localStorage.setItem('duo_pos_hardware_settings', JSON.stringify(hardwareSettings));
   },
-  setBillingSettings: (billingSettings) => set({ billingSettings })
+  setBillingSettings: (billingSettings) => set({ billingSettings }),
 }));

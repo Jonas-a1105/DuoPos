@@ -9,7 +9,6 @@
 import { isAfter, isBefore, differenceInHours, format } from 'date-fns';
 import { supabase, isSupabaseConfigured } from '../config/supabaseClient';
 
-
 export type SubscriptionTier = 'free' | 'standard' | 'pro';
 
 export interface PlanDefinition {
@@ -60,17 +59,17 @@ export const PLANS: Record<SubscriptionTier, PlanDefinition> = {
       'Límite de 15 ventas guardadas en historial',
       'Skins de Gamificación clásicas solamente',
       'Turnos y Caja Básicos',
-      '1 sola sucursal'
+      '1 sola sucursal',
     ],
     bannerColor: 'from-slate-50 to-slate-100 border-slate-300 text-slate-800',
     accentColor: 'slate',
-    badgeBg: 'bg-slate-150 text-slate-700'
+    badgeBg: 'bg-slate-150 text-slate-700',
   },
   standard: {
     id: 'standard',
     name: 'Plan Standard',
-    priceUSD: 29.90,
-    priceVEF: 1360.00,
+    priceUSD: 29.9,
+    priceVEF: 1360.0,
     emoji: '⚡',
     description: 'Facturación profesional para tiendas físicas medianas con alto flujo de clientes.',
     clientLimit: 50,
@@ -84,19 +83,20 @@ export const PLANS: Record<SubscriptionTier, PlanDefinition> = {
       'Hasta 2 sucursales sincronizadas',
       'Logística, Proveedores y Órdenes de Compra',
       'Misiones y Gamificación para 3 cajeros',
-      'Skins Estándar & Galaxy desbloqueados'
+      'Skins Estándar & Galaxy desbloqueados',
     ],
     bannerColor: 'from-emerald-50 to-emerald-100 border-emerald-300 text-emerald-900',
     accentColor: 'emerald',
-    badgeBg: 'bg-emerald-100 text-emerald-800'
+    badgeBg: 'bg-emerald-100 text-emerald-800',
   },
   pro: {
     id: 'pro',
     name: 'Plan Pro',
-    priceUSD: 79.00,
-    priceVEF: 3590.00,
+    priceUSD: 79.0,
+    priceVEF: 3590.0,
     emoji: '🏆',
-    description: 'La suite completa para negocios en crecimiento con CRM avanzado, multi-sucursales y herramientas fiscales.',
+    description:
+      'La suite completa para negocios en crecimiento con CRM avanzado, multi-sucursales y herramientas fiscales.',
     clientLimit: 99999,
     salesLimit: 99999,
     allowedBranches: 5,
@@ -108,12 +108,12 @@ export const PLANS: Record<SubscriptionTier, PlanDefinition> = {
       'Todos los temas desbloqueados (Standard, Galaxy, Cyberpunk)',
       'Control de fletes y logística CEDIS para transportistas',
       'Emisor de timbrados fiscales automatizado',
-      'Soporte prioritario Premium'
+      'Soporte prioritario Premium',
     ],
     bannerColor: 'from-violet-50 to-violet-100 border-violet-300 text-violet-900',
     accentColor: 'violet',
-    badgeBg: 'bg-violet-100 text-violet-800'
-  }
+    badgeBg: 'bg-violet-100 text-violet-800',
+  },
 };
 
 /**
@@ -122,26 +122,26 @@ export const PLANS: Record<SubscriptionTier, PlanDefinition> = {
  */
 export function generateKeyForFingerprint(tier: SubscriptionTier, hwFingerprint: string): string {
   if (tier === 'free') return 'FREE-NO-KEY-REQUIRED';
-  
+
   let hash = 0;
   const combined = `${tier}:${hwFingerprint.toUpperCase().trim()}:DUOPOS-SECURE-SALT-2026`;
   for (let i = 0; i < combined.length; i++) {
     const chr = combined.charCodeAt(i);
-    hash = ((hash << 5) - hash) + chr;
+    hash = (hash << 5) - hash + chr;
     hash |= 0;
   }
-  
+
   const hashVal1 = Math.abs((hash ^ 0x12345678) % 65536);
   const hashVal2 = Math.abs((hash ^ 0x87654321) % 65536);
-  const hashVal3 = Math.abs((hash ^ 0x61A72F6B) % 65536);
+  const hashVal3 = Math.abs((hash ^ 0x61a72f6b) % 65536);
 
   const part1 = hashVal1.toString(16).toUpperCase().padStart(4, '0');
   const part2 = hashVal2.toString(16).toUpperCase().padStart(4, '0');
   const part3 = hashVal3.toString(16).toUpperCase().padStart(4, '0');
-  
+
   let tierCode = 'STD';
   if (tier === 'pro') tierCode = 'PRO';
-  
+
   return `DUO-${tierCode}-${part1}-${part2}-${part3}`;
 }
 
@@ -168,24 +168,30 @@ export function generateLicenseKey(tier: SubscriptionTier): string {
 export function generateOfflineSignature(tier: string, expiry: string, hwSeed: string): string {
   const salt = 'DUOPOS-SECURE-SECRET-SALT-2026';
   const message = `${tier}:${expiry}:${hwSeed}:${salt}`;
-  
+
   let hash = 0;
   for (let i = 0; i < message.length; i++) {
     const char = message.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash |= 0;
   }
-  
+
   let hash2 = 17;
   for (let i = message.length - 1; i >= 0; i--) {
     const char = message.charCodeAt(i);
     hash2 = (hash2 * 31) ^ char;
     hash2 |= 0;
   }
-  
-  const part1 = Math.abs(hash ^ 0x9E3779B9).toString(16).toUpperCase().padStart(8, '0');
-  const part2 = Math.abs(hash2 ^ 0x61A72F6B).toString(16).toUpperCase().padStart(8, '0');
-  
+
+  const part1 = Math.abs(hash ^ 0x9e3779b9)
+    .toString(16)
+    .toUpperCase()
+    .padStart(8, '0');
+  const part2 = Math.abs(hash2 ^ 0x61a72f6b)
+    .toString(16)
+    .toUpperCase()
+    .padStart(8, '0');
+
   return `${part1.slice(0, 4)}-${part1.slice(4, 8)}-${part2.slice(0, 4)}`;
 }
 
@@ -194,7 +200,7 @@ export function generateOfflineSignature(tier: string, expiry: string, hwSeed: s
  */
 export function verifyOfflineLicenseKey(
   key: string,
-  hwSeed: string
+  hwSeed: string,
 ): { valid: boolean; tier: SubscriptionTier; expiresAt: string; error?: string } {
   const cleanKey = key.toUpperCase().trim();
   if (!cleanKey.startsWith('DUO-OFF-')) {
@@ -202,28 +208,33 @@ export function verifyOfflineLicenseKey(
   }
 
   const parts = cleanKey.split('-');
-  
+
   if (parts.length < 7) {
-    return { valid: false, tier: 'free', expiresAt: 'Nunca', error: 'Clave de activación offline incompleta o corrupta.' };
+    return {
+      valid: false,
+      tier: 'free',
+      expiresAt: 'Nunca',
+      error: 'Clave de activación offline incompleta o corrupta.',
+    };
   }
 
   const tier = parts[2].toLowerCase() as SubscriptionTier;
   const expiryRaw = parts[3]; // 'NUNCA' or 'YYYYMMDD'
-  
+
   // Signature is always the last 3 parts
   const sigParts = parts.slice(-3);
   const signature = sigParts.join('-');
-  
+
   // HW seed is everything between index 4 and signature parts
   const hwSeedParts = parts.slice(4, -3);
   const hwKeyInLicense = hwSeedParts.join('-');
 
   if (hwKeyInLicense !== 'UNIVERSAL' && hwKeyInLicense !== hwSeed.toUpperCase().trim()) {
-    return { 
-      valid: false, 
-      tier: 'free', 
-      expiresAt: 'Nunca', 
-      error: 'Esta licencia offline está asociada a otro dispositivo de cobro.' 
+    return {
+      valid: false,
+      tier: 'free',
+      expiresAt: 'Nunca',
+      error: 'Esta licencia offline está asociada a otro dispositivo de cobro.',
     };
   }
 
@@ -267,7 +278,7 @@ export function detectClockTampering(): boolean {
     // If current time is strictly earlier than last run by more than 1 hour
     const hoursDiff = differenceInHours(lastRun, current);
     if (hoursDiff > 1) {
-      console.warn("⚠️ [LICENSING] ALERTA DE SEGURIDAD: Se detectó una alteración del reloj del sistema.");
+      console.warn('⚠️ [LICENSING] ALERTA DE SEGURIDAD: Se detectó una alteración del reloj del sistema.');
       return true;
     }
 
@@ -276,7 +287,7 @@ export function detectClockTampering(): boolean {
       localStorage.setItem('duo_pos_last_run_timestamp', current.toISOString());
     }
   } catch (e) {
-    console.error("Error checking clock tampering", e);
+    console.error('Error checking clock tampering', e);
   }
   return false;
 }
@@ -288,7 +299,7 @@ export function detectClockTampering(): boolean {
 export async function validateLicenseKeyOnline(
   key: string,
   hwFingerprint: string,
-  companyName: string = ''
+  companyName: string = '',
 ): Promise<{ valid: boolean; tier: SubscriptionTier; expiresAt?: string; error?: string }> {
   const cleanKey = key.toUpperCase().trim();
   if (!cleanKey) {
@@ -302,13 +313,13 @@ export async function validateLicenseKeyOnline(
       return {
         valid: true,
         tier: offlineRes.tier,
-        expiresAt: offlineRes.expiresAt
+        expiresAt: offlineRes.expiresAt,
       };
     } else {
       return {
         valid: false,
         tier: 'free',
-        error: offlineRes.error || 'La clave offline firmada es inválida.'
+        error: offlineRes.error || 'La clave offline firmada es inválida.',
       };
     }
   }
@@ -317,7 +328,8 @@ export async function validateLicenseKeyOnline(
     return {
       valid: false,
       tier: 'free',
-      error: 'Supabase no está configurado y no se detectó una clave offline firmada. La activación online requiere conexión real.'
+      error:
+        'Supabase no está configurado y no se detectó una clave offline firmada. La activación online requiere conexión real.',
     };
   }
 
@@ -347,10 +359,10 @@ export async function validateLicenseKeyOnline(
       if (license.activated_by === hwFingerprint) {
         return { valid: true, tier: license.tier as SubscriptionTier, expiresAt: expiryString };
       } else {
-        return { 
-          valid: false, 
-          tier: 'free', 
-          error: 'Esta llave de licencia ya está activa en otro dispositivo.' 
+        return {
+          valid: false,
+          tier: 'free',
+          error: 'Esta llave de licencia ya está activa en otro dispositivo.',
         };
       }
     }
@@ -362,7 +374,7 @@ export async function validateLicenseKeyOnline(
         status: 'activated',
         activated_at: new Date().toISOString(),
         activated_by: hwFingerprint,
-        company_name: companyName || null
+        company_name: companyName || null,
       })
       .eq('license_key', cleanKey)
       .eq('status', 'available');
@@ -384,7 +396,7 @@ export async function validateLicenseKeyOnline(
  */
 export async function createLicenseOnline(
   tier: SubscriptionTier,
-  notes: string = ''
+  notes: string = '',
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   if (!isSupabaseConfigured()) {
     return { success: false, error: 'Supabase no está configurado.' };
@@ -399,7 +411,7 @@ export async function createLicenseOnline(
         license_key: key,
         tier,
         status: 'available',
-        notes: notes || null
+        notes: notes || null,
       })
       .select()
       .single();
@@ -425,10 +437,7 @@ export async function revokeLicenseOnline(key: string): Promise<{ success: boole
   }
 
   try {
-    const { error } = await supabase
-      .from('licenses')
-      .update({ status: 'revoked' })
-      .eq('license_key', key);
+    const { error } = await supabase.from('licenses').update({ status: 'revoked' }).eq('license_key', key);
 
     if (error) {
       console.error('Error al revocar licencia:', error);
@@ -451,10 +460,7 @@ export async function listLicensesOnline(): Promise<{ success: boolean; data?: a
   }
 
   try {
-    const { data, error } = await supabase
-      .from('licenses')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('licenses').select('*').order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error al listar licencias:', error);

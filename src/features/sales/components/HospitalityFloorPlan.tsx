@@ -48,9 +48,12 @@ export default function HospitalityFloorPlan({
             🏨
           </span>
           <div className="text-left">
-            <h3 className="font-black text-gray-800 text-sm uppercase leading-none">Mapa de Mesas y Comensales (F&B)</h3>
+            <h3 className="font-black text-gray-800 text-sm uppercase leading-none">
+              Mapa de Mesas y Comensales (F&B)
+            </h3>
             <p className="text-[10px] text-[#58cc02] font-black uppercase mt-1 tracking-wider">
-              Mesa Activa: {activeTableId ? tables.find(t => t.id === activeTableId)?.name : 'Ninguna (Mostrador / Fast Food)'}
+              Mesa Activa:{' '}
+              {activeTableId ? tables.find((t) => t.id === activeTableId)?.name : 'Ninguna (Mostrador / Fast Food)'}
             </p>
           </div>
         </div>
@@ -59,12 +62,17 @@ export default function HospitalityFloorPlan({
           {/* KDS Open simulator button */}
           <button
             type="button"
-            onClick={() => { setIsKdsOpen(true); playSound('click'); }}
+            onClick={() => {
+              setIsKdsOpen(true);
+              playSound('click');
+            }}
             className="flex-1 sm:flex-none bg-[#ff9600] text-white border-b-4 border-amber-700 hover:bg-[#ffa726] active:translate-y-[2px] active:border-b-0 py-1.5 px-3 rounded-xl font-black text-[10.5px] uppercase tracking-wider flex items-center justify-center gap-1 cursor-pointer animate-pulse-slow"
           >
             <ChefHat size={13} /> Monitor Cocina (KDS)
             {kitchenOrders.length > 0 && (
-              <span className="bg-red-500 font-mono text-white text-[9px] h-4 min-w-4 px-1 rounded-full flex items-center justify-center font-black animate-bounce">{kitchenOrders.length}</span>
+              <span className="bg-red-500 font-mono text-white text-[9px] h-4 min-w-4 px-1 rounded-full flex items-center justify-center font-black animate-bounce">
+                {kitchenOrders.length}
+              </span>
             )}
           </button>
 
@@ -85,14 +93,15 @@ export default function HospitalityFloorPlan({
 
       {/* Floor Layout tables grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2.5">
-        {tables.map(t => {
+        {tables.map((t) => {
           const isSelected = activeTableId === t.id;
           const isOccupied = t.status === 'occupied';
           const activeItemsCount = t.cart?.reduce((acc, it) => acc + it.quantity, 0) || 0;
-          const tableTotal = t.cart?.reduce((acc, curr) => {
-            const addSum = curr.addons ? curr.addons.reduce((s, a) => s + a.price, 0) : 0;
-            return acc + ((curr.product.price + addSum) * curr.quantity);
-          }, 0) || 0;
+          const tableTotal =
+            t.cart?.reduce((acc, curr) => {
+              const addSum = curr.addons ? curr.addons.reduce((s, a) => s + a.price, 0) : 0;
+              return acc + (curr.product.price + addSum) * curr.quantity;
+            }, 0) || 0;
 
           return (
             <button
@@ -114,14 +123,23 @@ export default function HospitalityFloorPlan({
                   } else {
                     // free table. If screen already has a cart, bind it to this table!
                     if (cart.length > 0) {
-                      const bindNow = window.confirm(`¿Pretende asociar los productos del carrito actual a la ${t.name}?`);
+                      const bindNow = window.confirm(
+                        `¿Pretende asociar los productos del carrito actual a la ${t.name}?`,
+                      );
                       if (bindNow) {
-                        setTables(prev => prev.map(item => {
-                          if (item.id === t.id) {
-                            return { ...item, status: 'occupied', cart: cart, waiterName: activeWaiterName || 'Personal General' };
-                          }
-                          return item;
-                        }));
+                        setTables((prev) =>
+                          prev.map((item) => {
+                            if (item.id === t.id) {
+                              return {
+                                ...item,
+                                status: 'occupied',
+                                cart: cart,
+                                waiterName: activeWaiterName || 'Personal General',
+                              };
+                            }
+                            return item;
+                          }),
+                        );
                       } else {
                         setCart([]);
                       }
@@ -147,9 +165,7 @@ export default function HospitalityFloorPlan({
               </span>
 
               <div className="my-1.5 flex flex-col items-center">
-                <span className="text-xl select-none leading-none mb-1">
-                  {isOccupied ? '🍱' : '🍽️'}
-                </span>
+                <span className="text-xl select-none leading-none mb-1">{isOccupied ? '🍱' : '🍽️'}</span>
                 <span className="text-[11px] leading-tight block truncate w-full">{t.name}</span>
               </div>
 
@@ -158,12 +174,12 @@ export default function HospitalityFloorPlan({
                 {isOccupied ? (
                   <div className="text-[8.5px] leading-none text-rose-700 flex flex-col gap-0.5 mt-0.5">
                     <span className="font-extrabold font-mono">${tableTotal.toFixed(2)}</span>
-                    <span className="font-bold truncate" title={t.waiterName}>{t.waiterName || 'Mesero'}</span>
+                    <span className="font-bold truncate" title={t.waiterName}>
+                      {t.waiterName || 'Mesero'}
+                    </span>
                   </div>
                 ) : (
-                  <span className="text-[8.5px] font-black uppercase text-emerald-600 tracking-wider">
-                    LIBRE
-                  </span>
+                  <span className="text-[8.5px] font-black uppercase text-emerald-600 tracking-wider">LIBRE</span>
                 )}
               </div>
 
@@ -190,19 +206,23 @@ export default function HospitalityFloorPlan({
               setActiveWaiterName(e.target.value);
               // Update active table waiter directly
               if (activeTableId) {
-                setTables(prev => prev.map(t => {
-                  if (t.id === activeTableId) {
-                    return { ...t, waiterName: e.target.value };
-                  }
-                  return t;
-                }));
+                setTables((prev) =>
+                  prev.map((t) => {
+                    if (t.id === activeTableId) {
+                      return { ...t, waiterName: e.target.value };
+                    }
+                    return t;
+                  }),
+                );
               }
             }}
             className="bg-white border-2 border-gray-200 rounded-lg px-2 py-1 text-xs font-bold text-gray-750 outline-none focus:border-[#58cc02]"
           >
             <option value="">-- Personal General --</option>
-            {MOCK_WAITERS.map(w => (
-              <option key={w.id} value={w.name}>{w.name}</option>
+            {MOCK_WAITERS.map((w) => (
+              <option key={w.id} value={w.name}>
+                {w.name}
+              </option>
             ))}
           </select>
         </div>

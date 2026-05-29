@@ -1,9 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Product, Supplier, PurchaseOrder, PurchaseOrderItem } from '../../../types';
 import { playSound } from '../../../services/sounds';
-import { 
-  PlusCircle, X, Check 
-} from 'lucide-react';
+import { PlusCircle, X, Check } from 'lucide-react';
 
 interface PurchaseOrderWizardProps {
   purchaseOrders: PurchaseOrder[];
@@ -24,7 +22,7 @@ export default function PurchaseOrderWizard({
   onTransitPurchaseOrder,
   onReceivePurchaseOrder,
   onCancelPurchaseOrder,
-  onGrantXp
+  onGrantXp,
 }: PurchaseOrderWizardProps) {
   // PO Compiler Form States
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
@@ -32,17 +30,24 @@ export default function PurchaseOrderWizard({
   const [orderPaymentMethod, setOrderPaymentMethod] = useState<'cash' | 'credit'>('cash');
   const [orderCarrier, setOrderCarrier] = useState('DuoExpress Air 🦉');
   const [orderNotes, setOrderNotes] = useState('');
-  const [orderItems, setOrderItems] = useState<{ productId: string, name: string, emoji: string, cost: number, quantity: number }[]>([]);
+  const [orderItems, setOrderItems] = useState<
+    { productId: string; name: string; emoji: string; cost: number; quantity: number }[]
+  >([]);
   const [orderError, setOrderError] = useState('');
-  const [orderFilterStatus, setOrderFilterStatus] = useState<'all' | 'draft' | 'sent' | 'transit' | 'received' | 'cancelled'>('all');
+  const [orderFilterStatus, setOrderFilterStatus] = useState<
+    'all' | 'draft' | 'sent' | 'transit' | 'received' | 'cancelled'
+  >('all');
 
   // Math Calculations
   const computedSubtotal = useMemo(() => {
-    return orderItems.reduce((acc, it) => acc + (it.cost * it.quantity), 0);
+    return orderItems.reduce((acc, it) => acc + it.cost * it.quantity, 0);
   }, [orderItems]);
 
   const computedTax = useMemo(() => Number((computedSubtotal * 0.16).toFixed(2)), [computedSubtotal]);
-  const computedTotal = useMemo(() => Number((computedSubtotal + computedTax).toFixed(2)), [computedSubtotal, computedTax]);
+  const computedTotal = useMemo(
+    () => Number((computedSubtotal + computedTax).toFixed(2)),
+    [computedSubtotal, computedTax],
+  );
 
   const handleOpenNewOrder = () => {
     setOrderSupplierId(suppliers[0]?.id || '');
@@ -61,13 +66,16 @@ export default function PurchaseOrderWizard({
       alert('⚠️ No hay productos en catálogo.');
       return;
     }
-    setOrderItems([...orderItems, {
-      productId: firstProd.id,
-      name: firstProd.name,
-      emoji: firstProd.emoji || '📦',
-      cost: firstProd.cost,
-      quantity: 10
-    }]);
+    setOrderItems([
+      ...orderItems,
+      {
+        productId: firstProd.id,
+        name: firstProd.name,
+        emoji: firstProd.emoji || '📦',
+        cost: firstProd.cost,
+        quantity: 10,
+      },
+    ]);
     playSound('click');
   };
 
@@ -76,7 +84,7 @@ export default function PurchaseOrderWizard({
     updated[idx] = { ...updated[idx], ...fields } as any;
 
     if (fields.productId) {
-      const match = products.find(p => p.id === fields.productId);
+      const match = products.find((p) => p.id === fields.productId);
       if (match) {
         updated[idx].name = match.name;
         updated[idx].emoji = match.emoji || '📦';
@@ -92,15 +100,27 @@ export default function PurchaseOrderWizard({
   };
 
   const handleSaveOrder = (status: 'draft' | 'sent') => {
-    if (!orderSupplierId) { setOrderError('Proveedor requerido.'); return; }
-    if (orderItems.length === 0) { setOrderError('Debe agregar mínimo 1 artículo.'); return; }
-
-    for (const it of orderItems) {
-      if (it.quantity <= 0) { setOrderError('Cantidad inválida.'); return; }
-      if (it.cost < 0) { setOrderError('Costo inválido.'); return; }
+    if (!orderSupplierId) {
+      setOrderError('Proveedor requerido.');
+      return;
+    }
+    if (orderItems.length === 0) {
+      setOrderError('Debe agregar mínimo 1 artículo.');
+      return;
     }
 
-    const selectedSup = suppliers.find(s => s.id === orderSupplierId);
+    for (const it of orderItems) {
+      if (it.quantity <= 0) {
+        setOrderError('Cantidad inválida.');
+        return;
+      }
+      if (it.cost < 0) {
+        setOrderError('Costo inválido.');
+        return;
+      }
+    }
+
+    const selectedSup = suppliers.find((s) => s.id === orderSupplierId);
     const newPO: PurchaseOrder = {
       id: `po-${1000 + purchaseOrders.length + 1}`,
       supplierId: orderSupplierId,
@@ -113,7 +133,7 @@ export default function PurchaseOrderWizard({
       status,
       createdAt: new Date().toISOString(),
       estimatedDelivery: new Date(Date.now() + (selectedSup?.deliveryDays || 2) * 24 * 3600 * 1000).toISOString(),
-      carrier: orderCarrier
+      carrier: orderCarrier,
     };
 
     onSavePurchaseOrder(newPO);
@@ -128,14 +148,14 @@ export default function PurchaseOrderWizard({
   };
 
   const handleTransitOrder = (id: string) => {
-    const carrier = prompt("Transportista / Chofer:", "DuoExpress Air 🦉") || "DuoExpress Air 🦉";
+    const carrier = prompt('Transportista / Chofer:', 'DuoExpress Air 🦉') || 'DuoExpress Air 🦉';
     const estimatedDelivery = new Date(Date.now() + 2 * 24 * 3600 * 1000).toISOString();
     onTransitPurchaseOrder(id, carrier, estimatedDelivery);
     playSound('click');
   };
 
   const handleReceiveOrder = (id: string) => {
-    const o = purchaseOrders.find(po => po.id === id);
+    const o = purchaseOrders.find((po) => po.id === id);
     if (!o) return;
     onReceivePurchaseOrder(id);
     if (onGrantXp) onGrantXp(85);
@@ -152,7 +172,6 @@ export default function PurchaseOrderWizard({
 
   return (
     <div className="space-y-4 animate-fadeIn text-left">
-      
       <div className="flex flex-wrap justify-between items-center gap-3">
         <div className="flex flex-wrap gap-1 select-none">
           {[
@@ -160,11 +179,14 @@ export default function PurchaseOrderWizard({
             { status: 'draft', label: 'Borrador 📝' },
             { status: 'sent', label: 'Enviadas 🚀' },
             { status: 'transit', label: 'En Tránsito 🚚' },
-            { status: 'received', label: 'Recibidas ✅' }
-          ].map(s => (
+            { status: 'received', label: 'Recibidas ✅' },
+          ].map((s) => (
             <button
               key={s.status}
-              onClick={() => { setOrderFilterStatus(s.status as any); playSound('click'); }}
+              onClick={() => {
+                setOrderFilterStatus(s.status as any);
+                playSound('click');
+              }}
               className={`py-1.5 px-3 rounded-lg text-[10px] font-black uppercase border cursor-pointer ${
                 orderFilterStatus === s.status
                   ? 'bg-blue-600 text-white border-blue-700'
@@ -186,23 +208,32 @@ export default function PurchaseOrderWizard({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-left">
         {purchaseOrders
-          .filter(o => orderFilterStatus === 'all' || o.status === orderFilterStatus)
-          .map(order => {
+          .filter((o) => orderFilterStatus === 'all' || o.status === orderFilterStatus)
+          .map((order) => {
             const isDraft = order.status === 'draft';
             const isSent = order.status === 'sent';
             const isTransit = order.status === 'transit';
             const isReceived = order.status === 'received';
 
             return (
-              <div key={order.id} className="bg-white border-2 border-gray-250 border-b-[6px] rounded-3xl p-4.5 flex flex-col justify-between space-y-3">
+              <div
+                key={order.id}
+                className="bg-white border-2 border-gray-250 border-b-[6px] rounded-3xl p-4.5 flex flex-col justify-between space-y-3"
+              >
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="font-mono text-xs font-black text-blue-650">PO Ref: {order.id}</span>
-                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-lg border ${
-                      isReceived ? 'bg-green-50 border-green-200 text-green-700' :
-                      isTransit ? 'bg-orange-50 border-orange-200 text-orange-700 animate-pulse' :
-                      isSent ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-100 text-gray-500 border-slate-250'
-                    }`}>
+                    <span
+                      className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-lg border ${
+                        isReceived
+                          ? 'bg-green-50 border-green-200 text-green-700'
+                          : isTransit
+                            ? 'bg-orange-50 border-orange-200 text-orange-700 animate-pulse'
+                            : isSent
+                              ? 'bg-blue-50 border-blue-200 text-blue-700'
+                              : 'bg-slate-100 text-gray-500 border-slate-250'
+                      }`}
+                    >
                       {order.status}
                     </span>
                   </div>
@@ -217,8 +248,13 @@ export default function PurchaseOrderWizard({
 
                   <div className="bg-slate-50 border rounded-xl p-2.5 max-h-32 overflow-y-auto space-y-1 text-xs">
                     {order.items.map((it, i) => (
-                      <div key={i} className="flex justify-between items-center text-[11px] font-semibold text-gray-750">
-                        <span>{it.emoji} {it.name} (x{it.quantity})</span>
+                      <div
+                        key={i}
+                        className="flex justify-between items-center text-[11px] font-semibold text-gray-750"
+                      >
+                        <span>
+                          {it.emoji} {it.name} (x{it.quantity})
+                        </span>
                         <span className="font-mono">${(it.cost * it.quantity).toFixed(2)}</span>
                       </div>
                     ))}
@@ -227,7 +263,9 @@ export default function PurchaseOrderWizard({
 
                 <div className="pt-2 border-t space-y-3">
                   <div className="flex justify-between items-baseline text-xs font-bold font-mono">
-                    <span className="text-gray-400">TÉRMINOS: {order.paymentMethod === 'cash' ? '🤝 CONTADO' : '💸 CRÉDITO AP'}</span>
+                    <span className="text-gray-400">
+                      TÉRMINOS: {order.paymentMethod === 'cash' ? '🤝 CONTADO' : '💸 CRÉDITO AP'}
+                    </span>
                     <span className="text-gray-850 font-black text-sm">TOTAL: ${order.total.toFixed(2)}</span>
                   </div>
 
@@ -245,7 +283,10 @@ export default function PurchaseOrderWizard({
                         >
                           Enviar 🚀
                         </button>
-                        <button onClick={() => handleCancelOrder(order.id)} className="px-3 py-1.5 border hover:bg-red-50 text-red-500 font-bold rounded-xl text-[10px] uppercase cursor-pointer">
+                        <button
+                          onClick={() => handleCancelOrder(order.id)}
+                          className="px-3 py-1.5 border hover:bg-red-50 text-red-500 font-bold rounded-xl text-[10px] uppercase cursor-pointer"
+                        >
                           X
                         </button>
                       </>
@@ -291,26 +332,43 @@ export default function PurchaseOrderWizard({
       {isOrderFormOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fadeIn text-gray-800">
           <div className="bg-white border-2 border-gray-205 border-b-8 rounded-3xl max-w-2xl w-full p-5 space-y-4 relative text-left">
-            <button onClick={() => setIsOrderFormOpen(false)} className="absolute right-4 top-4 p-2 text-gray-400 hover:text-gray-650 rounded-full"><X size={20} /></button>
+            <button
+              onClick={() => setIsOrderFormOpen(false)}
+              className="absolute right-4 top-4 p-2 text-gray-400 hover:text-gray-650 rounded-full"
+            >
+              <X size={20} />
+            </button>
 
             <div className="space-y-1">
-              <h3 className="text-xl font-black text-gray-805 flex items-center gap-1.5 select-none">🧁 Preparar Órden de Insumos DuoExpress</h3>
-              <p className="text-xs text-gray-400 font-bold">Generará una solicitud de compra oficial dirigida a tu socio de suministro aliado.</p>
+              <h3 className="text-xl font-black text-gray-805 flex items-center gap-1.5 select-none">
+                🧁 Preparar Órden de Insumos DuoExpress
+              </h3>
+              <p className="text-xs text-gray-400 font-bold">
+                Generará una solicitud de compra oficial dirigida a tu socio de suministro aliado.
+              </p>
             </div>
 
             {orderError && (
-              <div className="p-2.5 bg-red-50 text-red-650 border border-red-205 rounded-xl text-xs font-bold">{orderError}</div>
+              <div className="p-2.5 bg-red-50 text-red-650 border border-red-205 rounded-xl text-xs font-bold">
+                {orderError}
+              </div>
             )}
 
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="space-y-1 text-left">
-                <label className="text-[10px] font-black uppercase text-gray-400">1. Seleccionar Proveedor Alianza</label>
+                <label className="text-[10px] font-black uppercase text-gray-400">
+                  1. Seleccionar Proveedor Alianza
+                </label>
                 <select
                   value={orderSupplierId}
                   onChange={(e) => setOrderSupplierId(e.target.value)}
                   className="w-full bg-slate-55 border rounded-xl p-2 text-xs font-bold text-gray-700 cursor-pointer"
                 >
-                  {suppliers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.category})</option>)}
+                  {suppliers.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.category})
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -355,7 +413,9 @@ export default function PurchaseOrderWizard({
             {/* Item compilation rows */}
             <div className="space-y-2 border-t pt-3 text-left">
               <div className="flex justify-between items-center">
-                <label className="text-[10px] font-black uppercase text-gray-400">Renglones de Insumos ({orderItems.length})</label>
+                <label className="text-[10px] font-black uppercase text-gray-400">
+                  Renglones de Insumos ({orderItems.length})
+                </label>
                 <button
                   type="button"
                   onClick={handleAddOrderItem}
@@ -373,7 +433,11 @@ export default function PurchaseOrderWizard({
                       onChange={(e) => handleUpdateOrderItem(idx, { productId: e.target.value })}
                       className="flex-1 bg-white border p-1 rounded-lg font-bold text-gray-700 cursor-pointer text-xs"
                     >
-                      {products.map(p => <option key={p.id} value={p.id}>{p.emoji} {p.name}</option>)}
+                      {products.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.emoji} {p.name}
+                        </option>
+                      ))}
                     </select>
 
                     <div className="w-16">
@@ -408,16 +472,25 @@ export default function PurchaseOrderWizard({
                 ))}
 
                 {orderItems.length === 0 && (
-                  <p className="text-center text-[11px] text-gray-400 py-4 italic font-bold">Haz click en "+ Agregar Artículo" para construir el pedido.</p>
+                  <p className="text-center text-[11px] text-gray-400 py-4 italic font-bold">
+                    Haz click en "+ Agregar Artículo" para construir el pedido.
+                  </p>
                 )}
               </div>
             </div>
 
             {/* Calculations summaries */}
             <div className="bg-slate-55 border p-3 rounded-2xl space-y-1 text-xs">
-              <div className="flex justify-between font-bold text-gray-600"><span>Subtotal:</span> <span className="font-mono">${computedSubtotal.toFixed(2)}</span></div>
-              <div className="flex justify-between font-bold text-gray-600"><span>Impuestos Logísticos (CFDI/16%):</span> <span className="font-mono">${computedTax.toFixed(2)}</span></div>
-              <div className="flex justify-between font-black text-gray-800 text-sm"><span>Total de Facturación:</span> <span className="font-mono">${computedTotal.toFixed(2)}</span></div>
+              <div className="flex justify-between font-bold text-gray-600">
+                <span>Subtotal:</span> <span className="font-mono">${computedSubtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between font-bold text-gray-600">
+                <span>Impuestos Logísticos (CFDI/16%):</span>{' '}
+                <span className="font-mono">${computedTax.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between font-black text-gray-800 text-sm">
+                <span>Total de Facturación:</span> <span className="font-mono">${computedTotal.toFixed(2)}</span>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs pt-2">
@@ -436,11 +509,9 @@ export default function PurchaseOrderWizard({
                 Transmitir Pedido Oficial 🚀
               </button>
             </div>
-
           </div>
         </div>
       )}
-
     </div>
   );
 }

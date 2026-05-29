@@ -5,13 +5,38 @@
 
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { User, Product, Transaction, CashShift, Customer, LegalBillingSettings, Branch, CashRegister, StockTransfer, Supplier, PurchaseOrder, ExpressEvent } from '../types/index';
+import {
+  User,
+  Product,
+  Transaction,
+  CashShift,
+  Customer,
+  LegalBillingSettings,
+  Branch,
+  CashRegister,
+  StockTransfer,
+  Supplier,
+  PurchaseOrder,
+  ExpressEvent,
+} from '../types/index';
 import { DUO_CHARACTERS } from '../initialData';
 import LoginScreen from '../features/auth/LoginScreen';
 import LandingPage from '../features/auth/LandingPage';
 import { supabase, isSupabaseConfigured, setSupabaseToken } from '../config/supabaseClient';
 import { useAuth, useUser } from '@clerk/clerk-react';
-import { syncLoad, syncSave, syncInsert, syncDelete, flushPendingQueue, generateUUID, syncInsertTransaction, syncSaveShift, syncSavePurchaseOrder, getLocalData, setLocalData } from '../services/supabaseSync';
+import {
+  syncLoad,
+  syncSave,
+  syncInsert,
+  syncDelete,
+  flushPendingQueue,
+  generateUUID,
+  syncInsertTransaction,
+  syncSaveShift,
+  syncSavePurchaseOrder,
+  getLocalData,
+  setLocalData,
+} from '../services/supabaseSync';
 
 import { useUserStore } from '../stores/useUserStore';
 import { useSalesStore } from '../stores/useSalesStore';
@@ -35,12 +60,40 @@ import LicenseBlockScreen from '../components/Modal/LicenseBlockScreen';
 import LevelUpCelebrateModal from '../components/Modal/LevelUpCelebrateModal';
 import RoleLockWarningModal from '../components/Modal/RoleLockWarningModal';
 import { ErrorBoundary } from '../components/ErrorBoundary';
-import { Home, ShoppingBag, Package, History, LogOut, Download, Flame, Award, Smartphone, Laptop, Sparkles, Volume2, VolumeX, Users, Settings, Wallet, Globe, Cpu, Trophy, RefreshCw, Cloud } from 'lucide-react';
+import {
+  Home,
+  ShoppingBag,
+  Package,
+  History,
+  LogOut,
+  Download,
+  Flame,
+  Award,
+  Smartphone,
+  Laptop,
+  Sparkles,
+  Volume2,
+  VolumeX,
+  Users,
+  Settings,
+  Wallet,
+  Globe,
+  Cpu,
+  Trophy,
+  RefreshCw,
+  Cloud,
+} from 'lucide-react';
 import { playSound } from '../services/sounds';
 import { HardwareDeviceSettings, DEFAULT_HARDWARE_SETTINGS } from '../services/printService';
 import HardwareHubModal from '../components/Modal/HardwareHubModal';
 import { FlashNotifications, toast } from '../components/Modal/FlashNotifications';
-import { LicenseDetails, validateLicenseKeyOnline, generateHardwareFingerprint, PLANS, detectClockTampering } from '../services/licensing';
+import {
+  LicenseDetails,
+  validateLicenseKeyOnline,
+  generateHardwareFingerprint,
+  PLANS,
+  detectClockTampering,
+} from '../services/licensing';
 import { useExchangeRates } from '../hooks/useExchangeRates';
 import { useInventory } from '../hooks/useInventory';
 import { useCustomers } from '../hooks/useCustomers';
@@ -48,7 +101,6 @@ import { useShifts } from '../hooks/useShifts';
 import { useExpressEvents } from '../hooks/useExpressEvents';
 import { useInitialLoad } from '../hooks/useInitialLoad';
 import { useSession } from '../hooks/useSession';
-
 
 // ─── Componente de Sincronización de Sesiones Clerk + Supabase ────────────────
 function ClerkSessionSync({ onSyncUser }: { onSyncUser: (user: User | null) => void }) {
@@ -105,7 +157,7 @@ function ClerkSessionSync({ onSyncUser }: { onSyncUser: (user: User | null) => v
               unlocked_skins: ['standard'],
               active_skin: 'standard',
               unlocked_badges: [],
-              completed_missions_today: []
+              completed_missions_today: [],
             };
 
             const { data: newProfile, error: insertErr } = await supabase
@@ -135,7 +187,7 @@ function ClerkSessionSync({ onSyncUser }: { onSyncUser: (user: User | null) => v
               unlockedSkins: finalProfile.unlocked_skins,
               activeSkin: finalProfile.active_skin,
               unlockedBadges: finalProfile.unlocked_badges,
-              completedMissionsToday: finalProfile.completed_missions_today
+              completedMissionsToday: finalProfile.completed_missions_today,
             };
             onSyncUser(mappedUser);
             // Persist locally to avoid loading flicker
@@ -157,86 +209,93 @@ function ClerkSessionSync({ onSyncUser }: { onSyncUser: (user: User | null) => v
 
 export default function AppRouter() {
   // Zustand Stores Hooks
-  const user = useUserStore(state => state.user);
-  const setUser = useUserStore(state => state.setUser);
-  const users = useUserStore(state => state.users);
-  const setUsers = useUserStore(state => state.setUsers);
-  const showLanding = useUserStore(state => state.showLanding);
-  const setShowLanding = useUserStore(state => state.setShowLanding);
-  const licenseDetails = useUserStore(state => state.licenseDetails);
-  const setLicenseDetails = useUserStore(state => state.setLicenseDetails);
-  const isLicenseExpired = useUserStore(state => state.isLicenseExpired);
-  const setIsLicenseExpired = useUserStore(state => state.setIsLicenseExpired);
+  const user = useUserStore((state) => state.user);
+  const setUser = useUserStore((state) => state.setUser);
+  const users = useUserStore((state) => state.users);
+  const setUsers = useUserStore((state) => state.setUsers);
+  const showLanding = useUserStore((state) => state.showLanding);
+  const setShowLanding = useUserStore((state) => state.setShowLanding);
+  const licenseDetails = useUserStore((state) => state.licenseDetails);
+  const setLicenseDetails = useUserStore((state) => state.setLicenseDetails);
+  const isLicenseExpired = useUserStore((state) => state.isLicenseExpired);
+  const setIsLicenseExpired = useUserStore((state) => state.setIsLicenseExpired);
 
-  const isClockTampered = useUserStore(state => state.isClockTampered);
-  const setIsClockTampered = useUserStore(state => state.setIsClockTampered);
-  const duoMood = useUserStore(state => state.duoMood);
-  const setDuoMood = useUserStore(state => state.setDuoMood);
-  const duoSparkles = useUserStore(state => state.duoSparkles);
-  const setDuoSparkles = useUserStore(state => state.setDuoSparkles);
-  const levelUpAchieved = useUserStore(state => state.levelUpAchieved);
-  const setLevelUpAchieved = useUserStore(state => state.setLevelUpAchieved);
-  const roleLockWarning = useUserStore(state => state.roleLockWarning);
-  const setRoleLockWarning = useUserStore(state => state.setRoleLockWarning);
-  const lastSyncTime = useUserStore(state => state.lastSyncTime);
-  const setLastSyncTime = useUserStore(state => state.setLastSyncTime);
+  const isClockTampered = useUserStore((state) => state.isClockTampered);
+  const setIsClockTampered = useUserStore((state) => state.setIsClockTampered);
+  const duoMood = useUserStore((state) => state.duoMood);
+  const setDuoMood = useUserStore((state) => state.setDuoMood);
+  const duoSparkles = useUserStore((state) => state.duoSparkles);
+  const setDuoSparkles = useUserStore((state) => state.setDuoSparkles);
+  const levelUpAchieved = useUserStore((state) => state.levelUpAchieved);
+  const setLevelUpAchieved = useUserStore((state) => state.setLevelUpAchieved);
+  const roleLockWarning = useUserStore((state) => state.roleLockWarning);
+  const setRoleLockWarning = useUserStore((state) => state.setRoleLockWarning);
+  const lastSyncTime = useUserStore((state) => state.lastSyncTime);
+  const setLastSyncTime = useUserStore((state) => state.setLastSyncTime);
 
-  const activeBranchId = useSalesStore(state => state.activeBranchId);
-  const setActiveBranchId = useSalesStore(state => state.setActiveBranchId);
-  const activeRegisterId = useSalesStore(state => state.activeRegisterId);
-  const setActiveRegisterId = useSalesStore(state => state.setActiveRegisterId);
-  const branches = useSalesStore(state => state.branches);
-  const setBranches = useSalesStore(state => state.setBranches);
-  const registers = useSalesStore(state => state.registers);
-  const setRegisters = useSalesStore(state => state.setRegisters);
-  const activeShift = useSalesStore(state => state.activeShift);
-  const setActiveShift = useSalesStore(state => state.setActiveShift);
-  const shiftHistory = useSalesStore(state => state.shiftHistory);
-  const setShiftHistory = useSalesStore(state => state.setShiftHistory);
-  const transactions = useSalesStore(state => state.transactions);
-  const setTransactions = useSalesStore(state => state.setTransactions);
-  const exchangeRates = useSalesStore(state => state.exchangeRates);
-  const setExchangeRates = useSalesStore(state => state.setExchangeRates);
-  const activeRateType = useSalesStore(state => state.activeRateType);
-  const setActiveRateType = useSalesStore(state => state.setActiveRateType);
-  const hardwareSettings = useSalesStore(state => state.hardwareSettings);
-  const setHardwareSettings = useSalesStore(state => state.setHardwareSettings);
-  const billingSettings = useSalesStore(state => state.billingSettings);
-  const setBillingSettings = useSalesStore(state => state.setBillingSettings);
+  const activeBranchId = useSalesStore((state) => state.activeBranchId);
+  const setActiveBranchId = useSalesStore((state) => state.setActiveBranchId);
+  const activeRegisterId = useSalesStore((state) => state.activeRegisterId);
+  const setActiveRegisterId = useSalesStore((state) => state.setActiveRegisterId);
+  const branches = useSalesStore((state) => state.branches);
+  const setBranches = useSalesStore((state) => state.setBranches);
+  const registers = useSalesStore((state) => state.registers);
+  const setRegisters = useSalesStore((state) => state.setRegisters);
+  const activeShift = useSalesStore((state) => state.activeShift);
+  const setActiveShift = useSalesStore((state) => state.setActiveShift);
+  const shiftHistory = useSalesStore((state) => state.shiftHistory);
+  const setShiftHistory = useSalesStore((state) => state.setShiftHistory);
+  const transactions = useSalesStore((state) => state.transactions);
+  const setTransactions = useSalesStore((state) => state.setTransactions);
+  const exchangeRates = useSalesStore((state) => state.exchangeRates);
+  const setExchangeRates = useSalesStore((state) => state.setExchangeRates);
+  const activeRateType = useSalesStore((state) => state.activeRateType);
+  const setActiveRateType = useSalesStore((state) => state.setActiveRateType);
+  const hardwareSettings = useSalesStore((state) => state.hardwareSettings);
+  const setHardwareSettings = useSalesStore((state) => state.setHardwareSettings);
+  const billingSettings = useSalesStore((state) => state.billingSettings);
+  const setBillingSettings = useSalesStore((state) => state.setBillingSettings);
 
-  const products = useInventoryStore(state => state.products);
-  const setProducts = useInventoryStore(state => state.setProducts);
-  const suppliers = useInventoryStore(state => state.suppliers);
-  const setSuppliers = useInventoryStore(state => state.setSuppliers);
-  const purchaseOrders = useInventoryStore(state => state.purchaseOrders);
-  const setPurchaseOrders = useInventoryStore(state => state.setPurchaseOrders);
-  const stockTransfers = useInventoryStore(state => state.stockTransfers);
-  const setStockTransfers = useInventoryStore(state => state.setStockTransfers);
-  const activeEvent = useInventoryStore(state => state.activeEvent);
-  const setActiveEvent = useInventoryStore(state => state.setActiveEvent);
+  const products = useInventoryStore((state) => state.products);
+  const setProducts = useInventoryStore((state) => state.setProducts);
+  const suppliers = useInventoryStore((state) => state.suppliers);
+  const setSuppliers = useInventoryStore((state) => state.setSuppliers);
+  const purchaseOrders = useInventoryStore((state) => state.purchaseOrders);
+  const setPurchaseOrders = useInventoryStore((state) => state.setPurchaseOrders);
+  const stockTransfers = useInventoryStore((state) => state.stockTransfers);
+  const setStockTransfers = useInventoryStore((state) => state.setStockTransfers);
+  const activeEvent = useInventoryStore((state) => state.activeEvent);
+  const setActiveEvent = useInventoryStore((state) => state.setActiveEvent);
 
-  const customers = useCustomerStore(state => state.customers);
-  const setCustomers = useCustomerStore(state => state.setCustomers);
+  const customers = useCustomerStore((state) => state.customers);
+  const setCustomers = useCustomerStore((state) => state.setCustomers);
 
-  const {
-    loginUser,
-    logoutUser,
-    saveUser,
-  } = useSession();
+  const { loginUser, logoutUser, saveUser } = useSession();
 
   // Local UI-scoped states
-  const isDev = user && (
-    user.username.toLowerCase() === 'jonas' || 
-    user.username.toLowerCase() === 'jonas_mendoza' || 
-    (user.email && user.email.toLowerCase().includes('jonas')) || 
-    user.username.toLowerCase() === 'admin'
-  );
+  const isDev =
+    user &&
+    (user.username.toLowerCase() === 'jonas' ||
+      user.username.toLowerCase() === 'jonas_mendoza' ||
+      (user.email && user.email.toLowerCase().includes('jonas')) ||
+      user.username.toLowerCase() === 'admin');
   const navigate = useNavigate();
   const location = useLocation();
 
   const activeTab = location.pathname === '/' ? 'dashboard' : (location.pathname.substring(1) as any);
 
-  const setActiveTab = (tab: 'dashboard' | 'sales' | 'shifts' | 'inventory' | 'history' | 'customers' | 'settings' | 'logistics' | 'gamification') => {
+  const setActiveTab = (
+    tab:
+      | 'dashboard'
+      | 'sales'
+      | 'shifts'
+      | 'inventory'
+      | 'history'
+      | 'customers'
+      | 'settings'
+      | 'logistics'
+      | 'gamification',
+  ) => {
     navigate(tab === 'dashboard' ? '/' : '/' + tab);
   };
 
@@ -278,15 +337,11 @@ export default function AppRouter() {
       setDuoSparkles(false);
     }, 5000);
   };
-  
+
   // Real-time Venezuelan Exchange rates state (ve.dolarapi.com)
   // Powered by React Query + ky — auto-refetch cada 120s, retry, caché local
 
-  const {
-    data: exchangeRatesQuery,
-    isFetching: isRefreshingRates,
-    refetch: refetchRates,
-  } = useExchangeRates();
+  const { data: exchangeRatesQuery, isFetching: isRefreshingRates, refetch: refetchRates } = useExchangeRates();
 
   // Sync React Query data to Zustand store + localStorage
   useEffect(() => {
@@ -301,15 +356,21 @@ export default function AppRouter() {
   const handleToggleRateType = (type: 'oficial' | 'paralelo') => {
     if (licenseDetails.tier === 'free' && type === 'paralelo') {
       playSound('error');
-      toast.error('El soporte para tasas de dólar paralelo (Monitor) requiere el Plan Standard o Pro. Actualiza tu plan en Ajustes > Planes.', { title: 'Plan Standard o Pro Requerido 🔒' });
+      toast.error(
+        'El soporte para tasas de dólar paralelo (Monitor) requiere el Plan Standard o Pro. Actualiza tu plan en Ajustes > Planes.',
+        { title: 'Plan Standard o Pro Requerido 🔒' },
+      );
       return;
     }
     setActiveRateType(type);
     localStorage.setItem('duo_pos_active_rate_type', type);
     playSound('click');
-    toast.info(`Precios convertidos usando tasas de tipo: ${type === 'oficial' ? 'BCV Oficial' : 'Paralelo (Monitor)'}`, { title: 'Tasa Alternada 🔄' });
+    toast.info(
+      `Precios convertidos usando tasas de tipo: ${type === 'oficial' ? 'BCV Oficial' : 'Paralelo (Monitor)'}`,
+      { title: 'Tasa Alternada 🔄' },
+    );
   };
-  
+
   // Extracted domain hooks
   const {
     addProduct: inventoryAddProduct,
@@ -326,25 +387,11 @@ export default function AppRouter() {
     registerSupplierPayout: inventoryRegisterSupplierPayout,
   } = useInventory();
 
-  const {
-    addCustomer,
-    updateCustomer,
-    deleteCustomer,
-    processCustomerLoyalty,
-  } = useCustomers();
+  const { addCustomer, updateCustomer, deleteCustomer, processCustomerLoyalty } = useCustomers();
 
-  const {
-    openShift,
-    closeShift,
-    addShiftMovement,
-    updateShiftAfterSale,
-    updateShiftAfterRefund,
-  } = useShifts();
+  const { openShift, closeShift, addShiftMovement, updateShiftAfterSale, updateShiftAfterRefund } = useShifts();
 
-  const {
-    triggerEventProgress,
-    triggerExpressEvent,
-  } = useExpressEvents();
+  const { triggerEventProgress, triggerExpressEvent } = useExpressEvents();
 
   // Hardware status state
   const [isHardwareHubOpen, setIsHardwareHubOpen] = useState(false);
@@ -353,9 +400,9 @@ export default function AppRouter() {
     setHardwareSettings(settings);
     localStorage.setItem('duo_pos_hardware_settings', JSON.stringify(settings));
   };
-  
+
   // Multi-Sucursal, Multi-Caja & Almacén Central (CEDIS) State Managers
-  
+
   // Real-time Sound Muted settings state
   const [isMuted, setIsMuted] = useState(() => localStorage.getItem('duo_pos_muted') === 'true');
 
@@ -365,8 +412,16 @@ export default function AppRouter() {
       const saved = localStorage.getItem('duo_pos_licensing_details');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.tier === 'trial') { parsed.tier = 'free'; parsed.clientLimit = PLANS.free.clientLimit; parsed.salesLimit = PLANS.free.salesLimit; }
-        if (parsed.tier === 'unlimited_racha' || parsed.tier === 'enterprise_buhoflota') { parsed.tier = 'pro'; parsed.clientLimit = PLANS.pro.clientLimit; parsed.salesLimit = PLANS.pro.salesLimit; }
+        if (parsed.tier === 'trial') {
+          parsed.tier = 'free';
+          parsed.clientLimit = PLANS.free.clientLimit;
+          parsed.salesLimit = PLANS.free.salesLimit;
+        }
+        if (parsed.tier === 'unlimited_racha' || parsed.tier === 'enterprise_buhoflota') {
+          parsed.tier = 'pro';
+          parsed.clientLimit = PLANS.pro.clientLimit;
+          parsed.salesLimit = PLANS.pro.salesLimit;
+        }
         localStorage.setItem('duo_pos_licensing_details', JSON.stringify(parsed));
         setLicenseDetails(parsed);
       } else {
@@ -384,7 +439,7 @@ export default function AppRouter() {
           salesLimit: PLANS.free.salesLimit,
           currentSalesCount: 0,
           offlineActivationSeed: customSeed,
-          companyName: ''
+          companyName: '',
         });
       }
     } catch (e) {
@@ -425,13 +480,13 @@ export default function AppRouter() {
       if (licenseDetails.activated && licenseDetails.expiresAt !== 'Nunca') {
         const expiryDate = new Date(licenseDetails.expiresAt);
         const today = new Date();
-        
+
         // Strip hours to do pure date comparisons
         today.setHours(0, 0, 0, 0);
         expiryDate.setHours(23, 59, 59, 999); // Active through the end of the day
 
         if (today > expiryDate) {
-          console.warn("⚠️ [LICENSING] Licencia de DuoPOS expirada.");
+          console.warn('⚠️ [LICENSING] Licencia de DuoPOS expirada.');
           setIsLicenseExpired(true);
         } else {
           setIsLicenseExpired(false);
@@ -462,19 +517,22 @@ export default function AppRouter() {
         clientLimit: plan.clientLimit,
         salesLimit: plan.salesLimit,
         activatedAt: new Date().toISOString(),
-        companyName: companyName || ''
+        companyName: companyName || '',
       };
       setLicenseDetails(updated);
       try {
         localStorage.setItem('duo_pos_licensing_details', JSON.stringify(updated));
       } catch (err) {}
-      
+
       // Update check variables immediately
       setIsLicenseExpired(false);
       setIsClockTampered(false);
 
       playSound('levelup');
-      return { success: true, message: `¡Licencia activada con éxito!\nFelicidades, tu DuoPOS ahora tiene el plan [${plan.name}] activo en este terminal.` };
+      return {
+        success: true,
+        message: `¡Licencia activada con éxito!\nFelicidades, tu DuoPOS ahora tiene el plan [${plan.name}] activo en este terminal.`,
+      };
     } else {
       return { success: false, message: res.error || 'La llave ingresada es inválida.' };
     }
@@ -488,7 +546,7 @@ export default function AppRouter() {
       activationKey: '',
       expiresAt: 'Nunca',
       clientLimit: PLANS.free.clientLimit,
-      salesLimit: PLANS.free.salesLimit
+      salesLimit: PLANS.free.salesLimit,
     };
     setLicenseDetails(updated);
     try {
@@ -516,12 +574,12 @@ export default function AppRouter() {
       playSound('click');
     }
   };
-  
+
   // Install states
   const [isSimInstalled, setIsSimInstalled] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
   const [showInstallBanner, setShowInstallBanner] = useState(true);
-  
+
   // Real native installation prompt trigger state
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
@@ -544,7 +602,9 @@ export default function AppRouter() {
   const syncStateFromSupabase = async (showToasts = true) => {
     if (!user || !isSupabaseConfigured() || !navigator.onLine) {
       if (showToasts) {
-        toast.info('No hay conexión a Internet o Supabase no está configurado.', { title: 'Sincronización no disponible' });
+        toast.info('No hay conexión a Internet o Supabase no está configurado.', {
+          title: 'Sincronización no disponible',
+        });
       }
       return;
     }
@@ -554,35 +614,59 @@ export default function AppRouter() {
       await flushPendingQueue();
 
       const results = await Promise.allSettled([
-        syncLoad<Product>('products', 'duo_pos_products', []).then(async loaded => {
-          const augmented = loaded.map(p => {
+        syncLoad<Product>('products', 'duo_pos_products', []).then(async (loaded) => {
+          const augmented = loaded.map((p) => {
             if (!p.branchesStock) {
-              return { ...p, branchesStock: { 'branch-centro': p.stock, 'branch-central': p.stock * 3 + 40, 'branch-norte': Math.round(p.stock * 0.7) + 5 } };
+              return {
+                ...p,
+                branchesStock: {
+                  'branch-centro': p.stock,
+                  'branch-central': p.stock * 3 + 40,
+                  'branch-norte': Math.round(p.stock * 0.7) + 5,
+                },
+              };
             }
             return p;
           });
           setProducts(augmented);
           await setLocalData('duo_pos_products', augmented);
         }),
-        syncLoad<Transaction>('transactions', 'duo_pos_transactions', [], { orderBy: 'date', ascending: false }).then(setTransactions),
+        syncLoad<Transaction>('transactions', 'duo_pos_transactions', [], { orderBy: 'date', ascending: false }).then(
+          setTransactions,
+        ),
         syncLoad<Customer>('customers', 'duo_pos_customers', []).then(setCustomers),
-        syncLoad<CashShift>('cash_shifts', 'duo_pos_shift_history', [], { orderBy: 'opening_time', ascending: false }).then(loaded => {
-          const active = loaded.find(s => s.status === 'open' && s.branchId === activeBranchId && s.registerId === activeRegisterId);
+        syncLoad<CashShift>('cash_shifts', 'duo_pos_shift_history', [], {
+          orderBy: 'opening_time',
+          ascending: false,
+        }).then((loaded) => {
+          const active = loaded.find(
+            (s) => s.status === 'open' && s.branchId === activeBranchId && s.registerId === activeRegisterId,
+          );
           if (active) {
             setActiveShift(active);
           } else {
             setActiveShift(null);
           }
-          setShiftHistory(loaded.filter(s => s.status === 'closed' && s.branchId === activeBranchId && s.registerId === activeRegisterId));
+          setShiftHistory(
+            loaded.filter(
+              (s) => s.status === 'closed' && s.branchId === activeBranchId && s.registerId === activeRegisterId,
+            ),
+          );
         }),
         syncLoad<Branch>('branches', 'duo_pos_branches', []).then(setBranches),
         syncLoad<CashRegister>('cash_registers', 'duo_pos_registers', []).then(setRegisters),
-        syncLoad<StockTransfer>('stock_transfers', 'duo_pos_stock_transfers', [], { orderBy: 'created_at', ascending: false }).then(setStockTransfers),
+        syncLoad<StockTransfer>('stock_transfers', 'duo_pos_stock_transfers', [], {
+          orderBy: 'created_at',
+          ascending: false,
+        }).then(setStockTransfers),
         syncLoad<Supplier>('suppliers', 'duo_pos_suppliers', []).then(setSuppliers),
-        syncLoad<PurchaseOrder>('purchase_orders', 'duo_pos_purchase_orders', [], { orderBy: 'created_at', ascending: false }).then(setPurchaseOrders),
+        syncLoad<PurchaseOrder>('purchase_orders', 'duo_pos_purchase_orders', [], {
+          orderBy: 'created_at',
+          ascending: false,
+        }).then(setPurchaseOrders),
       ]);
 
-      const synced = results.filter(r => r.status === 'fulfilled').length;
+      const synced = results.filter((r) => r.status === 'fulfilled').length;
       const now = new Date().toLocaleTimeString();
       setLastSyncTime(now);
       if (showToasts) {
@@ -633,9 +717,14 @@ export default function AppRouter() {
   useEffect(() => {
     const reloadShiftsForCurrentRegister = async () => {
       try {
-        const loaded = await syncLoad<CashShift>('cash_shifts', 'duo_pos_shift_history', [], { orderBy: 'opening_time', ascending: false });
-        
-        const active = loaded.find(s => s.status === 'open' && s.branchId === activeBranchId && s.registerId === activeRegisterId);
+        const loaded = await syncLoad<CashShift>('cash_shifts', 'duo_pos_shift_history', [], {
+          orderBy: 'opening_time',
+          ascending: false,
+        });
+
+        const active = loaded.find(
+          (s) => s.status === 'open' && s.branchId === activeBranchId && s.registerId === activeRegisterId,
+        );
         if (active) {
           setActiveShift(active);
         } else {
@@ -651,8 +740,10 @@ export default function AppRouter() {
             setActiveShift(null);
           }
         }
-        
-        const closed = loaded.filter(s => s.status === 'closed' && s.branchId === activeBranchId && s.registerId === activeRegisterId);
+
+        const closed = loaded.filter(
+          (s) => s.status === 'closed' && s.branchId === activeBranchId && s.registerId === activeRegisterId,
+        );
         setShiftHistory(closed);
       } catch {
         const activeShiftRaw = localStorage.getItem('duo_pos_active_shift');
@@ -666,15 +757,17 @@ export default function AppRouter() {
         } else {
           setActiveShift(null);
         }
-        
+
         const shiftHistoryRaw = localStorage.getItem('duo_pos_shift_history');
         if (shiftHistoryRaw) {
           const parsedHistory: CashShift[] = JSON.parse(shiftHistoryRaw);
-          setShiftHistory(parsedHistory.filter(s => s.branchId === activeBranchId && s.registerId === activeRegisterId));
+          setShiftHistory(
+            parsedHistory.filter((s) => s.branchId === activeBranchId && s.registerId === activeRegisterId),
+          );
         }
       }
     };
-    
+
     reloadShiftsForCurrentRegister();
   }, [activeBranchId, activeRegisterId]);
 
@@ -685,7 +778,7 @@ export default function AppRouter() {
       const tabRolesMap: Record<string, string[]> = {
         inventory: ['admin', 'supervisor'],
         logistics: ['admin', 'supervisor'],
-        settings: ['admin']
+        settings: ['admin'],
       };
       const required = tabRolesMap[activeTab];
       if (required && !required.includes(currentUserRole)) {
@@ -703,10 +796,12 @@ export default function AppRouter() {
   };
 
   // Inventory logic handlers (delegated to useInventory hook)
-  const handleAddProduct = (newProd: Omit<Product, 'id'>) => inventoryAddProduct(newProd, activeBranchId, handleGrantXp);
+  const handleAddProduct = (newProd: Omit<Product, 'id'>) =>
+    inventoryAddProduct(newProd, activeBranchId, handleGrantXp);
   const handleUpdateProduct = (prod: Product) => inventoryUpdateProduct(prod, activeBranchId);
   const handleDeleteProduct = (id: string) => inventoryDeleteProduct(id);
-  const handleDecreaseStock = (productId: string, qty: number) => inventoryDecreaseStock(productId, qty, activeBranchId);
+  const handleDecreaseStock = (productId: string, qty: number) =>
+    inventoryDecreaseStock(productId, qty, activeBranchId);
 
   // Customer handlers (delegated to useCustomers hook)
   const handleAddCustomer = (newCust: any) => addCustomer(newCust, licenseDetails);
@@ -728,8 +823,8 @@ export default function AppRouter() {
     try {
       allSettings = loadedSettingsRaw ? JSON.parse(loadedSettingsRaw) : [];
     } catch {}
-    
-    allSettings = allSettings.filter(s => s.id !== 'billing');
+
+    allSettings = allSettings.filter((s) => s.id !== 'billing');
     const newRow = { id: 'billing', data: updated };
     allSettings.push(newRow);
 
@@ -741,39 +836,44 @@ export default function AppRouter() {
   const handleUpdateSupplier = (supplier: Supplier) => inventoryUpdateSupplier(supplier);
   const handleDeleteSupplier = (id: string) => inventoryDeleteSupplier(id);
   const handleSavePurchaseOrder = (po: PurchaseOrder) => inventorySavePurchaseOrder(po);
-  const handleTransitPurchaseOrder = (id: string, carrier: string, estimatedDelivery: string) => inventoryTransitPurchaseOrder(id, carrier, estimatedDelivery);
+  const handleTransitPurchaseOrder = (id: string, carrier: string, estimatedDelivery: string) =>
+    inventoryTransitPurchaseOrder(id, carrier, estimatedDelivery);
   const handleReceivePurchaseOrder = async (id: string) => {
     await inventoryReceivePurchaseOrder(id);
   };
   const handleCancelPurchaseOrder = (id: string) => inventoryCancelPurchaseOrder(id);
-  const handleRegisterSupplierPayout = (supplierId: string, amount: number, notes: string) => inventoryRegisterSupplierPayout(supplierId, amount, notes);
+  const handleRegisterSupplierPayout = (supplierId: string, amount: number, notes: string) =>
+    inventoryRegisterSupplierPayout(supplierId, amount, notes);
 
   // Transactions logic handlers
   const handleAddTransaction = async (txn: Transaction) => {
     if (transactions.length >= licenseDetails.salesLimit) {
       playSound('error');
-      toast.error(`Has completado el límite para el plan actual (${licenseDetails.salesLimit} ventas). Para seguir procesando transacciones, actualiza tu licencia en Ajustes > Planes.`, {
-        title: 'Límite de Ventas Excedido 🔒',
-        duration: 10000
-      });
+      toast.error(
+        `Has completado el límite para el plan actual (${licenseDetails.salesLimit} ventas). Para seguir procesando transacciones, actualiza tu licencia en Ajustes > Planes.`,
+        {
+          title: 'Límite de Ventas Excedido 🔒',
+          duration: 10000,
+        },
+      );
       return;
     }
 
     const txnWithBranch: Transaction = {
       ...txn,
       branchId: txn.branchId || activeBranchId,
-      registerId: txn.registerId || activeRegisterId
+      registerId: txn.registerId || activeRegisterId,
     };
     const updatedTxns = [txnWithBranch, ...transactions];
     setTransactions(updatedTxns);
-    
+
     await syncInsertTransaction(txnWithBranch, updatedTxns);
 
     // Increment billingSettings invoice sequence if transaction has invoiceData
     if (txn.invoiceData && billingSettings) {
       const updatedBilling = {
         ...billingSettings,
-        nextInvoiceNumber: billingSettings.nextInvoiceNumber + 1
+        nextInvoiceNumber: billingSettings.nextInvoiceNumber + 1,
       };
       setBillingSettings(updatedBilling);
       localStorage.setItem('duo_pos_billing_settings', JSON.stringify(updatedBilling));
@@ -784,8 +884,8 @@ export default function AppRouter() {
       try {
         allSettings = loadedSettingsRaw ? JSON.parse(loadedSettingsRaw) : [];
       } catch {}
-      
-      allSettings = allSettings.filter(s => s.id !== 'billing');
+
+      allSettings = allSettings.filter((s) => s.id !== 'billing');
       const newRow = { id: 'billing', data: updatedBilling };
       allSettings.push(newRow);
 
@@ -795,7 +895,9 @@ export default function AppRouter() {
       try {
         const today = new Date().toISOString().split('T')[0];
         const dayStatsRaw = localStorage.getItem(`duo_pos_daily_acts_${today}`);
-        const currentStats = dayStatsRaw ? JSON.parse(dayStatsRaw) : { barcodeScans: 0, invoicesEmitted: 0, customersRegistered: 0 };
+        const currentStats = dayStatsRaw
+          ? JSON.parse(dayStatsRaw)
+          : { barcodeScans: 0, invoicesEmitted: 0, customersRegistered: 0 };
         currentStats.invoicesEmitted = (currentStats.invoicesEmitted || 0) + 1;
         localStorage.setItem(`duo_pos_daily_acts_${today}`, JSON.stringify(currentStats));
       } catch (e) {}
@@ -809,18 +911,17 @@ export default function AppRouter() {
     // Update active cash shift diagnostics if active (delegated to useShifts hook)
     if (activeShift) {
       const isCash = txn.paymentMethod === 'cash';
-      const cashAddition = txn.isMixedPayment ? (txn.mixedCashAmount || 0) : (isCash ? txn.total : 0);
+      const cashAddition = txn.isMixedPayment ? txn.mixedCashAmount || 0 : isCash ? txn.total : 0;
       updateShiftAfterSale(txn.total, cashAddition, txn.paymentMethod || '', !!txn.isMixedPayment);
     }
-
 
     // Handle streak calculation logic!
     if (user) {
       const today = new Date().toISOString().split('T')[0];
-      
+
       let streak = user.streak;
       if (user.lastSaleDate !== today) {
-        // If they sold today, check if last registration was yesterday to increment, 
+        // If they sold today, check if last registration was yesterday to increment,
         // or keep racha alive. For arcade POS fun, any new active sales day extends the streak!
         streak = user.streak + 1;
       }
@@ -840,7 +941,9 @@ export default function AppRouter() {
       // Automatically register the first sale everyday in daily simulation stats to unlock quests too!
       try {
         const dayStatsRaw = localStorage.getItem(`duo_pos_daily_acts_${today}`);
-        const currentStats = dayStatsRaw ? JSON.parse(dayStatsRaw) : { barcodeScans: 0, invoicesEmitted: 0, customersRegistered: 0 };
+        const currentStats = dayStatsRaw
+          ? JSON.parse(dayStatsRaw)
+          : { barcodeScans: 0, invoicesEmitted: 0, customersRegistered: 0 };
         // We can save status
         localStorage.setItem(`duo_pos_daily_acts_${today}`, JSON.stringify(currentStats));
       } catch (err) {}
@@ -858,13 +961,13 @@ export default function AppRouter() {
   };
 
   const handleRefundTransaction = async (txnId: string) => {
-    const targetTxn = transactions.find(t => t.id === txnId);
+    const targetTxn = transactions.find((t) => t.id === txnId);
     if (!targetTxn) return;
 
     // 1. Restore product inventory stocks
     const changedProducts: Product[] = [];
-    const updatedProducts = products.map(p => {
-      const soldItem = targetTxn.items.find(item => item.productId === p.id);
+    const updatedProducts = products.map((p) => {
+      const soldItem = targetTxn.items.find((item) => item.productId === p.id);
       if (soldItem) {
         const changed = { ...p, stock: p.stock + soldItem.quantity };
         changedProducts.push(changed);
@@ -874,16 +977,16 @@ export default function AppRouter() {
     });
 
     setProducts(updatedProducts);
-    
+
     // Sync inventory restorations to Supabase
     for (const cp of changedProducts) {
       await syncSave<Product>('products', 'duo_pos_products', updatedProducts, cp);
     }
 
     // 2. Erase transaction from audit log
-    const updatedTxns = transactions.filter(t => t.id !== txnId);
+    const updatedTxns = transactions.filter((t) => t.id !== txnId);
     setTransactions(updatedTxns);
-    
+
     await syncDelete('transactions', 'duo_pos_transactions', updatedTxns, txnId);
 
     // 2b. Adjust active shift sales values if cash (delegated to useShifts hook)
@@ -896,13 +999,15 @@ export default function AppRouter() {
       const updatedUser: User = {
         ...user,
         xp: Math.max(0, user.xp - 10), // Small deduction for backing out
-        weeklyXp: Math.max(0, (user.weeklyXp ?? 0) - 10)
+        weeklyXp: Math.max(0, (user.weeklyXp ?? 0) - 10),
       };
       saveUser(updatedUser);
     }
-    toast.warning(`Transacción #${txnId.slice(0, 8).toUpperCase()} reembolsada con éxito. Stock devuelto a inventario.`, { title: 'Reembolso de Ticket ⚠️' });
+    toast.warning(
+      `Transacción #${txnId.slice(0, 8).toUpperCase()} reembolsada con éxito. Stock devuelto a inventario.`,
+      { title: 'Reembolso de Ticket ⚠️' },
+    );
   };
-
 
   // Shift control operations (delegated to useShifts hook)
   const handleOpenShift = (initialCash: number) => {
@@ -927,38 +1032,41 @@ export default function AppRouter() {
 
   const handleLogout = () => logoutUser();
 
-  if (showLanding) {
+  if (showLanding && !user) {
     return (
-      <LandingPage
-        onEnterApp={() => {
-          setShowLanding(false);
-        }}
-        onEnterAsAdmin={() => {
-          const adminUser: User = {
-            id: 'user-admin',
-            username: 'Administrador Duo',
-            email: 'admin@duopos.com',
-            avatar: 'duo',
-            streak: 5,
-            lastSaleDate: new Date().toISOString().split('T')[0],
-            xp: 380,
-            level: 3,
-            dailyGoal: 150,
-            levelTitle: 'Supervisor de Rachas 🥈',
-            role: 'admin',
-            gems: 400,
-            gemsEarnedTotal: 400,
-            unlockedSkins: ['skin-standard', 'skin-dark-galaxy', 'skin-neon-cyberpunk'],
-            activeSkin: 'standard',
-            unlockedBadges: [],
-            completedMissionsToday: [],
-            seasonXp: 0,
-            seasonRewardsClaimed: []
-          };
-          loginUser(adminUser);
-          toast.success("¡Ingresaste con la cuenta maestra de Administrador! 🦉🎉", { title: "Duo Club Maestre" });
-        }}
-      />
+      <>
+        {!!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY && <ClerkSessionSync onSyncUser={setUser} />}
+        <LandingPage
+          onEnterApp={() => {
+            setShowLanding(false);
+          }}
+          onEnterAsAdmin={() => {
+            const adminUser: User = {
+              id: 'user-admin',
+              username: 'Administrador StockMaster',
+              email: 'admin@stockmasterpro.com',
+              avatar: 'duo',
+              streak: 5,
+              lastSaleDate: new Date().toISOString().split('T')[0],
+              xp: 380,
+              level: 3,
+              dailyGoal: 150,
+              levelTitle: 'Supervisor de Rachas 🥈',
+              role: 'admin',
+              gems: 400,
+              gemsEarnedTotal: 400,
+              unlockedSkins: ['skin-standard', 'skin-dark-galaxy', 'skin-neon-cyberpunk'],
+              activeSkin: 'standard',
+              unlockedBadges: [],
+              completedMissionsToday: [],
+              seasonXp: 0,
+              seasonRewardsClaimed: [],
+            };
+            loginUser(adminUser);
+            toast.success('¡Ingresaste con la cuenta maestra de Administrador! ⚡🎉', { title: 'StockMaster Club' });
+          }}
+        />
+      </>
     );
   }
 
@@ -967,9 +1075,16 @@ export default function AppRouter() {
   }
 
   if (!user) {
-    return <LoginScreen onLoginSuccess={(u) => {
-      loginUser(u);
-    }} />;
+    return (
+      <>
+        {!!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY && <ClerkSessionSync onSyncUser={setUser} />}
+        <LoginScreen
+          onLoginSuccess={(u) => {
+            loginUser(u);
+          }}
+        />
+      </>
+    );
   }
 
   const activeChar = DUO_CHARACTERS[user.avatar] || DUO_CHARACTERS.duo;
@@ -979,68 +1094,77 @@ export default function AppRouter() {
     switch (activeSkin) {
       case 'dark-galaxy':
         return {
-          outer: "bg-slate-950 text-slate-100 selection:bg-purple-600 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-950 via-slate-950 to-slate-950",
-          card: "bg-indigo-950/20 border-violet-950/60 shadow-[0_0_15px_rgba(110,68,255,0.06)] backdrop-blur-xs text-slate-100",
-          sidebarActive: "bg-indigo-950/40 border-violet-500 border-2 border-b-4 text-violet-400 font-extrabold shadow-[0_0_12px_rgba(139,92,246,0.2)]",
-          accentText: "text-violet-450",
-          logoText: "text-violet-400"
+          outer:
+            'bg-slate-950 text-slate-100 selection:bg-purple-600 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-950 via-slate-950 to-slate-950',
+          card: 'bg-indigo-950/20 border-violet-950/60 shadow-[0_0_15px_rgba(110,68,255,0.06)] backdrop-blur-xs text-slate-100',
+          sidebarActive:
+            'bg-indigo-950/40 border-violet-500 border-2 border-b-4 text-violet-400 font-extrabold shadow-[0_0_12px_rgba(139,92,246,0.2)]',
+          accentText: 'text-violet-450',
+          logoText: 'text-violet-400',
         };
       case 'neon-cyberpunk':
         return {
-          outer: "bg-[#09090b] text-cyan-400 selection:bg-pink-500 font-mono",
-          card: "bg-black border-pink-500/30 shadow-[0_0_20px_rgba(244,63,94,0.12)] text-cyan-300",
-          sidebarActive: "bg-zinc-900/50 border-cyan-400 border-2 border-b-4 text-cyan-405 uppercase font-black shadow-[0_0_10px_rgba(34,211,238,0.25)]",
-          accentText: "text-pink-550",
-          logoText: "text-cyan-450 font-black"
+          outer: 'bg-[#09090b] text-cyan-400 selection:bg-pink-500 font-mono',
+          card: 'bg-black border-pink-500/30 shadow-[0_0_20px_rgba(244,63,94,0.12)] text-cyan-300',
+          sidebarActive:
+            'bg-zinc-900/50 border-cyan-400 border-2 border-b-4 text-cyan-405 uppercase font-black shadow-[0_0_10px_rgba(34,211,238,0.25)]',
+          accentText: 'text-pink-550',
+          logoText: 'text-cyan-450 font-black',
         };
       case 'emerald-palace':
         return {
-          outer: "bg-[#0b2417] text-amber-100 selection:bg-yellow-500 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-[#072517] via-[#0c311e] to-[#01140a]",
-          card: "bg-[#113924] border-yellow-600/40 shadow-[0_0_15px_rgba(234,179,8,0.08)] text-amber-50",
-          sidebarActive: "bg-[#0c311e]/80 border-yellow-500 border-2 border-b-4 text-yellow-550 font-bold shadow-[0_0_10px_rgba(234,179,8,0.15)]",
-          accentText: "text-yellow-500",
-          logoText: "text-yellow-600 font-black"
+          outer:
+            'bg-[#0b2417] text-amber-100 selection:bg-yellow-500 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-[#072517] via-[#0c311e] to-[#01140a]',
+          card: 'bg-[#113924] border-yellow-600/40 shadow-[0_0_15px_rgba(234,179,8,0.08)] text-amber-50',
+          sidebarActive:
+            'bg-[#0c311e]/80 border-yellow-500 border-2 border-b-4 text-yellow-550 font-bold shadow-[0_0_10px_rgba(234,179,8,0.15)]',
+          accentText: 'text-yellow-500',
+          logoText: 'text-yellow-600 font-black',
         };
       case 'bubblegum-cute':
         return {
-          outer: "bg-pink-50/50 text-pink-900 selection:bg-pink-300",
-          card: "bg-white border-pink-100 shadow-[0_4px_16px_rgba(244,63,145,0.04)] text-pink-900",
-          sidebarActive: "bg-pink-50 border-[#ff4b93] border-2 border-b-4 text-[#ff4b93] font-black shadow-[0_2px_8px_rgba(255,75,147,0.15)]",
-          accentText: "text-[#ff4b93]",
-          logoText: "text-[#ff4b93] font-extrabold"
+          outer: 'bg-pink-50/50 text-pink-900 selection:bg-pink-300',
+          card: 'bg-white border-pink-100 shadow-[0_4px_16px_rgba(244,63,145,0.04)] text-pink-900',
+          sidebarActive:
+            'bg-pink-50 border-[#ff4b93] border-2 border-b-4 text-[#ff4b93] font-black shadow-[0_2px_8px_rgba(255,75,147,0.15)]',
+          accentText: 'text-[#ff4b93]',
+          logoText: 'text-[#ff4b93] font-extrabold',
         };
       case 'retro-8bit':
         return {
-          outer: "bg-stone-900 text-stone-200 selection:bg-amber-600 font-mono",
-          card: "bg-stone-800 border-stone-700 text-stone-200",
-          sidebarActive: "bg-stone-850 border-amber-500 border-2 border-b-4 text-amber-500 font-bold shadow-[0_0_10px_rgba(245,158,11,0.15)]",
-          accentText: "text-amber-500",
-          logoText: "text-amber-500 font-bold uppercase"
+          outer: 'bg-stone-900 text-stone-200 selection:bg-amber-600 font-mono',
+          card: 'bg-stone-800 border-stone-700 text-stone-200',
+          sidebarActive:
+            'bg-stone-850 border-amber-500 border-2 border-b-4 text-amber-500 font-bold shadow-[0_0_10px_rgba(245,158,11,0.15)]',
+          accentText: 'text-amber-500',
+          logoText: 'text-amber-500 font-bold uppercase',
         };
       case 'executive-gold':
         return {
-          outer: "bg-[#0a0a0a] text-yellow-500/90 selection:bg-yellow-600 font-sans",
-          card: "bg-[#151515] border-yellow-600/30 text-yellow-500",
-          sidebarActive: "bg-[#1a1a1a] border-[#ffd700] border-2 border-b-4 text-[#ffd700] font-black shadow-[0_0_15px_rgba(255,215,0,0.15)]",
-          accentText: "text-[#ffd700]",
-          logoText: "text-[#ffd700] font-black uppercase"
+          outer: 'bg-[#0a0a0a] text-yellow-500/90 selection:bg-yellow-600 font-sans',
+          card: 'bg-[#151515] border-yellow-600/30 text-yellow-500',
+          sidebarActive:
+            'bg-[#1a1a1a] border-[#ffd700] border-2 border-b-4 text-[#ffd700] font-black shadow-[0_0_15px_rgba(255,215,0,0.15)]',
+          accentText: 'text-[#ffd700]',
+          logoText: 'text-[#ffd700] font-black uppercase',
         };
       case 'deep-ocean':
         return {
-          outer: "bg-[#072a40] text-sky-150 selection:bg-sky-600",
-          card: "bg-[#0f172a] border-sky-950 text-sky-50 shadow-[0_0_15px_rgba(56,189,248,0.06)]",
-          sidebarActive: "bg-[#0f172a] border-sky-450 border-2 border-b-4 text-sky-400 font-black shadow-[0_0_12px_rgba(56,189,248,0.2)]",
-          accentText: "text-sky-400",
-          logoText: "text-sky-400 font-extrabold"
+          outer: 'bg-[#072a40] text-sky-150 selection:bg-sky-600',
+          card: 'bg-[#0f172a] border-sky-950 text-sky-50 shadow-[0_0_15px_rgba(56,189,248,0.06)]',
+          sidebarActive:
+            'bg-[#0f172a] border-sky-450 border-2 border-b-4 text-sky-400 font-black shadow-[0_0_12px_rgba(56,189,248,0.2)]',
+          accentText: 'text-sky-400',
+          logoText: 'text-sky-400 font-extrabold',
         };
       case 'standard':
       default:
         return {
-          outer: "bg-[#f7f7f7] text-[#3c3c3c] selection:bg-[#d2f09d]",
-          card: "bg-white border-[#e5e5e5] text-[#3c3c3c]",
-          sidebarActive: "bg-[#e5e5e5]/10 border-[#1cb0f6] border-2 border-b-4 text-[#1cb0f6]",
-          accentText: "text-[#58cc02]",
-          logoText: "text-[#58cc02]"
+          outer: 'bg-[#f7f7f7] text-[#3c3c3c] selection:bg-[#d2f09d]',
+          card: 'bg-white border-[#e5e5e5] text-[#3c3c3c]',
+          sidebarActive: 'bg-[#e5e5e5]/10 border-[#1cb0f6] border-2 border-b-4 text-[#1cb0f6]',
+          accentText: 'text-[#58cc02]',
+          logoText: 'text-[#58cc02]',
         };
     }
   };
@@ -1048,18 +1172,19 @@ export default function AppRouter() {
   const themeClasses = getSkinThemeClasses();
 
   return (
-    <div className={`min-h-screen font-sans flex flex-col relative antialiased transition-all duration-300 theme-${user?.activeSkin || 'standard'} ${themeClasses.outer}`}>
-
+    <div
+      className={`min-h-screen font-sans flex flex-col relative antialiased transition-all duration-300 theme-${user?.activeSkin || 'standard'} ${themeClasses.outer}`}
+    >
       {/* Clerk Session Syncer (Condicional) */}
-      {!!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY && (
-        <ClerkSessionSync onSyncUser={setUser} />
-      )}
+      {!!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY && <ClerkSessionSync onSyncUser={setUser} />}
 
       {/* 1. TOP DISMISSIBLE PWA MARKETING BANNER */}
       {showInstallBanner && !isSimInstalled && (
         <div className="bg-[#58cc02] text-white py-2.5 px-4 text-xs md:text-sm font-black text-center relative z-40 flex items-center justify-center gap-2 border-b-4 border-[#46a302] shadow-md animate-slideDown">
           <span className="animate-bounce">📲</span>
-          <span>¡Accede más rápido! Instala <strong>DuoPOS</strong> en tu PC o móvil para ver el layout nativo flotante.</span>
+          <span>
+            ¡Accede más rápido! Instala <strong>DuoPOS</strong> en tu PC o móvil para ver el layout nativo flotante.
+          </span>
           <button
             onClick={() => setIsInstallModalOpen(true)}
             className="bg-white text-[#58cc02] font-black text-[10px] md:text-xs py-1 px-3.5 rounded-xl border border-[#dddddd] border-b-2 hover:bg-gray-50 active:translate-y-0.5 max-w-xs mx-1 cursor-pointer"
@@ -1078,19 +1203,22 @@ export default function AppRouter() {
 
       {/* Main app body: left sidebar + main display */}
       <div className="flex-1 flex flex-col md:flex-row max-w-[1440px] w-full mx-auto md:px-4 lg:px-8 mt-4">
-        
         {/* 2. RESPONSIVE SIDEBAR: Shows on larger displays (MD+) */}
         <aside className="hidden md:flex flex-col justify-between w-64 p-4 pr-6 shrink-0 h-[calc(100vh-60px)] sticky top-4">
-          
           <div className="space-y-8">
-            
             {/* StockMaster Pro logo header */}
             <div className="flex items-center gap-2 px-2 cursor-pointer transform hover:scale-102 transition-transform duration-100">
               <div className="relative flex items-center gap-1.5 shrink-0">
                 {user.avatar === 'duo' ? (
                   <>
                     <ShieldCrest level={user.level} size={36} animate={true} />
-                    <AeroMascot size={36} activeAccessory={user.activeAccessory} mood={duoMood as any} level={user.level} showSparkles={duoSparkles} />
+                    <AeroMascot
+                      size={36}
+                      activeAccessory={user.activeAccessory}
+                      mood={duoMood as any}
+                      level={user.level}
+                      showSparkles={duoSparkles}
+                    />
                   </>
                 ) : (
                   <span className="text-4xl filter drop-shadow-sm select-none">{activeChar.avatar}</span>
@@ -1098,7 +1226,10 @@ export default function AppRouter() {
               </div>
               <div>
                 <h1 className={`text-2xl font-black tracking-wider leading-none ${themeClasses.logoText}`}>
-                  Stock<span className={user?.activeSkin === 'standard' ? 'text-[#3c3c3c]' : 'text-inherit opacity-85'}>Master</span>
+                  Stock
+                  <span className={user?.activeSkin === 'standard' ? 'text-[#3c3c3c]' : 'text-inherit opacity-85'}>
+                    Master
+                  </span>
                 </h1>
                 <span className="text-[9px] tracking-widest uppercase font-black text-gray-400">Pro - Gamificado</span>
               </div>
@@ -1107,37 +1238,94 @@ export default function AppRouter() {
             {/* Sidebar nav selections */}
             <nav className="space-y-2">
               {[
-                { id: 'dashboard', label: 'Inicio', icon: <Home size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Tablero' },
-                { id: 'sales', label: 'Vender', icon: <ShoppingBag size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Ventas' },
-                { id: 'gamification', label: 'Master Club 🏆', icon: <Trophy size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Gamificación' },
-                { id: 'shifts', label: 'Caja y Turnos', icon: <Wallet size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Turnos' },
-                { id: 'customers', label: 'Clientes', icon: <Users size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Clientes' },
-                { id: 'inventory', label: 'Catalogos', icon: <Package size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor'], name: 'Catálogos' },
-                { id: 'logistics', label: 'Sucursales & CEDIS 🌐', icon: <Globe size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor'], name: 'Logística' },
-                { id: 'history', label: 'Historial', icon: <History size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Historial' },
-                { id: 'settings', label: 'Ajustes', icon: <Settings size={20} strokeWidth={2.5} />, roles: ['admin'], name: 'Configuración' }
-              ].map(tab => {
+                {
+                  id: 'dashboard',
+                  label: 'Inicio',
+                  icon: <Home size={20} strokeWidth={2.5} />,
+                  roles: ['admin', 'supervisor', 'cashier'],
+                  name: 'Tablero',
+                },
+                {
+                  id: 'sales',
+                  label: 'Vender',
+                  icon: <ShoppingBag size={20} strokeWidth={2.5} />,
+                  roles: ['admin', 'supervisor', 'cashier'],
+                  name: 'Ventas',
+                },
+                {
+                  id: 'gamification',
+                  label: 'Master Club 🏆',
+                  icon: <Trophy size={20} strokeWidth={2.5} />,
+                  roles: ['admin', 'supervisor', 'cashier'],
+                  name: 'Gamificación',
+                },
+                {
+                  id: 'shifts',
+                  label: 'Caja y Turnos',
+                  icon: <Wallet size={20} strokeWidth={2.5} />,
+                  roles: ['admin', 'supervisor', 'cashier'],
+                  name: 'Turnos',
+                },
+                {
+                  id: 'customers',
+                  label: 'Clientes',
+                  icon: <Users size={20} strokeWidth={2.5} />,
+                  roles: ['admin', 'supervisor', 'cashier'],
+                  name: 'Clientes',
+                },
+                {
+                  id: 'inventory',
+                  label: 'Catalogos',
+                  icon: <Package size={20} strokeWidth={2.5} />,
+                  roles: ['admin', 'supervisor'],
+                  name: 'Catálogos',
+                },
+                {
+                  id: 'logistics',
+                  label: 'Sucursales & CEDIS 🌐',
+                  icon: <Globe size={20} strokeWidth={2.5} />,
+                  roles: ['admin', 'supervisor'],
+                  name: 'Logística',
+                },
+                {
+                  id: 'history',
+                  label: 'Historial',
+                  icon: <History size={20} strokeWidth={2.5} />,
+                  roles: ['admin', 'supervisor', 'cashier'],
+                  name: 'Historial',
+                },
+                {
+                  id: 'settings',
+                  label: 'Ajustes',
+                  icon: <Settings size={20} strokeWidth={2.5} />,
+                  roles: ['admin'],
+                  name: 'Configuración',
+                },
+              ].map((tab) => {
                 const currentUserRole = user.role || 'cashier';
                 const hasAccess = tab.roles.includes(currentUserRole);
                 const isSelected = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => { 
+                    onClick={() => {
                       if (hasAccess) {
                         if (tab.id === 'logistics' && licenseDetails.tier === 'free') {
                           playSound('error');
-                          toast.error('La sección de "Sucursales & CEDIS" requiere el Plan Standard o superior. Actualiza tu plan en Ajustes > Planes y Suscripción.', { title: 'Acceso Restringido — Plan Gratuito 🔒', duration: 7000 });
+                          toast.error(
+                            'La sección de "Sucursales & CEDIS" requiere el Plan Standard o superior. Actualiza tu plan en Ajustes > Planes y Suscripción.',
+                            { title: 'Acceso Restringido — Plan Gratuito 🔒', duration: 7000 },
+                          );
                           return;
                         }
-                        setActiveTab(tab.id as any); 
-                        playSound('click'); 
+                        setActiveTab(tab.id as any);
+                        playSound('click');
                       } else {
                         playSound('error');
                         setRoleLockWarning({
                           requiredRole: tab.roles.join(' o '),
                           activeRole: currentUserRole,
-                          tabName: tab.name
+                          tabName: tab.name,
                         });
                       }
                     }}
@@ -1173,7 +1361,10 @@ export default function AppRouter() {
 
             {isSupabaseConfigured() && (
               <button
-                onClick={() => { playSound('click'); syncStateFromSupabase(); }}
+                onClick={() => {
+                  playSound('click');
+                  syncStateFromSupabase();
+                }}
                 disabled={isSyncing}
                 className={`w-full text-white border-b-4 font-black text-xs py-2.5 rounded-2xl tracking-wide flex items-center justify-center gap-1.5 cursor-pointer uppercase ${
                   isSyncing
@@ -1187,7 +1378,10 @@ export default function AppRouter() {
             )}
 
             <button
-              onClick={() => { playSound('click'); setShowLanding(true); }}
+              onClick={() => {
+                playSound('click');
+                setShowLanding(true);
+              }}
               className="w-full bg-white text-[#58cc02] border-2 border-green-200 border-b-4 hover:bg-green-50 active:translate-y-[2px] active:border-b-2 font-black text-xs py-2.5 rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer uppercase flex-shrink-0"
             >
               📖 Guía y Servicios
@@ -1201,22 +1395,24 @@ export default function AppRouter() {
             </button>
 
             <div className="text-center font-black text-[9px] text-gray-400">
-              DuoPOS {appVersion} • {licenseDetails.tier === 'free' ? 'Plan Gratuito' : PLANS[licenseDetails.tier]?.name || 'Licencia Registrada'}
+              DuoPOS {appVersion} •{' '}
+              {licenseDetails.tier === 'free'
+                ? 'Plan Gratuito'
+                : PLANS[licenseDetails.tier]?.name || 'Licencia Registrada'}
             </div>
           </div>
-
         </aside>
 
         {/* 3. CORE DISPLAY WORKPLACE PANEL ROUTER */}
         <main className="flex-1 px-4 md:px-0 md:pl-4 overflow-y-auto min-h-screen">
-          
           {/* TOP QUICK STAT BAR (For PC and Mobile headers) */}
           <div className="bg-white border-2 border-[#e5e5e5] border-b-4 rounded-2xl p-2.5 sm:p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6 mt-1 md:mt-0 shadow-xs">
             {/* Left side: Stats & Clock */}
             <div className="flex items-center justify-between w-full md:w-auto gap-2 flex-wrap">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="text-red-500 fill-red-500 font-extrabold flex items-center gap-1 bg-red-50 border border-red-100 px-2 py-1 rounded-xl text-xs md:text-sm shadow-xs select-none">
-                  <Flame size={14} fill="currentColor" className="flex-shrink-0 animate-pulse text-red-500" /> {user.streak} días racha
+                  <Flame size={14} fill="currentColor" className="flex-shrink-0 animate-pulse text-red-500" />{' '}
+                  {user.streak} días racha
                 </span>
                 <span className="text-[#58cc02] font-extrabold flex items-center gap-1 bg-green-50 border border-green-100 px-2 py-1 rounded-xl text-xs md:text-sm shadow-xs select-none">
                   👑 Nivel {user.level}
@@ -1225,15 +1421,18 @@ export default function AppRouter() {
 
               {/* Venezuelan Exchange Rate Monitor */}
               <div className="flex items-center gap-1 bg-amber-50 border border-amber-100/70 p-1 rounded-xl select-none text-[10.5px] sm:text-xs">
-                <span className="font-extrabold text-[#df7e00] px-1 pl-1.5 flex items-center gap-0.5" title="Tasas disponibles en tiempo real (ve.dolarapi.com)">
+                <span
+                  className="font-extrabold text-[#df7e00] px-1 pl-1.5 flex items-center gap-0.5"
+                  title="Tasas disponibles en tiempo real (ve.dolarapi.com)"
+                >
                   🇻🇪 Tasa:
                 </span>
                 <button
                   type="button"
                   onClick={() => handleToggleRateType('oficial')}
                   className={`p-1 px-1.5 sm:px-2 rounded-lg font-black transition-all ${
-                    activeRateType === 'oficial' 
-                      ? 'bg-[#ff9600] text-white shadow-xs' 
+                    activeRateType === 'oficial'
+                      ? 'bg-[#ff9600] text-white shadow-xs'
                       : 'text-[#df7e00] hover:bg-[#ff9600]/10'
                   }`}
                   title="Usar Tasa Oficial BCV"
@@ -1244,8 +1443,8 @@ export default function AppRouter() {
                   type="button"
                   onClick={() => handleToggleRateType('paralelo')}
                   className={`p-1 px-1.5 sm:px-2 rounded-lg font-black transition-all ${
-                    activeRateType === 'paralelo' 
-                      ? 'bg-[#1cb0f6] text-white shadow-xs' 
+                    activeRateType === 'paralelo'
+                      ? 'bg-[#1cb0f6] text-white shadow-xs'
                       : 'text-[#1cb0f6] hover:bg-[#1cb0f6]/10'
                   }`}
                   title="Usar Tasa Paralelo"
@@ -1254,7 +1453,10 @@ export default function AppRouter() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { playSound('click'); refetchRates(); }}
+                  onClick={() => {
+                    playSound('click');
+                    refetchRates();
+                  }}
                   disabled={isRefreshingRates}
                   className={`p-1 text-gray-400 hover:text-gray-600 rounded transition-all ${isRefreshingRates ? 'animate-spin' : ''}`}
                   title="Actualizar tasas"
@@ -1264,7 +1466,10 @@ export default function AppRouter() {
                 {isSupabaseConfigured() && (
                   <button
                     type="button"
-                    onClick={() => { playSound('click'); syncStateFromSupabase(); }}
+                    onClick={() => {
+                      playSound('click');
+                      syncStateFromSupabase();
+                    }}
                     disabled={isSyncing}
                     className={`p-1 rounded transition-all ${isSyncing ? 'animate-spin text-[#1cb0f6]' : 'text-gray-400 hover:text-[#1cb0f6]'}`}
                     title={`Sincronizar datos con la nube${lastSyncTime ? ` (última: ${lastSyncTime})` : ''}`}
@@ -1294,13 +1499,15 @@ export default function AppRouter() {
                       const updatedUser = { ...user, role: nextRole };
                       setUser(updatedUser);
                       localStorage.setItem('duo_pos_active_user', JSON.stringify(updatedUser));
-                      
+
                       // Update user in users list in localStorage too
                       const savedUsersRaw = localStorage.getItem('duo_pos_users');
                       if (savedUsersRaw) {
                         try {
                           const users = JSON.parse(savedUsersRaw);
-                          const idx = users.findIndex((u: any) => u.username.toLowerCase() === user.username.toLowerCase());
+                          const idx = users.findIndex(
+                            (u: any) => u.username.toLowerCase() === user.username.toLowerCase(),
+                          );
                           if (idx !== -1) {
                             users[idx].role = nextRole;
                             localStorage.setItem('duo_pos_users', JSON.stringify(users));
@@ -1319,11 +1526,14 @@ export default function AppRouter() {
                   </select>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-1.5 animate-fadeIn">
                 <button
                   type="button"
-                  onClick={() => { setIsHardwareHubOpen(true); playSound('click'); }}
+                  onClick={() => {
+                    setIsHardwareHubOpen(true);
+                    playSound('click');
+                  }}
                   className="p-1 px-2 border border-sky-200 text-[#1cb0f6] bg-sky-50 hover:bg-sky-100 rounded-xl flex items-center justify-center transition-all cursor-pointer gap-1 text-[10px] sm:text-xs font-black uppercase"
                   title="Panel de Control IoT y Drivers de Periféricos"
                 >
@@ -1335,11 +1545,13 @@ export default function AppRouter() {
                   type="button"
                   onClick={toggleMute}
                   className={`p-1.5 border rounded-xl flex items-center justify-center transition-all cursor-pointer ${
-                    isMuted 
-                      ? 'border-red-200 text-red-500 bg-red-50 hover:bg-red-100' 
+                    isMuted
+                      ? 'border-red-200 text-red-500 bg-red-50 hover:bg-red-100'
                       : 'border-green-200 text-green-600 bg-green-50 hover:bg-green-100'
                   }`}
-                  title={isMuted ? "Sonidos Silenciados - Clic para Activar" : "Sonidos Activados - Clic para Silenciar"}
+                  title={
+                    isMuted ? 'Sonidos Silenciados - Clic para Activar' : 'Sonidos Activados - Clic para Silenciar'
+                  }
                 >
                   {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
                 </button>
@@ -1349,7 +1561,10 @@ export default function AppRouter() {
 
           {/* DYNAMIC EXPRESS EVENT ALERT BANNER */}
           {activeEvent && (
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 border-b-8 rounded-3xl p-4.5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-bounce" style={{ animationDuration: '4s' }}>
+            <div
+              className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 border-b-8 rounded-3xl p-4.5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-bounce"
+              style={{ animationDuration: '4s' }}
+            >
               <div className="flex items-center gap-4.5 w-full sm:w-auto">
                 <div className="bg-amber-100 dark:bg-amber-950 p-3 h-14 w-14 rounded-2xl flex items-center justify-center text-3xl shadow-sm animate-pulse flex-shrink-0">
                   {activeEvent.type === 'happy_hour' ? '⚡' : activeEvent.type === 'scan_challenge' ? '🔍' : '🤝'}
@@ -1358,18 +1573,16 @@ export default function AppRouter() {
                   <span className="bg-amber-200 text-amber-950 text-[10px] uppercase font-black px-2 py-0.5 rounded-lg border-b border-amber-300">
                     Reto Express Activo ⏰
                   </span>
-                  <h4 className="text-lg font-black tracking-tight text-gray-800">
-                    {activeEvent.title}
-                  </h4>
+                  <h4 className="text-lg font-black tracking-tight text-gray-800">{activeEvent.title}</h4>
                   <p className="text-xs text-gray-500 font-extrabold leading-relaxed max-w-lg">
                     {activeEvent.description}
                   </p>
-                  
+
                   {/* Progress Tracker for challenges */}
                   {activeEvent.targetCount > 0 && (
                     <div className="flex items-center gap-2 pt-1 w-full">
                       <div className="w-40 bg-gray-200 h-2.5 rounded-full overflow-hidden border border-gray-300">
-                        <div 
+                        <div
                           className="bg-amber-500 h-full transition-all duration-300"
                           style={{ width: `${(activeEvent.currentCount / activeEvent.targetCount) * 100}%` }}
                         />
@@ -1381,19 +1594,23 @@ export default function AppRouter() {
                   )}
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-4.5 w-full sm:w-auto justify-end">
                 {/* Timer Clock */}
                 <div className="bg-amber-100 border-2 border-amber-200 rounded-2xl p-2 px-3.5 flex items-center gap-2 shadow-xs">
                   <span className="text-xl font-black text-amber-600 font-mono tracking-tight animate-pulse">
-                    {Math.floor(activeEvent.remainingSeconds / 60)}:{(activeEvent.remainingSeconds % 60).toString().padStart(2, '0')}
+                    {Math.floor(activeEvent.remainingSeconds / 60)}:
+                    {(activeEvent.remainingSeconds % 60).toString().padStart(2, '0')}
                   </span>
                 </div>
-                
+
                 {/* Dismiss button */}
                 <button
                   type="button"
-                  onClick={() => { playSound('click'); setActiveEvent(null); }}
+                  onClick={() => {
+                    playSound('click');
+                    setActiveEvent(null);
+                  }}
                   className="p-1 px-2 border-2 border-amber-200 text-amber-600 bg-white hover:bg-amber-50 font-black text-xs uppercase py-1.5 rounded-xl transition-all cursor-pointer"
                 >
                   Omitir
@@ -1404,213 +1621,301 @@ export default function AppRouter() {
 
           {/* Active Screen Selection Switcher router */}
           <ErrorBoundary>
-          <Routes>
-            <Route path="/" element={
-              <DashboardScreen
-                user={user}
-                transactions={transactions}
-                products={products}
-                onSetNewGoal={(val) => {
-                  const refreshed = { ...user, dailyGoal: val };
-                  saveUser(refreshed);
-                }}
-                onNavigateToSell={() => setActiveTab('sales')}
-                onGrantXp={handleGrantXp}
-                onUpdateUser={saveUser}
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <DashboardScreen
+                    user={user}
+                    transactions={transactions}
+                    products={products}
+                    onSetNewGoal={(val) => {
+                      const refreshed = { ...user, dailyGoal: val };
+                      saveUser(refreshed);
+                    }}
+                    onNavigateToSell={() => setActiveTab('sales')}
+                    onGrantXp={handleGrantXp}
+                    onUpdateUser={saveUser}
+                  />
+                }
               />
-            } />
 
-            <Route path="/sales" element={
-              <SalesScreen
-                products={products.map(p => ({ ...p, stock: p.branchesStock?.[activeBranchId] ?? p.stock }))}
-                user={user}
-                onGrantXp={handleGrantXp}
-                onAddTransaction={handleAddTransaction}
-                onDecreaseStock={handleDecreaseStock}
-                activeShift={activeShift}
-                shiftHistory={shiftHistory}
-                onOpenShift={handleOpenShift}
-                onCloseShift={handleCloseShift}
-                onAddShiftMovement={handleAddShiftMovement}
-                customers={customers}
-                billingSettings={billingSettings}
-                hardwareSettings={hardwareSettings}
-                onOpenHardwareSettings={() => setIsHardwareHubOpen(true)}
-                onUpdateCustomer={handleUpdateCustomer}
-                exchangeRate={exchangeRates[activeRateType]}
-                activeRateType={activeRateType}
-                exchangeRates={exchangeRates}
-                activeEvent={activeEvent}
-                onTriggerEventProgress={handleTriggerEventProgress}
+              <Route
+                path="/sales"
+                element={
+                  <SalesScreen
+                    products={products.map((p) => ({ ...p, stock: p.branchesStock?.[activeBranchId] ?? p.stock }))}
+                    user={user}
+                    onGrantXp={handleGrantXp}
+                    onAddTransaction={handleAddTransaction}
+                    onDecreaseStock={handleDecreaseStock}
+                    activeShift={activeShift}
+                    shiftHistory={shiftHistory}
+                    onOpenShift={handleOpenShift}
+                    onCloseShift={handleCloseShift}
+                    onAddShiftMovement={handleAddShiftMovement}
+                    customers={customers}
+                    billingSettings={billingSettings}
+                    hardwareSettings={hardwareSettings}
+                    onOpenHardwareSettings={() => setIsHardwareHubOpen(true)}
+                    onUpdateCustomer={handleUpdateCustomer}
+                    exchangeRate={exchangeRates[activeRateType]}
+                    activeRateType={activeRateType}
+                    exchangeRates={exchangeRates}
+                    activeEvent={activeEvent}
+                    onTriggerEventProgress={handleTriggerEventProgress}
+                  />
+                }
               />
-            } />
 
-            <Route path="/customers" element={
-              <CustomersScreen
-                customers={customers}
-                onAddCustomer={handleAddCustomer}
-                onUpdateCustomer={handleUpdateCustomer}
-                onDeleteCustomer={handleDeleteCustomer}
-                onGrantXp={handleGrantXp}
-                activeShift={activeShift}
-                onAddShiftMovement={handleAddShiftMovement}
+              <Route
+                path="/customers"
+                element={
+                  <CustomersScreen
+                    customers={customers}
+                    onAddCustomer={handleAddCustomer}
+                    onUpdateCustomer={handleUpdateCustomer}
+                    onDeleteCustomer={handleDeleteCustomer}
+                    onGrantXp={handleGrantXp}
+                    activeShift={activeShift}
+                    onAddShiftMovement={handleAddShiftMovement}
+                  />
+                }
               />
-            } />
 
-            <Route path="/inventory" element={
-              <InventoryScreen
-                products={products.map(p => ({ ...p, stock: p.branchesStock?.[activeBranchId] ?? p.stock }))}
-                onAddProduct={handleAddProduct}
-                onUpdateProduct={handleUpdateProduct}
-                onDeleteProduct={handleDeleteProduct}
-                onGrantXp={handleGrantXp}
-                activeShift={activeShift}
-                onAddShiftMovement={handleAddShiftMovement}
-                currentUser={user}
-                suppliers={suppliers}
-                purchaseOrders={purchaseOrders}
-                onAddSupplier={handleAddSupplier}
-                onUpdateSupplier={handleUpdateSupplier}
-                onDeleteSupplier={handleDeleteSupplier}
-                onSavePurchaseOrder={handleSavePurchaseOrder}
-                onTransitPurchaseOrder={handleTransitPurchaseOrder}
-                onReceivePurchaseOrder={handleReceivePurchaseOrder}
-                onCancelPurchaseOrder={handleCancelPurchaseOrder}
-                onRegisterSupplierPayout={handleRegisterSupplierPayout}
+              <Route
+                path="/inventory"
+                element={
+                  <InventoryScreen
+                    products={products.map((p) => ({ ...p, stock: p.branchesStock?.[activeBranchId] ?? p.stock }))}
+                    onAddProduct={handleAddProduct}
+                    onUpdateProduct={handleUpdateProduct}
+                    onDeleteProduct={handleDeleteProduct}
+                    onGrantXp={handleGrantXp}
+                    activeShift={activeShift}
+                    onAddShiftMovement={handleAddShiftMovement}
+                    currentUser={user}
+                    suppliers={suppliers}
+                    purchaseOrders={purchaseOrders}
+                    onAddSupplier={handleAddSupplier}
+                    onUpdateSupplier={handleUpdateSupplier}
+                    onDeleteSupplier={handleDeleteSupplier}
+                    onSavePurchaseOrder={handleSavePurchaseOrder}
+                    onTransitPurchaseOrder={handleTransitPurchaseOrder}
+                    onReceivePurchaseOrder={handleReceivePurchaseOrder}
+                    onCancelPurchaseOrder={handleCancelPurchaseOrder}
+                    onRegisterSupplierPayout={handleRegisterSupplierPayout}
+                  />
+                }
               />
-            } />
 
-            <Route path="/history" element={
-              <HistoryScreen
-                transactions={transactions}
-                onRefundTransaction={handleRefundTransaction}
-                currentUser={user}
-                billingSettings={billingSettings}
+              <Route
+                path="/history"
+                element={
+                  <HistoryScreen
+                    transactions={transactions}
+                    onRefundTransaction={handleRefundTransaction}
+                    currentUser={user}
+                    billingSettings={billingSettings}
+                  />
+                }
               />
-            } />
 
-            <Route path="/settings" element={
-              <SettingsScreen
-                settings={billingSettings}
-                onSaveSettings={handleSaveBillingSettings}
-                onGrantXp={handleGrantXp}
-                licenseDetails={licenseDetails}
-                onActivateLicenseKey={handleActivateLicenseKey}
-                onResetLicenseToFree={handleResetLicenseToFree}
-                appVersion={appVersion}
-                onUpdateAppVersion={handleUpdateAppVersion}
-                user={user}
+              <Route
+                path="/settings"
+                element={
+                  <SettingsScreen
+                    settings={billingSettings}
+                    onSaveSettings={handleSaveBillingSettings}
+                    onGrantXp={handleGrantXp}
+                    licenseDetails={licenseDetails}
+                    onActivateLicenseKey={handleActivateLicenseKey}
+                    onResetLicenseToFree={handleResetLicenseToFree}
+                    appVersion={appVersion}
+                    onUpdateAppVersion={handleUpdateAppVersion}
+                    user={user}
+                  />
+                }
               />
-            } />
 
-            <Route path="/gamification" element={
-              <GamificationScreen
-                user={user}
-                onUpdateUser={saveUser}
-                transactions={transactions}
-                products={products}
-                customers={customers}
-                licenseDetails={licenseDetails}
-                activeEvent={activeEvent}
-                onTriggerExpressEvent={handleTriggerExpressEvent}
+              <Route
+                path="/gamification"
+                element={
+                  <GamificationScreen
+                    user={user}
+                    onUpdateUser={saveUser}
+                    transactions={transactions}
+                    products={products}
+                    customers={customers}
+                    licenseDetails={licenseDetails}
+                    activeEvent={activeEvent}
+                    onTriggerExpressEvent={handleTriggerExpressEvent}
+                  />
+                }
               />
-            } />
 
-            <Route path="/shifts" element={
-              <ShiftsScreen
-                user={user}
-                transactions={transactions}
-                activeShift={activeShift}
-                shiftHistory={shiftHistory}
-                onOpenShift={handleOpenShift}
-                onCloseShift={handleCloseShift}
-                onAddShiftMovement={handleAddShiftMovement}
-                onGrantXp={handleGrantXp}
+              <Route
+                path="/shifts"
+                element={
+                  <ShiftsScreen
+                    user={user}
+                    transactions={transactions}
+                    activeShift={activeShift}
+                    shiftHistory={shiftHistory}
+                    onOpenShift={handleOpenShift}
+                    onCloseShift={handleCloseShift}
+                    onAddShiftMovement={handleAddShiftMovement}
+                    onGrantXp={handleGrantXp}
+                  />
+                }
               />
-            } />
 
-            <Route path="/logistics" element={
-              <LogisticsScreen
-                products={products}
-                onUpdateProduct={handleUpdateProduct}
-                transactions={transactions}
-                activeShift={activeShift}
-                shiftHistory={shiftHistory}
-                onGrantXp={handleGrantXp}
-                branches={branches}
-                setBranches={setBranches}
-                activeBranchId={activeBranchId}
-                setActiveBranchId={setActiveBranchId}
-                registers={registers}
-                setRegisters={setRegisters}
-                activeRegisterId={activeRegisterId}
-                setActiveRegisterId={setActiveRegisterId}
-                stockTransfers={stockTransfers}
-                setStockTransfers={setStockTransfers}
-                currentUser={user}
-                licenseDetails={licenseDetails}
+              <Route
+                path="/logistics"
+                element={
+                  <LogisticsScreen
+                    products={products}
+                    onUpdateProduct={handleUpdateProduct}
+                    transactions={transactions}
+                    activeShift={activeShift}
+                    shiftHistory={shiftHistory}
+                    onGrantXp={handleGrantXp}
+                    branches={branches}
+                    setBranches={setBranches}
+                    activeBranchId={activeBranchId}
+                    setActiveBranchId={setActiveBranchId}
+                    registers={registers}
+                    setRegisters={setRegisters}
+                    activeRegisterId={activeRegisterId}
+                    setActiveRegisterId={setActiveRegisterId}
+                    stockTransfers={stockTransfers}
+                    setStockTransfers={setStockTransfers}
+                    currentUser={user}
+                    licenseDetails={licenseDetails}
+                  />
+                }
               />
-            } />
-          </Routes>
+            </Routes>
           </ErrorBoundary>
-
         </main>
-
       </div>
 
       {/* 4. PERSISTENT BOTTOM NAVIGATION TAB BAR: ONLY Shows on mobile (under MD) */}
-      <footer 
+      <footer
         className="md:hidden sticky bottom-0 z-40 bg-white border-t-2 border-gray-200 p-2 pb-3.5 flex items-center justify-start overflow-x-auto scrollbar-none gap-2 snap-x"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {[
-          { id: 'dashboard', label: 'Inicio', icon: <Home size={18} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Tablero' },
-          { id: 'sales', label: 'Vender', icon: <ShoppingBag size={18} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Ventas' },
-          { id: 'gamification', label: 'Club Duo', icon: <Trophy size={18} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Gamificación' },
-          { id: 'shifts', label: 'Caja', icon: <Wallet size={18} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Turnos' },
-          { id: 'customers', label: 'Clientes', icon: <Users size={18} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Clientes' },
-          { id: 'inventory', label: 'Almacén', icon: <Package size={18} strokeWidth={2.5} />, roles: ['admin', 'supervisor'], name: 'Catálogos' },
-          { id: 'logistics', label: 'Sucursal', icon: <Globe size={18} strokeWidth={2.5} />, roles: ['admin', 'supervisor'], name: 'Logística' },
-          { id: 'history', label: 'Historial', icon: <History size={18} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Historial' },
-          { id: 'settings', label: 'Ajustes', icon: <Settings size={18} strokeWidth={2.5} />, roles: ['admin'], name: 'Configuración' }
-        ].map(tab => {
+          {
+            id: 'dashboard',
+            label: 'Inicio',
+            icon: <Home size={18} strokeWidth={2.5} />,
+            roles: ['admin', 'supervisor', 'cashier'],
+            name: 'Tablero',
+          },
+          {
+            id: 'sales',
+            label: 'Vender',
+            icon: <ShoppingBag size={18} strokeWidth={2.5} />,
+            roles: ['admin', 'supervisor', 'cashier'],
+            name: 'Ventas',
+          },
+          {
+            id: 'gamification',
+            label: 'Club Duo',
+            icon: <Trophy size={18} strokeWidth={2.5} />,
+            roles: ['admin', 'supervisor', 'cashier'],
+            name: 'Gamificación',
+          },
+          {
+            id: 'shifts',
+            label: 'Caja',
+            icon: <Wallet size={18} strokeWidth={2.5} />,
+            roles: ['admin', 'supervisor', 'cashier'],
+            name: 'Turnos',
+          },
+          {
+            id: 'customers',
+            label: 'Clientes',
+            icon: <Users size={18} strokeWidth={2.5} />,
+            roles: ['admin', 'supervisor', 'cashier'],
+            name: 'Clientes',
+          },
+          {
+            id: 'inventory',
+            label: 'Almacén',
+            icon: <Package size={18} strokeWidth={2.5} />,
+            roles: ['admin', 'supervisor'],
+            name: 'Catálogos',
+          },
+          {
+            id: 'logistics',
+            label: 'Sucursal',
+            icon: <Globe size={18} strokeWidth={2.5} />,
+            roles: ['admin', 'supervisor'],
+            name: 'Logística',
+          },
+          {
+            id: 'history',
+            label: 'Historial',
+            icon: <History size={18} strokeWidth={2.5} />,
+            roles: ['admin', 'supervisor', 'cashier'],
+            name: 'Historial',
+          },
+          {
+            id: 'settings',
+            label: 'Ajustes',
+            icon: <Settings size={18} strokeWidth={2.5} />,
+            roles: ['admin'],
+            name: 'Configuración',
+          },
+        ].map((tab) => {
           const currentUserRole = user.role || 'cashier';
           const hasAccess = tab.roles.includes(currentUserRole);
           const isSelected = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => { 
+              onClick={() => {
                 if (hasAccess) {
                   if (tab.id === 'logistics' && licenseDetails.tier === 'free') {
                     playSound('error');
-                    toast.error('La sección de "Sucursales" requiere el Plan Standard o superior. Actualiza en Ajustes > Planes.', { title: 'Acceso Restringido — Plan Gratuito 🔒', duration: 7000 });
+                    toast.error(
+                      'La sección de "Sucursales" requiere el Plan Standard o superior. Actualiza en Ajustes > Planes.',
+                      { title: 'Acceso Restringido — Plan Gratuito 🔒', duration: 7000 },
+                    );
                     return;
                   }
-                  setActiveTab(tab.id as any); 
-                  playSound('click'); 
+                  setActiveTab(tab.id as any);
+                  playSound('click');
                 } else {
                   playSound('error');
                   setRoleLockWarning({
                     requiredRole: tab.roles.join(' o '),
                     activeRole: currentUserRole,
-                    tabName: tab.name
+                    tabName: tab.name,
                   });
                 }
               }}
               className="flex-shrink-0 w-[64px] flex flex-col items-center justify-center text-center cursor-pointer select-none snap-center"
             >
-              <div className={`p-1.5 rounded-xl transition-colors relative ${
-                isSelected ? 'text-[#1cb0f6] bg-[#1cb0f6]/5 font-black scale-102 font-bold' : 'text-gray-400'
-              }`}>
+              <div
+                className={`p-1.5 rounded-xl transition-colors relative ${
+                  isSelected ? 'text-[#1cb0f6] bg-[#1cb0f6]/5 font-black scale-102 font-bold' : 'text-gray-400'
+                }`}
+              >
                 {tab.icon}
                 {!hasAccess && (
-                  <span className="absolute -top-1 -right-1 bg-gray-100 text-gray-400 font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center text-[7px] border border-white">🔒</span>
+                  <span className="absolute -top-1 -right-1 bg-gray-100 text-gray-400 font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center text-[7px] border border-white">
+                    🔒
+                  </span>
                 )}
               </div>
-              <span className={`text-[8.5px] font-extrabold uppercase mt-1 tracking-wider truncate w-full ${
-                isSelected ? 'text-[#1cb0f6]' : 'text-gray-400'
-              }`}>
+              <span
+                className={`text-[8.5px] font-extrabold uppercase mt-1 tracking-wider truncate w-full ${
+                  isSelected ? 'text-[#1cb0f6]' : 'text-gray-400'
+                }`}
+              >
                 {tab.label}
               </span>
             </button>

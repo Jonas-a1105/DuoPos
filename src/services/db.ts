@@ -7,7 +7,7 @@ class DuoPosDatabase extends Dexie {
   constructor() {
     super('DuoPosDatabase');
     this.version(1).stores({
-      generic_store: 'key' // Clave primaria
+      generic_store: 'key', // Clave primaria
     });
   }
 }

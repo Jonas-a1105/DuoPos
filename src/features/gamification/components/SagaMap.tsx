@@ -12,16 +12,116 @@ interface SagaMapProps {
 
 export default function SagaMap({ user, onUpdateUser, transactions, customers }: SagaMapProps) {
   const nodesData = [
-    { id: 'node-1', title: 'Inicio del Cajero 🏁', description: 'Realiza tu primera venta en DuoPOS.', metricName: 'Ventas Realizadas', requirement: { metric: 'totalTransactions', target: 1 }, reward: { xp: 40, gems: 20 }, x: 300, y: 750, type: 'milestone' },
-    { id: 'node-2', title: 'Cajero de Cobre 🥉', description: 'Registra un total de 5 transacciones de venta.', metricName: 'Ventas Realizadas', requirement: { metric: 'totalTransactions', target: 5 }, reward: { xp: 60, gems: 30 }, x: 440, y: 680, type: 'milestone' },
-    { id: 'node-3', title: 'Estrella de Clientes 👥', description: 'Registra 2 clientes en el club de fidelidad.', metricName: 'Clientes Registrados', requirement: { metric: 'customers', target: 2 }, reward: { xp: 80, gems: 40 }, x: 360, y: 600, type: 'milestone' },
-    { id: 'node-4', title: 'Cofre Sorpresa Bronce 🎁', description: 'Alcanza el nivel 2 y reclama tus premios sorpresa.', metricName: 'Nivel Requerido', requirement: { metric: 'level', target: 2 }, reward: { xp: 100, gems: 50 }, x: 200, y: 540, type: 'chest' },
-    { id: 'node-5', title: 'Dominando la Racha 🔥', description: 'Mantén una racha activa de 3 días de ventas.', metricName: 'Racha de Días', requirement: { metric: 'streak', target: 3 }, reward: { xp: 120, gems: 60 }, x: 160, y: 460, type: 'milestone' },
-    { id: 'node-6', title: 'Cajero Profesional 💼', description: 'Alcanza las 15 ventas registradas de por vida.', metricName: 'Ventas Realizadas', requirement: { metric: 'totalTransactions', target: 15 }, reward: { xp: 150, gems: 70 }, x: 280, y: 390, type: 'milestone' },
-    { id: 'node-7', title: 'Fidelización Premium ⭐', description: 'Registra 5 clientes en el club de lealtad.', metricName: 'Clientes Registrados', requirement: { metric: 'customers', target: 5 }, reward: { xp: 180, gems: 80 }, x: 420, y: 330, type: 'milestone' },
-    { id: 'node-8', title: 'Cofre Reluciente Oro 🎁', description: 'Llega al nivel 4 para abrir el cofre dorado.', metricName: 'Nivel Requerido', requirement: { metric: 'level', target: 4 }, reward: { xp: 200, gems: 100 }, x: 360, y: 250, type: 'chest' },
-    { id: 'node-9', title: 'Arqueo Impecable 💎', description: 'Cierra una caja con discrepancia de $0.', metricName: 'Arqueos Perfectos', requirement: { metric: 'perfectShifts', target: 1 }, reward: { xp: 250, gems: 120 }, x: 220, y: 180, type: 'milestone' },
-    { id: 'node-10', title: 'JEFE FINAL: Socio de Duo 👑', description: 'Alcanza el nivel 6 en la red de cajeros corporativos.', metricName: 'Nivel Requerido', requirement: { metric: 'level', target: 6 }, reward: { xp: 500, gems: 250 }, x: 300, y: 90, type: 'boss' }
+    {
+      id: 'node-1',
+      title: 'Inicio del Cajero 🏁',
+      description: 'Realiza tu primera venta en DuoPOS.',
+      metricName: 'Ventas Realizadas',
+      requirement: { metric: 'totalTransactions', target: 1 },
+      reward: { xp: 40, gems: 20 },
+      x: 300,
+      y: 750,
+      type: 'milestone',
+    },
+    {
+      id: 'node-2',
+      title: 'Cajero de Cobre 🥉',
+      description: 'Registra un total de 5 transacciones de venta.',
+      metricName: 'Ventas Realizadas',
+      requirement: { metric: 'totalTransactions', target: 5 },
+      reward: { xp: 60, gems: 30 },
+      x: 440,
+      y: 680,
+      type: 'milestone',
+    },
+    {
+      id: 'node-3',
+      title: 'Estrella de Clientes 👥',
+      description: 'Registra 2 clientes en el club de fidelidad.',
+      metricName: 'Clientes Registrados',
+      requirement: { metric: 'customers', target: 2 },
+      reward: { xp: 80, gems: 40 },
+      x: 360,
+      y: 600,
+      type: 'milestone',
+    },
+    {
+      id: 'node-4',
+      title: 'Cofre Sorpresa Bronce 🎁',
+      description: 'Alcanza el nivel 2 y reclama tus premios sorpresa.',
+      metricName: 'Nivel Requerido',
+      requirement: { metric: 'level', target: 2 },
+      reward: { xp: 100, gems: 50 },
+      x: 200,
+      y: 540,
+      type: 'chest',
+    },
+    {
+      id: 'node-5',
+      title: 'Dominando la Racha 🔥',
+      description: 'Mantén una racha activa de 3 días de ventas.',
+      metricName: 'Racha de Días',
+      requirement: { metric: 'streak', target: 3 },
+      reward: { xp: 120, gems: 60 },
+      x: 160,
+      y: 460,
+      type: 'milestone',
+    },
+    {
+      id: 'node-6',
+      title: 'Cajero Profesional 💼',
+      description: 'Alcanza las 15 ventas registradas de por vida.',
+      metricName: 'Ventas Realizadas',
+      requirement: { metric: 'totalTransactions', target: 15 },
+      reward: { xp: 150, gems: 70 },
+      x: 280,
+      y: 390,
+      type: 'milestone',
+    },
+    {
+      id: 'node-7',
+      title: 'Fidelización Premium ⭐',
+      description: 'Registra 5 clientes en el club de lealtad.',
+      metricName: 'Clientes Registrados',
+      requirement: { metric: 'customers', target: 5 },
+      reward: { xp: 180, gems: 80 },
+      x: 420,
+      y: 330,
+      type: 'milestone',
+    },
+    {
+      id: 'node-8',
+      title: 'Cofre Reluciente Oro 🎁',
+      description: 'Llega al nivel 4 para abrir el cofre dorado.',
+      metricName: 'Nivel Requerido',
+      requirement: { metric: 'level', target: 4 },
+      reward: { xp: 200, gems: 100 },
+      x: 360,
+      y: 250,
+      type: 'chest',
+    },
+    {
+      id: 'node-9',
+      title: 'Arqueo Impecable 💎',
+      description: 'Cierra una caja con discrepancia de $0.',
+      metricName: 'Arqueos Perfectos',
+      requirement: { metric: 'perfectShifts', target: 1 },
+      reward: { xp: 250, gems: 120 },
+      x: 220,
+      y: 180,
+      type: 'milestone',
+    },
+    {
+      id: 'node-10',
+      title: 'JEFE FINAL: Socio de Duo 👑',
+      description: 'Alcanza el nivel 6 en la red de cajeros corporativos.',
+      metricName: 'Nivel Requerido',
+      requirement: { metric: 'level', target: 6 },
+      reward: { xp: 500, gems: 250 },
+      x: 300,
+      y: 90,
+      type: 'boss',
+    },
   ];
 
   const totalSalesVal = transactions.length;
@@ -33,13 +133,20 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
 
   const getMetricValue = (metric: string) => {
     switch (metric) {
-      case 'totalSales': return totalSalesVal;
-      case 'totalTransactions': return totalTransactionsVal;
-      case 'streak': return streakVal;
-      case 'level': return levelVal;
-      case 'customers': return customersVal;
-      case 'perfectShifts': return perfectShiftsVal;
-      default: return 0;
+      case 'totalSales':
+        return totalSalesVal;
+      case 'totalTransactions':
+        return totalTransactionsVal;
+      case 'streak':
+        return streakVal;
+      case 'level':
+        return levelVal;
+      case 'customers':
+        return customersVal;
+      case 'perfectShifts':
+        return perfectShiftsVal;
+      default:
+        return 0;
     }
   };
 
@@ -47,7 +154,7 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
 
   useEffect(() => {
     const firstUnclaimed = nodesData.find((node, index) => {
-      const isUnlocked = index === 0 || (user.progressionClaimed?.includes(nodesData[index - 1].id) || false);
+      const isUnlocked = index === 0 || user.progressionClaimed?.includes(nodesData[index - 1].id) || false;
       const isClaimed = user.progressionClaimed?.includes(node.id) || false;
       return isUnlocked && !isClaimed;
     });
@@ -57,12 +164,12 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
   }, [user.progressionClaimed]);
 
   const handleClaimNode = (nodeId: string) => {
-    const node = nodesData.find(n => n.id === nodeId);
+    const node = nodesData.find((n) => n.id === nodeId);
     if (!node) return;
-    
+
     playSound('levelup');
     const claimedNodes = [...(user.progressionClaimed || []), nodeId];
-    
+
     let updatedXp = user.xp + node.reward.xp;
     let currentLevel = user.level;
     let title = user.levelTitle;
@@ -84,7 +191,7 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
         'Experto en Finanzas 🥇',
         'Duo Maestro Glorioso 👑',
         'Dios del Escáner de Barras ⚡',
-        'Socio Corporativo de Duo 💎'
+        'Socio Corporativo de Duo 💎',
       ];
       title = titles[Math.min(currentLevel - 1, titles.length - 1)];
       toast.achievement(`¡Subiste al nivel ${currentLevel}! Título: ${title}`, { title: '¡NIVEL ALCANZADO! 🎉' });
@@ -95,7 +202,7 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
 
     let nextUnlockedAccessories = [...(user.unlockedAccessories || [])];
     let nextUnlockedSkins = [...(user.unlockedSkins || [])];
-    
+
     if (node.id === 'node-4') {
       const accessoryId = 'accessory-glasses';
       if (!nextUnlockedAccessories.includes(accessoryId)) {
@@ -116,7 +223,9 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
       const accessoryId = 'accessory-corona';
       if (!nextUnlockedAccessories.includes(accessoryId)) {
         nextUnlockedAccessories.push(accessoryId);
-        toast.achievement('¡Venciste al jefe final y desbloqueaste la Corona Real 👑!', { title: '¡CAMINO COMPLETADO! 🏆' });
+        toast.achievement('¡Venciste al jefe final y desbloqueaste la Corona Real 👑!', {
+          title: '¡CAMINO COMPLETADO! 🏆',
+        });
       }
     }
 
@@ -129,11 +238,13 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
       gemsEarnedTotal: nextGemsTotal,
       progressionClaimed: claimedNodes,
       unlockedAccessories: nextUnlockedAccessories,
-      unlockedSkins: nextUnlockedSkins
+      unlockedSkins: nextUnlockedSkins,
     };
 
     onUpdateUser(nextUser);
-    toast.success(`¡Hito reclamado! Ganaste +${node.reward.xp} XP y +${node.reward.gems} Gemas 💎`, { title: 'Progreso del Camino' });
+    toast.success(`¡Hito reclamado! Ganaste +${node.reward.xp} XP y +${node.reward.gems} Gemas 💎`, {
+      title: 'Progreso del Camino',
+    });
   };
 
   const points = [
@@ -146,31 +257,39 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
     { x: 420, y: 330 },
     { x: 360, y: 250 },
     { x: 220, y: 180 },
-    { x: 300, y: 90 }
+    { x: 300, y: 90 },
   ];
 
   let furthestUnlockedIndex = 0;
   for (let i = 0; i < nodesData.length; i++) {
-    const isUnlocked = i === 0 || (user.progressionClaimed?.includes(nodesData[i-1].id) || false);
+    const isUnlocked = i === 0 || user.progressionClaimed?.includes(nodesData[i - 1].id) || false;
     if (isUnlocked) {
       furthestUnlockedIndex = i;
     }
   }
 
-  const activePathD = points.slice(0, furthestUnlockedIndex + 1).map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x},${p.y}`).join(' ');
+  const activePathD = points
+    .slice(0, furthestUnlockedIndex + 1)
+    .map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x},${p.y}`)
+    .join(' ');
 
   return (
     <div className="space-y-6 text-left">
       <div className="bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-3xl p-5 md:p-6 text-white flex flex-col sm:flex-row items-center justify-between gap-5 border-b-[6px] border-cyan-705 shadow-md">
         <div className="space-y-1 text-center sm:text-left">
-          <span className="bg-cyan-800/55 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-wider">Progreso del Emprendedor</span>
+          <span className="bg-cyan-800/55 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
+            Progreso del Emprendedor
+          </span>
           <h3 className="text-2xl font-black tracking-tight">Camino del Emprendedor DuoPOS</h3>
           <p className="text-xs text-cyan-100 font-semibold max-w-xl">
-            Completa hitos operativos reales en el punto de venta para desbloquear cofres de gemas y coronarte como el Socio de Duo definitivo en la cima.
+            Completa hitos operativos reales en el punto de venta para desbloquear cofres de gemas y coronarte como el
+            Socio de Duo definitivo en la cima.
           </p>
         </div>
         <div className="bg-white/15 border border-white/20 p-3 px-4.5 rounded-2xl flex flex-col items-center justify-center shrink-0">
-          <span className="text-[10px] font-black text-cyan-200 uppercase tracking-widest leading-none">HITOS RECLAMADOS</span>
+          <span className="text-[10px] font-black text-cyan-200 uppercase tracking-widest leading-none">
+            HITOS RECLAMADOS
+          </span>
           <span className="text-lg font-black font-mono tracking-tight mt-1">
             {user.progressionClaimed?.length || 0} / {nodesData.length}
           </span>
@@ -191,15 +310,27 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
               </defs>
 
               {/* Grid decorations */}
-              <text x="240" y="720" className="text-2xl opacity-60">🌲</text>
-              <text x="490" y="550" className="text-2xl opacity-60">🌳</text>
-              <text x="120" y="420" className="text-3xl opacity-75 animate-bounce" style={{ animationDuration: '3s' }}>🏝️</text>
-              <text x="480" y="320" className="text-2xl opacity-60">🌲</text>
-              <text x="100" y="210" className="text-3xl opacity-40 animate-pulse" style={{ animationDuration: '6s' }}>☁️</text>
-              <text x="500" y="140" className="text-3xl opacity-40 animate-pulse" style={{ animationDuration: '8s' }}>☁️</text>
-              
+              <text x="240" y="720" className="text-2xl opacity-60">
+                🌲
+              </text>
+              <text x="490" y="550" className="text-2xl opacity-60">
+                🌳
+              </text>
+              <text x="120" y="420" className="text-3xl opacity-75 animate-bounce" style={{ animationDuration: '3s' }}>
+                🏝️
+              </text>
+              <text x="480" y="320" className="text-2xl opacity-60">
+                🌲
+              </text>
+              <text x="100" y="210" className="text-3xl opacity-40 animate-pulse" style={{ animationDuration: '6s' }}>
+                ☁️
+              </text>
+              <text x="500" y="140" className="text-3xl opacity-40 animate-pulse" style={{ animationDuration: '8s' }}>
+                ☁️
+              </text>
+
               {/* Winding base pipeline (grey) */}
-              <path 
+              <path
                 d="M 300,750 L 440,680 L 360,600 L 200,540 L 160,460 L 280,390 L 420,330 L 360,250 L 220,180 L 300,90"
                 stroke="#475569"
                 strokeWidth="10"
@@ -210,7 +341,7 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
 
               {/* Active segment pipeline (glowing/green) */}
               {points.slice(0, furthestUnlockedIndex + 1).length > 1 && (
-                <path 
+                <path
                   d={activePathD}
                   stroke="#10b981"
                   strokeWidth="10"
@@ -224,12 +355,12 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
               {/* Render Isometric Pillars and Nodes */}
               {nodesData.map((node, index) => {
                 const isClaimed = user.progressionClaimed?.includes(node.id) || false;
-                const isUnlocked = index === 0 || (user.progressionClaimed?.includes(nodesData[index - 1].id) || false);
+                const isUnlocked = index === 0 || user.progressionClaimed?.includes(nodesData[index - 1].id) || false;
                 const metricVal = getMetricValue(node.requirement.metric);
                 const isCompleted = metricVal >= node.requirement.target;
                 const isClaimable = isUnlocked && !isClaimed && isCompleted;
                 const isSelected = selectedNodeId === node.id;
-                
+
                 // Pillar metrics
                 const cx = node.x;
                 const cy = node.y;
@@ -269,30 +400,43 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
                 }
 
                 return (
-                  <g 
-                    key={node.id} 
+                  <g
+                    key={node.id}
                     className={`cursor-pointer group select-none transition-all duration-300 ${isSelected ? 'scale-105' : 'hover:scale-102'}`}
-                    onClick={() => { playSound('click'); setSelectedNodeId(node.id); }}
+                    onClick={() => {
+                      playSound('click');
+                      setSelectedNodeId(node.id);
+                    }}
                   >
                     {/* Selected pillar shadow ring */}
                     {isSelected && (
-                      <ellipse cx={cx} cy={cy + 30} rx={rx + 8} ry={ry + 4} fill="none" stroke="#60a5fa" strokeWidth="2.5" strokeDasharray="4,4" className="animate-spin-slow" />
+                      <ellipse
+                        cx={cx}
+                        cy={cy + 30}
+                        rx={rx + 8}
+                        ry={ry + 4}
+                        fill="none"
+                        stroke="#60a5fa"
+                        strokeWidth="2.5"
+                        strokeDasharray="4,4"
+                        className="animate-spin-slow"
+                      />
                     )}
 
                     {/* Left Side Face */}
-                    <polygon 
+                    <polygon
                       points={`${cx - rx},${cy + ry} ${cx},${cy + 2 * ry} ${cx},${cy + 2 * ry + h} ${cx - rx},${cy + ry + h}`}
                       fill={leftColor}
                     />
 
                     {/* Right Side Face */}
-                    <polygon 
+                    <polygon
                       points={`${cx},${cy + 2 * ry} ${cx + rx},${cy + ry} ${cx + rx},${cy + ry + h} ${cx},${cy + 2 * ry + h}`}
                       fill={rightColor}
                     />
 
                     {/* Top Diamond Face */}
-                    <polygon 
+                    <polygon
                       points={`${cx},${cy} ${cx + rx},${cy + ry} ${cx},${cy + 2 * ry} ${cx - rx},${cy + ry}`}
                       fill={topColor}
                       stroke={isSelected ? '#ffffff' : '#ffffff22'}
@@ -301,14 +445,22 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
                     />
 
                     {/* Emoji Label inside Node */}
-                    <text 
-                      x={cx} 
-                      y={cy + ry + 4} 
-                      textAnchor="middle" 
+                    <text
+                      x={cx}
+                      y={cy + ry + 4}
+                      textAnchor="middle"
                       className="font-extrabold text-sm select-none"
                       fill="#ffffff"
                     >
-                      {isClaimed ? '✔️' : node.type === 'chest' ? '🎁' : node.type === 'boss' ? '👑' : !isUnlocked ? '🔒' : index + 1}
+                      {isClaimed
+                        ? '✔️'
+                        : node.type === 'chest'
+                          ? '🎁'
+                          : node.type === 'boss'
+                            ? '👑'
+                            : !isUnlocked
+                              ? '🔒'
+                              : index + 1}
                     </text>
                   </g>
                 );
@@ -325,12 +477,12 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
         {/* Right: Selected Node Details */}
         <div className="space-y-4">
           {(() => {
-            const node = nodesData.find(n => n.id === selectedNodeId);
+            const node = nodesData.find((n) => n.id === selectedNodeId);
             if (!node) return null;
-            
+
             const index = nodesData.indexOf(node);
             const isClaimed = user.progressionClaimed?.includes(node.id) || false;
-            const isUnlocked = index === 0 || (user.progressionClaimed?.includes(nodesData[index - 1].id) || false);
+            const isUnlocked = index === 0 || user.progressionClaimed?.includes(nodesData[index - 1].id) || false;
             const metricVal = getMetricValue(node.requirement.metric);
             const isCompleted = metricVal >= node.requirement.target;
             const isClaimable = isUnlocked && !isClaimed && isCompleted;
@@ -361,22 +513,22 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
                 </div>
 
                 <div className="p-5 space-y-4.5">
-                  <p className="text-xs text-gray-500 font-semibold leading-relaxed">
-                    {node.description}
-                  </p>
+                  <p className="text-xs text-gray-500 font-semibold leading-relaxed">{node.description}</p>
 
                   {/* Requirement Progress */}
                   <div className="space-y-1.5 bg-gray-50 border border-gray-150 p-3 rounded-xl">
-                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Requisito de Desbloqueo</span>
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">
+                      Requisito de Desbloqueo
+                    </span>
                     <div className="flex justify-between items-center text-xs font-black text-gray-700 leading-none">
                       <span>{node.metricName}</span>
                       <span className={isCompleted ? 'text-green-600' : 'text-gray-500'}>
                         {metricVal} / {node.requirement.target}
                       </span>
                     </div>
-                    
+
                     <div className="bg-gray-200 h-2 rounded-full overflow-hidden w-full mt-1">
-                      <div 
+                      <div
                         className={`h-full rounded-full transition-all duration-300 ${isCompleted ? 'bg-green-500' : 'bg-amber-400'}`}
                         style={{ width: `${pct}%` }}
                       />
@@ -385,7 +537,9 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
 
                   {/* Rewards summary */}
                   <div className="space-y-1">
-                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">Recompensa al Reclamar</span>
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block">
+                      Recompensa al Reclamar
+                    </span>
                     <div className="flex flex-wrap gap-2 pt-0.5">
                       <span className="bg-blue-50 border border-blue-100 text-blue-700 text-[10px] font-black px-2.5 py-1 rounded-lg">
                         +{node.reward.xp} XP
@@ -395,13 +549,19 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
                       </span>
                     </div>
                     {node.id === 'node-4' && (
-                      <span className="text-[10px] text-amber-700 font-bold block pt-1 animate-pulse">🎁 ¡Un accesorio de búho sorpresa!</span>
+                      <span className="text-[10px] text-amber-700 font-bold block pt-1 animate-pulse">
+                        🎁 ¡Un accesorio de búho sorpresa!
+                      </span>
                     )}
                     {node.id === 'node-8' && (
-                      <span className="text-[10px] text-amber-700 font-bold block pt-1 animate-pulse">🎁 ¡Una skin de POS sorpresa!</span>
+                      <span className="text-[10px] text-amber-700 font-bold block pt-1 animate-pulse">
+                        🎁 ¡Una skin de POS sorpresa!
+                      </span>
                     )}
                     {node.id === 'node-10' && (
-                      <span className="text-[10px] text-amber-700 font-bold block pt-1 animate-pulse">👑 ¡Corona Real para el Búho!</span>
+                      <span className="text-[10px] text-amber-700 font-bold block pt-1 animate-pulse">
+                        👑 ¡Corona Real para el Búho!
+                      </span>
                     )}
                   </div>
 
@@ -426,12 +586,16 @@ export default function SagaMap({ user, onUpdateUser, transactions, customers }:
                     ) : !isUnlocked ? (
                       <div className="text-center p-2 bg-slate-50 border border-slate-100 rounded-xl space-y-1">
                         <span className="text-gray-400 font-black text-xs uppercase block">HITO BLOQUEADO 🔒</span>
-                        <span className="text-[9.5px] text-gray-400 font-semibold block leading-tight">Completa y reclama los hitos anteriores en el camino.</span>
+                        <span className="text-[9.5px] text-gray-400 font-semibold block leading-tight">
+                          Completa y reclama los hitos anteriores en el camino.
+                        </span>
                       </div>
                     ) : (
                       <div className="text-center p-2 bg-amber-50/50 border border-amber-100 rounded-xl space-y-1">
                         <span className="text-amber-700 font-black text-xs uppercase block">EN PROGRESO ⚡</span>
-                        <span className="text-[9.5px] text-amber-650 font-semibold block leading-tight">Alcanza la meta en tu panel de ventas diario para poder reclamar.</span>
+                        <span className="text-[9.5px] text-amber-650 font-semibold block leading-tight">
+                          Alcanza la meta en tu panel de ventas diario para poder reclamar.
+                        </span>
                       </div>
                     )}
                   </div>

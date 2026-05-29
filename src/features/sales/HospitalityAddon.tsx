@@ -4,10 +4,23 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ChefHat, NotepadText, Users, Clock, ForkKnife, DollarSign, Plus, Check, Trash2, SplitSquareVertical, MessageSquare, Flame, AlertCircle } from 'lucide-react';
+import {
+  ChefHat,
+  NotepadText,
+  Users,
+  Clock,
+  ForkKnife,
+  DollarSign,
+  Plus,
+  Check,
+  Trash2,
+  SplitSquareVertical,
+  MessageSquare,
+  Flame,
+  AlertCircle,
+} from 'lucide-react';
 import { CartItem, Product, Customer } from '../../types/index';
 import { playSound } from '../../services/sounds';
-
 
 // Standard mock waiters for DuoPOS
 export const MOCK_WAITERS = [
@@ -41,13 +54,13 @@ export const DEFAULT_TABLES: TableState[] = [
 
 // F&B Addons available for purchase
 export const PREMIUM_ADDONS = [
-  { name: 'Extra Queso Fundido 🧀', price: 1.00 },
-  { name: 'Tocino Crujiente 🥓', price: 1.50 },
+  { name: 'Extra Queso Fundido 🧀', price: 1.0 },
+  { name: 'Tocino Crujiente 🥓', price: 1.5 },
   { name: 'Aguacate Orgánico 🥑', price: 1.25 },
   { name: 'Doble Ración Carboherradura 🥔', price: 1.75 },
   { name: 'Crema Batida Dulce 🥛', price: 0.75 },
-  { name: 'Topping Secreto Racha 🍓', price: 1.20 },
-  { name: 'Shot Espresso Adicional ☕', price: 1.00 },
+  { name: 'Topping Secreto Racha 🍓', price: 1.2 },
+  { name: 'Shot Espresso Adicional ☕', price: 1.0 },
 ];
 
 export const QUICK_NOTES = [
@@ -76,9 +89,9 @@ export function ModifierModal({ isOpen, onClose, cartItem, onSave }: ModifierMod
 
   const handleToggleAddon = (addon: { name: string; price: number }) => {
     playSound('click');
-    const isAlreadySelected = selectedAddons.some(a => a.name === addon.name);
+    const isAlreadySelected = selectedAddons.some((a) => a.name === addon.name);
     if (isAlreadySelected) {
-      setSelectedAddons(selectedAddons.filter(a => a.name !== addon.name));
+      setSelectedAddons(selectedAddons.filter((a) => a.name !== addon.name));
     } else {
       setSelectedAddons([...selectedAddons, addon]);
     }
@@ -86,7 +99,7 @@ export function ModifierModal({ isOpen, onClose, cartItem, onSave }: ModifierMod
 
   const handleQuickNote = (note: string) => {
     playSound('click');
-    setNotes(prev => {
+    setNotes((prev) => {
       const trimmed = prev.trim();
       if (!trimmed) return note;
       if (trimmed.toLowerCase().includes(note.toLowerCase())) return prev; // Avoid duplicate
@@ -103,16 +116,22 @@ export function ModifierModal({ isOpen, onClose, cartItem, onSave }: ModifierMod
   return (
     <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-white border-2 border-gray-200 border-b-8 rounded-3xl w-full max-w-lg p-6 shadow-2xl animate-scaleUp">
-        
         <div className="flex justify-between items-start border-b pb-3 mb-4">
           <div className="flex items-center gap-2">
             <span className="text-3xl">{cartItem.product.emoji}</span>
             <div>
               <h3 className="font-black text-gray-805 text-base uppercase leading-none">Modificadores de Platillo</h3>
-              <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Personalizando: {cartItem.product.name}</p>
+              <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">
+                Personalizando: {cartItem.product.name}
+              </p>
             </div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 font-extrabold p-1 text-sm bg-gray-100 rounded-full h-6 w-6 flex items-center justify-center">✕</button>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 font-extrabold p-1 text-sm bg-gray-100 rounded-full h-6 w-6 flex items-center justify-center"
+          >
+            ✕
+          </button>
         </div>
 
         <div className="space-y-4 max-h-[380px] overflow-y-auto pr-1">
@@ -135,7 +154,9 @@ export function ModifierModal({ isOpen, onClose, cartItem, onSave }: ModifierMod
 
           {/* Custom Notes text entry */}
           <div className="space-y-1 text-left">
-            <label className="text-[10px] font-black uppercase text-gray-450 block">Notas de Preparación Personalizadas</label>
+            <label className="text-[10px] font-black uppercase text-gray-450 block">
+              Notas de Preparación Personalizadas
+            </label>
             <div className="relative">
               <span className="absolute left-3 top-3 text-gray-400">📝</span>
               <input
@@ -150,10 +171,12 @@ export function ModifierModal({ isOpen, onClose, cartItem, onSave }: ModifierMod
 
           {/* Premium Addons list */}
           <div className="space-y-1.5 text-left pt-2 border-t">
-            <label className="text-[10px] font-black uppercase text-gray-450 block">Ingredientes Extras / Complementos PREMIUM</label>
+            <label className="text-[10px] font-black uppercase text-gray-450 block">
+              Ingredientes Extras / Complementos PREMIUM
+            </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {PREMIUM_ADDONS.map((addon, index) => {
-                const isSelected = selectedAddons.some(a => a.name === addon.name);
+                const isSelected = selectedAddons.some((a) => a.name === addon.name);
                 return (
                   <button
                     key={index}
@@ -168,7 +191,9 @@ export function ModifierModal({ isOpen, onClose, cartItem, onSave }: ModifierMod
                     <div className="text-[10.5px]">
                       <span>{addon.name}</span>
                     </div>
-                    <span className={`text-[10px] font-black ${isSelected ? 'text-[#3c9e01]' : 'text-gray-405 font-mono'}`}>
+                    <span
+                      className={`text-[10px] font-black ${isSelected ? 'text-[#3c9e01]' : 'text-gray-405 font-mono'}`}
+                    >
                       +${addon.price.toFixed(2)}
                     </span>
                   </button>
@@ -195,7 +220,6 @@ export function ModifierModal({ isOpen, onClose, cartItem, onSave }: ModifierMod
             Aplicar Cambios
           </button>
         </div>
-
       </div>
     </div>
   );
@@ -221,7 +245,7 @@ export function SplitBillModal({ isOpen, onClose, cart, totalAmount, onCompleteS
   // Item splitting state
   const [itemSelections, setItemSelections] = useState<Record<string, { payQty: number; origItem: CartItem }>>(() => {
     const states: Record<string, { payQty: number; origItem: CartItem }> = {};
-    cart.forEach(it => {
+    cart.forEach((it) => {
       states[it.product.id] = { payQty: 0, origItem: it };
     });
     return states;
@@ -237,8 +261,8 @@ export function SplitBillModal({ isOpen, onClose, cart, totalAmount, onCompleteS
     playSound('click');
     const curr = itemSelections[productId];
     const maxQty = curr.origItem.quantity;
-    
-    setItemSelections(prev => {
+
+    setItemSelections((prev) => {
       let nextQty = prev[productId].payQty;
       if (action === 'add' && nextQty < maxQty) {
         nextQty += 1;
@@ -247,7 +271,7 @@ export function SplitBillModal({ isOpen, onClose, cart, totalAmount, onCompleteS
       }
       return {
         ...prev,
-        [productId]: { ...prev[productId], payQty: nextQty }
+        [productId]: { ...prev[productId], payQty: nextQty },
       };
     });
   };
@@ -256,12 +280,12 @@ export function SplitBillModal({ isOpen, onClose, cart, totalAmount, onCompleteS
   const selectedItemsTotal = Object.values(itemSelections).reduce((sum: number, data: any) => {
     const addonsPrice = data.origItem.addons ? data.origItem.addons.reduce((s: number, a: any) => s + a.price, 0) : 0;
     const basePrice = data.origItem.product.price + addonsPrice;
-    return sum + (basePrice * data.payQty);
+    return sum + basePrice * data.payQty;
   }, 0) as number;
 
   const handlePayEqualPart = (partNum: number) => {
     playSound('levelup');
-    setHasPaidParts(prev => [...prev, partNum]);
+    setHasPaidParts((prev) => [...prev, partNum]);
     const pricePerDiner = totalAmount / equalParts;
     onCompleteSplit(pricePerDiner);
   };
@@ -274,16 +298,16 @@ export function SplitBillModal({ isOpen, onClose, cart, totalAmount, onCompleteS
     }
 
     playSound('levelup');
-    
+
     // Construct new remaining cart
     const updatedCart: CartItem[] = [];
-    cart.forEach(it => {
+    cart.forEach((it) => {
       const splitInfo = itemSelections[it.product.id] as any;
       const remainingQty = it.quantity - (splitInfo?.payQty || 0);
       if (remainingQty > 0) {
         updatedCart.push({
           ...it,
-          quantity: remainingQty
+          quantity: remainingQty,
         });
       }
     });
@@ -295,23 +319,34 @@ export function SplitBillModal({ isOpen, onClose, cart, totalAmount, onCompleteS
   return (
     <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-white border-2 border-gray-200 border-b-8 rounded-3xl w-full max-w-xl p-6 shadow-2xl animate-scaleUp">
-        
         <div className="flex justify-between items-start border-b pb-3 mb-4">
           <div className="flex items-center gap-2">
             <span className="text-3xl">🧮</span>
             <div>
-              <h3 className="font-black text-gray-805 text-base uppercase leading-none">Dividir Cuenta Interactiva (F&B)</h3>
-              <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Total de la Cuenta: ${totalAmount.toFixed(2)} USD</p>
+              <h3 className="font-black text-gray-805 text-base uppercase leading-none">
+                Dividir Cuenta Interactiva (F&B)
+              </h3>
+              <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">
+                Total de la Cuenta: ${totalAmount.toFixed(2)} USD
+              </p>
             </div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 font-extrabold p-1 text-sm bg-gray-100 rounded-full h-6 w-6 flex items-center justify-center">✕</button>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 font-extrabold p-1 text-sm bg-gray-100 rounded-full h-6 w-6 flex items-center justify-center"
+          >
+            ✕
+          </button>
         </div>
 
         {/* Tab Selector */}
         <div className="grid grid-cols-2 gap-2 mb-4">
           <button
             type="button"
-            onClick={() => { setSplitType('equal'); playSound('click'); }}
+            onClick={() => {
+              setSplitType('equal');
+              playSound('click');
+            }}
             className={`py-2 rounded-xl text-xs font-black uppercase border-2 flex items-center justify-center gap-1.5 cursor-pointer ${
               splitType === 'equal'
                 ? 'bg-blue-50 border-[#1cb0f6] text-[#1184bb]'
@@ -322,7 +357,10 @@ export function SplitBillModal({ isOpen, onClose, cart, totalAmount, onCompleteS
           </button>
           <button
             type="button"
-            onClick={() => { setSplitType('item'); playSound('click'); }}
+            onClick={() => {
+              setSplitType('item');
+              playSound('click');
+            }}
             className={`py-2 rounded-xl text-xs font-black uppercase border-2 flex items-center justify-center gap-1.5 cursor-pointer ${
               splitType === 'item'
                 ? 'bg-orange-50 border-[#ff9600] text-[#c96200]'
@@ -338,7 +376,9 @@ export function SplitBillModal({ isOpen, onClose, cart, totalAmount, onCompleteS
           <div className="space-y-4 text-left">
             <div className="flex justify-between items-center bg-gray-50 p-3 rounded-2xl border border-gray-150">
               <div>
-                <span className="text-[10px] font-black uppercase text-gray-450 block leading-tight">Comensales / Divisiones</span>
+                <span className="text-[10px] font-black uppercase text-gray-450 block leading-tight">
+                  Comensales / Divisiones
+                </span>
                 <span className="text-sm font-extrabold text-gray-700">Dividir cuenta entre {equalParts} personas</span>
               </div>
               <div className="flex items-center gap-2">
@@ -374,27 +414,33 @@ export function SplitBillModal({ isOpen, onClose, cart, totalAmount, onCompleteS
 
             {/* Simulated Diner list with checkboxes/buttons to register they are checkout */}
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-gray-450 block">Registro de Pagos Individuales</label>
+              <label className="text-[10px] font-black uppercase text-gray-450 block">
+                Registro de Pagos Individuales
+              </label>
               <div className="grid grid-cols-2 gap-2">
                 {Array.from({ length: equalParts }).map((_, i) => {
                   const partNum = i + 1;
                   const isPaid = hasPaidParts.includes(partNum);
                   return (
-                    <div 
+                    <div
                       key={partNum}
                       className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
-                        isPaid 
-                          ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+                        isPaid
+                          ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
                           : 'bg-white hover:bg-slate-50 border-gray-150 text-gray-700'
                       }`}
                     >
                       <div>
                         <p className="font-extrabold text-xs">Persona {partNum}</p>
-                        <p className="text-[10px] font-mono font-bold leading-none text-gray-400 mt-1">${(totalAmount / equalParts).toFixed(2)}</p>
+                        <p className="text-[10px] font-mono font-bold leading-none text-gray-400 mt-1">
+                          ${(totalAmount / equalParts).toFixed(2)}
+                        </p>
                       </div>
-                      
+
                       {isPaid ? (
-                        <span className="text-[10px] font-black uppercase bg-[#d2f09d] text-green-800 px-2 py-0.5 rounded-full">¡PAGADO! ✓</span>
+                        <span className="text-[10px] font-black uppercase bg-[#d2f09d] text-green-800 px-2 py-0.5 rounded-full">
+                          ¡PAGADO! ✓
+                        </span>
                       ) : (
                         <button
                           type="button"
@@ -416,21 +462,27 @@ export function SplitBillModal({ isOpen, onClose, cart, totalAmount, onCompleteS
         {splitType === 'item' && (
           <div className="space-y-4 text-left">
             <p className="text-[10.5px] text-gray-500 leading-tight">
-              Seleccione la cantidad exacta de artículos que va a pagar la primera persona en este momento. Los productos restantes permanecerán pendientes en la comanda de la mesa.
+              Seleccione la cantidad exacta de artículos que va a pagar la primera persona en este momento. Los
+              productos restantes permanecerán pendientes en la comanda de la mesa.
             </p>
 
             <div className="border border-gray-150 rounded-2xl bg-white max-h-[180px] overflow-y-auto split-items divide-y">
-              {cart.map(it => {
+              {cart.map((it) => {
                 const currentSel = itemSelections[it.product.id] || { payQty: 0, origItem: it };
                 const addonsPrice = it.addons ? it.addons.reduce((s, a) => s + a.price, 0) : 0;
                 const fullPrice = it.product.price + addonsPrice;
                 return (
-                  <div key={it.product.id} className="p-3 flex items-center justify-between text-xs font-bold font-sans">
+                  <div
+                    key={it.product.id}
+                    className="p-3 flex items-center justify-between text-xs font-bold font-sans"
+                  >
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-xl select-none">{it.product.emoji}</span>
                       <div className="min-w-0">
                         <p className="font-black text-gray-800 truncate leading-none mb-0.5">{it.product.name}</p>
-                        <p className="text-[10px] text-gray-400 font-mono leading-none font-bold">Max: {it.quantity} unidades • ${fullPrice.toFixed(2)}/u</p>
+                        <p className="text-[10px] text-gray-400 font-mono leading-none font-bold">
+                          Max: {it.quantity} unidades • ${fullPrice.toFixed(2)}/u
+                        </p>
                       </div>
                     </div>
 
@@ -443,7 +495,9 @@ export function SplitBillModal({ isOpen, onClose, cart, totalAmount, onCompleteS
                       >
                         -
                       </button>
-                      <span className="font-mono text-sm font-black text-gray-700 w-5 text-center">{currentSel.payQty}</span>
+                      <span className="font-mono text-sm font-black text-gray-700 w-5 text-center">
+                        {currentSel.payQty}
+                      </span>
                       <button
                         type="button"
                         disabled={currentSel.payQty >= it.quantity}
@@ -460,7 +514,9 @@ export function SplitBillModal({ isOpen, onClose, cart, totalAmount, onCompleteS
 
             <div className="bg-orange-50 bg-opacity-80 border border-orange-200 rounded-2xl p-4 flex justify-between items-center">
               <div>
-                <span className="text-[9px] font-black uppercase text-orange-650 block leading-none">Subtotal Consumo Seleccionado</span>
+                <span className="text-[9px] font-black uppercase text-orange-650 block leading-none">
+                  Subtotal Consumo Seleccionado
+                </span>
                 <span className="text-2xl font-mono font-black text-orange-700 leading-none">
                   ${selectedItemsTotal.toFixed(2)}
                 </span>
@@ -479,14 +535,17 @@ export function SplitBillModal({ isOpen, onClose, cart, totalAmount, onCompleteS
         {/* Footer info showing standard closure */}
         <div className="pt-4 border-t mt-4 flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase">
           <span>DuoPOS Hospitality Engine</span>
-          <button onClick={onClose} className="text-gray-500 hover:underline hover:text-gray-700 font-black cursor-pointer">Cerrar</button>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:underline hover:text-gray-700 font-black cursor-pointer"
+          >
+            Cerrar
+          </button>
         </div>
-
       </div>
     </div>
   );
 }
-
 
 // --- 3. KITCHEN DISPLAY SIMULATOR (KDS) ---
 export interface KitchenOrder {
@@ -534,14 +593,15 @@ export function KitchenDisplaySimulator({ isOpen, onClose, kitchenOrders, onDisp
   const handleFinishCooking = (order: KitchenOrder) => {
     playSound('levelup');
     onDispatchOrder(order.id);
-    alert(`🛎️ ¡PLATILLOS LISTOS PARA DESPACHO!\n\nDe la mesa "${order.tableName}" (Atendido por ${order.waiterName || 'Mesero'}). El ticket pasará a comensal y sumas +10 XP por cocina!`);
+    alert(
+      `🛎️ ¡PLATILLOS LISTOS PARA DESPACHO!\n\nDe la mesa "${order.tableName}" (Atendido por ${order.waiterName || 'Mesero'}). El ticket pasará a comensal y sumas +10 XP por cocina!`,
+    );
     onGrantXp(10);
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-[#121215] border-4 border-slate-700 rounded-3xl w-full max-w-6xl h-[85vh] shadow-2xl flex flex-col justify-between overflow-hidden animate-zoomIn text-white">
-        
         {/* Dark Metallic Header */}
         <div className="bg-[#1a1a20] border-b-2 border-slate-800 p-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
@@ -551,9 +611,13 @@ export function KitchenDisplaySimulator({ isOpen, onClose, kitchenOrders, onDisp
             <div>
               <h2 className="text-lg font-black tracking-wider uppercase text-[#ff9655] flex items-center gap-1.5 leading-none">
                 <span>DuoPOS KDS Emulator</span>
-                <span className="bg-orange-950 border border-orange-500 rounded text-orange-400 font-mono text-[9px] px-1 animate-pulse">SISTEMA COMANDAS</span>
+                <span className="bg-orange-950 border border-orange-500 rounded text-orange-400 font-mono text-[9px] px-1 animate-pulse">
+                  SISTEMA COMANDAS
+                </span>
               </h2>
-              <p className="text-[10px] text-gray-550 font-black uppercase mt-1 tracking-widest font-mono">Monitor de Ticketera de Cocina y Barra en Tiempo Real</p>
+              <p className="text-[10px] text-gray-550 font-black uppercase mt-1 tracking-widest font-mono">
+                Monitor de Ticketera de Cocina y Barra en Tiempo Real
+              </p>
             </div>
           </div>
 
@@ -572,12 +636,11 @@ export function KitchenDisplaySimulator({ isOpen, onClose, kitchenOrders, onDisp
 
         {/* Content Rail Grid */}
         <div className="flex-1 bg-[#0b0b0e] p-5 overflow-x-auto overflow-y-hidden flex gap-5 items-stretch scrollbar-thin">
-          
           {kitchenOrders.map((ord, idx) => {
             const sendDateObj = new Date(ord.sentAt);
-            const isCookingLong = (now.getTime() - sendDateObj.getTime()) > 180000; // > 3 min
+            const isCookingLong = now.getTime() - sendDateObj.getTime() > 180000; // > 3 min
             return (
-              <div 
+              <div
                 key={ord.id}
                 className="w-80 flex-shrink-0 bg-slate-900 border-2 border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-lg relative overflow-hidden h-full"
               >
@@ -592,11 +655,15 @@ export function KitchenDisplaySimulator({ isOpen, onClose, kitchenOrders, onDisp
                         <span className="text-[10px] font-black uppercase bg-[#1d9ff8]/20 text-[#1cb0f6] px-1.5 py-0.5 rounded">
                           {ord.tableName}
                         </span>
-                        <p className="text-[9px] text-gray-500 uppercase font-black mt-1">Waitstaff: {ord.waiterName || 'General Staff'}</p>
+                        <p className="text-[9px] text-gray-500 uppercase font-black mt-1">
+                          Waitstaff: {ord.waiterName || 'General Staff'}
+                        </p>
                       </div>
                       <div className="text-right font-mono">
                         <span className="text-[9px] bg-slate-800 p-1 rounded font-black text-white/50">{ord.id}</span>
-                        <span className={`block text-xs font-mono font-black mt-1 flex items-center gap-0.5 justify-end ${isCookingLong ? 'text-red-400 animate-pulse' : 'text-emerald-400'}`}>
+                        <span
+                          className={`block text-xs font-mono font-black mt-1 flex items-center gap-0.5 justify-end ${isCookingLong ? 'text-red-400 animate-pulse' : 'text-emerald-400'}`}
+                        >
                           <Clock size={10} /> {getElapsedTime(ord.sentAt)}
                         </span>
                       </div>
@@ -626,7 +693,10 @@ export function KitchenDisplaySimulator({ isOpen, onClose, kitchenOrders, onDisp
                           {it.addons && it.addons.length > 0 && (
                             <div className="text-[9.5px] font-bold text-emerald-400 space-x-1 mt-0.5 flex flex-wrap gap-1 leading-none">
                               {it.addons.map((add, addIdx) => (
-                                <span key={addIdx} className="bg-emerald-950/60 border border-emerald-900/50 px-1 py-0.5 rounded inline-block">
+                                <span
+                                  key={addIdx}
+                                  className="bg-emerald-950/60 border border-emerald-900/50 px-1 py-0.5 rounded inline-block"
+                                >
                                   +{add.name}
                                 </span>
                               ))}
@@ -648,7 +718,6 @@ export function KitchenDisplaySimulator({ isOpen, onClose, kitchenOrders, onDisp
                     </button>
                   </div>
                 </div>
-
               </div>
             );
           })}
@@ -659,12 +728,12 @@ export function KitchenDisplaySimulator({ isOpen, onClose, kitchenOrders, onDisp
               <div>
                 <h4 className="font-black text-gray-400 uppercase text-sm font-mono">Bandeja de Comandas Vacía</h4>
                 <p className="text-[10px] text-gray-600 leading-normal font-sans max-w-xs mt-1">
-                  Activa el "Modo Hospitalidad", selecciona una Mesa y haz clic en "Enviar a Cocina" para transmitir tickets de preparación de platillos al KDS.
+                  Activa el "Modo Hospitalidad", selecciona una Mesa y haz clic en "Enviar a Cocina" para transmitir
+                  tickets de preparación de platillos al KDS.
                 </p>
               </div>
             </div>
           )}
-
         </div>
 
         {/* CRT style scanline visual effects and warning */}
@@ -672,7 +741,6 @@ export function KitchenDisplaySimulator({ isOpen, onClose, kitchenOrders, onDisp
           <span>KDS PORTAL V2.2 // NODE TERMINAL IP: localhost:3000</span>
           <span>Suma racha de cocina activa para duplicar tu botín de XP</span>
         </div>
-
       </div>
     </div>
   );

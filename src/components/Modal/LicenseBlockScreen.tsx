@@ -5,13 +5,13 @@ import { playSound } from '../../services/sounds';
 import { toast } from './FlashNotifications';
 
 export default function LicenseBlockScreen() {
-  const isClockTampered = useUserStore(state => state.isClockTampered);
-  const isLicenseExpired = useUserStore(state => state.isLicenseExpired);
-  const licenseDetails = useUserStore(state => state.licenseDetails);
-  
-  const setLicenseDetails = useUserStore(state => state.setLicenseDetails);
-  const setIsLicenseExpired = useUserStore(state => state.setIsLicenseExpired);
-  const setIsClockTampered = useUserStore(state => state.setIsClockTampered);
+  const isClockTampered = useUserStore((state) => state.isClockTampered);
+  const isLicenseExpired = useUserStore((state) => state.isLicenseExpired);
+  const licenseDetails = useUserStore((state) => state.licenseDetails);
+
+  const setLicenseDetails = useUserStore((state) => state.setLicenseDetails);
+  const setIsLicenseExpired = useUserStore((state) => state.setIsLicenseExpired);
+  const setIsClockTampered = useUserStore((state) => state.setIsClockTampered);
 
   const [blockKey, setBlockKey] = useState<string>('');
   const [blockCompany, setBlockCompany] = useState<string>('');
@@ -40,17 +40,17 @@ export default function LicenseBlockScreen() {
           clientLimit: plan.clientLimit,
           salesLimit: plan.salesLimit,
           activatedAt: new Date().toISOString(),
-          companyName: blockCompany.trim() || ''
+          companyName: blockCompany.trim() || '',
         };
         setLicenseDetails(updated);
         localStorage.setItem('duo_pos_licensing_details', JSON.stringify(updated));
-        
+
         setIsLicenseExpired(false);
         setIsClockTampered(false);
         setBlockKey('');
         setBlockCompany('');
         playSound('levelup');
-        toast.success("¡Licencia activada con éxito! DuoPOS desbloqueado.");
+        toast.success('¡Licencia activada con éxito! DuoPOS desbloqueado.');
       } else {
         setBlockError(res.error || 'La clave ingresada es inválida o expirada.');
         playSound('error');
@@ -70,7 +70,6 @@ export default function LicenseBlockScreen() {
       <div className="absolute bottom-10 right-10 text-6xl opacity-10 animate-bounce pointer-events-none">🔒</div>
 
       <div className="max-w-md w-full flex flex-col items-center space-y-6 relative z-10">
-        
         {/* Logo Header */}
         <div className="flex items-center gap-3 transform hover:scale-102 transition-transform duration-200 cursor-pointer">
           <div className="bg-[#58cc02] p-4 rounded-3xl border-b-6 border-[#46a302] shadow-md flex items-center justify-center">
@@ -86,7 +85,6 @@ export default function LicenseBlockScreen() {
 
         {/* Warning Card */}
         <div className="bg-[#121a2f]/80 border-2 border-slate-800 rounded-3xl p-6 md:p-8 w-full shadow-2xl backdrop-blur-md">
-          
           {isClockTampered ? (
             // CLOCK TAMPERING CARD
             <div className="space-y-6 text-center">
@@ -97,9 +95,10 @@ export default function LicenseBlockScreen() {
                   ALERTA DE SEGURIDAD
                 </span>
               </div>
-              
+
               <p className="text-slate-300 text-sm leading-relaxed font-semibold">
-                DuoPOS ha detectado que la fecha de tu equipo es anterior al último registro del sistema. Por seguridad, el sistema se ha bloqueado preventivamente para evitar fraudes en la vigencia de tu licencia.
+                DuoPOS ha detectado que la fecha de tu equipo es anterior al último registro del sistema. Por seguridad,
+                el sistema se ha bloqueado preventivamente para evitar fraudes en la vigencia de tu licencia.
               </p>
 
               <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 text-xs font-bold text-slate-400 text-left space-y-2 leading-relaxed">
@@ -108,7 +107,7 @@ export default function LicenseBlockScreen() {
                 <p>2. Asegúrate de activar la sincronización automática de hora por Internet.</p>
                 <p>3. Recarga o reinicia la aplicación DuoPOS.</p>
               </div>
-              
+
               <button
                 onClick={() => window.location.reload()}
                 className="w-full bg-slate-800 hover:bg-slate-700 text-white font-black text-xs py-3 rounded-2xl border-b-4 border-slate-950 transition-all uppercase tracking-wider cursor-pointer"
@@ -120,15 +119,20 @@ export default function LicenseBlockScreen() {
             // EXPIRED LICENSE CARD
             <div className="space-y-5">
               <div className="text-center space-y-3">
-                <div className="text-6xl filter drop-shadow-md select-none transform hover:rotate-12 duration-150">🦉🔒</div>
+                <div className="text-6xl filter drop-shadow-md select-none transform hover:rotate-12 duration-150">
+                  🦉🔒
+                </div>
                 <div className="space-y-1">
-                  <h2 className="text-2xl font-black text-amber-500 uppercase tracking-tight leading-none">¡Licencia Vencida!</h2>
+                  <h2 className="text-2xl font-black text-amber-500 uppercase tracking-tight leading-none">
+                    ¡Licencia Vencida!
+                  </h2>
                   <span className="bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[9px] font-black uppercase px-2.5 py-0.5 rounded-lg inline-block tracking-wider">
                     Racha Comercial Pausada
                   </span>
                 </div>
                 <p className="text-xs text-slate-350 font-bold leading-relaxed max-w-xs mx-auto">
-                  Tu licencia expiró el día <strong className="text-white">{licenseDetails.expiresAt}</strong>. Para continuar usándolo y salvar tus registros de venta, activa una nueva clave.
+                  Tu licencia expiró el día <strong className="text-white">{licenseDetails.expiresAt}</strong>. Para
+                  continuar usándolo y salvar tus registros de venta, activa una nueva clave.
                 </p>
               </div>
 
@@ -176,7 +180,9 @@ export default function LicenseBlockScreen() {
               </form>
 
               <div className="bg-slate-900/40 border border-slate-800 p-3 rounded-2xl text-[10px] text-slate-400 font-bold leading-normal space-y-1">
-                <p className="text-slate-300 font-black uppercase text-[9px] tracking-wider leading-none mb-1">Información de Soporte</p>
+                <p className="text-slate-300 font-black uppercase text-[9px] tracking-wider leading-none mb-1">
+                  Información de Soporte
+                </p>
                 <div>Seed de hardware para activación offline:</div>
                 <div className="font-mono text-white text-[11px] select-all bg-slate-950/80 px-2 py-1 rounded border border-slate-800 text-center tracking-wider mt-1">
                   {licenseDetails.offlineActivationSeed}
@@ -185,9 +191,10 @@ export default function LicenseBlockScreen() {
             </div>
           )}
         </div>
-        
+
         <p className="text-center text-[10px] text-slate-500 font-semibold leading-normal">
-          DuoPOS y las licencias están protegidos por firmas criptográficas. Pide soporte a tu desarrollador principal si no tienes tu código.
+          DuoPOS y las licencias están protegidos por firmas criptográficas. Pide soporte a tu desarrollador principal
+          si no tienes tu código.
         </p>
       </div>
     </div>

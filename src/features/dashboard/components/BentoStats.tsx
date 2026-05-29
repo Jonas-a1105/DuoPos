@@ -10,24 +10,23 @@ interface BentoStatsProps {
 export default function BentoStats({ transactions, products }: BentoStatsProps) {
   // Calculations
   const totalSalesAllTime = transactions.reduce((acc, curr) => acc + curr.total, 0);
-  
+
   let totalCostAllTime = 0;
-  transactions.forEach(t => {
-    t.items.forEach(item => {
-      const prodCost = products.find(p => p.id === item.productId)?.cost || (item.price * 0.4);
+  transactions.forEach((t) => {
+    t.items.forEach((item) => {
+      const prodCost = products.find((p) => p.id === item.productId)?.cost || item.price * 0.4;
       totalCostAllTime += prodCost * item.quantity;
     });
   });
   const totalProfitAllTime = Math.max(0, totalSalesAllTime - totalCostAllTime);
 
-  const averageCartValue = transactions.length > 0 ? (totalSalesAllTime / transactions.length) : 0;
-  const lowStockCount = products.filter(p => p.stock <= 5).length;
+  const averageCartValue = transactions.length > 0 ? totalSalesAllTime / transactions.length : 0;
+  const lowStockCount = products.filter((p) => p.stock <= 5).length;
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fadeIn text-left">
       <h3 className="text-2xl font-black text-gray-800 tracking-tight">Estadísticas de la Tienda</h3>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        
         {/* Sales Box */}
         <div className="bg-white border-2 border-[#e5e5e5] border-b-[6px] rounded-3xl p-5 hover:translate-y-[-2px] transition-transform flex flex-col justify-between h-36">
           <div className="flex justify-between items-center">
@@ -40,9 +39,7 @@ export default function BentoStats({ transactions, products }: BentoStatsProps) 
             <span className="text-2xl md:text-3xl font-black text-gray-800 tracking-tight block">
               ${totalSalesAllTime.toFixed(2)}
             </span>
-            <p className="text-[10px] text-gray-400 font-extrabold uppercase">
-              Todas las ventas registradas
-            </p>
+            <p className="text-[10px] text-gray-400 font-extrabold uppercase">Todas las ventas registradas</p>
           </div>
         </div>
 
@@ -76,9 +73,7 @@ export default function BentoStats({ transactions, products }: BentoStatsProps) 
             <span className="text-2xl md:text-3xl font-black text-gray-800 tracking-tight block">
               ${averageCartValue.toFixed(2)}
             </span>
-            <p className="text-[10px] text-gray-400 font-extrabold uppercase">
-              Por cada cliente cobrado
-            </p>
+            <p className="text-[10px] text-gray-400 font-extrabold uppercase">Por cada cliente cobrado</p>
           </div>
         </div>
 
@@ -95,14 +90,12 @@ export default function BentoStats({ transactions, products }: BentoStatsProps) 
               {products.length} <span className="text-sm text-gray-400 font-extrabold">items</span>
             </span>
             <p className="text-[10px] text-gray-400 font-extrabold uppercase">
-              {lowStockCount > 0 
-                ? `🚨 ¡Hay ${lowStockCount} artículos con poco stock!` 
-                : '✅ Niveles de almacén saludables'
-              }
+              {lowStockCount > 0
+                ? `🚨 ¡Hay ${lowStockCount} artículos con poco stock!`
+                : '✅ Niveles de almacén saludables'}
             </p>
           </div>
         </div>
-
       </div>
     </div>
   );

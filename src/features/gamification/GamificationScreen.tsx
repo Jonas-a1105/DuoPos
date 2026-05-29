@@ -5,15 +5,7 @@ import { toast } from '../../components/Modal/FlashNotifications';
 import AeroMascot from '../../components/Mascot/AeroMascot';
 import type { AeroMood } from '../../components/Mascot/AeroMascot';
 import { LicenseDetails } from '../../services/licensing';
-import { 
-  Trophy, 
-  Coins, 
-  Zap, 
-  CheckCircle2, 
-  Lock, 
-  ShieldAlert, 
-  Gift
-} from 'lucide-react';
+import { Trophy, Coins, Zap, CheckCircle2, Lock, ShieldAlert, Gift } from 'lucide-react';
 
 // Subcomponents modularized
 import QuestsSection from './components/QuestsSection';
@@ -45,7 +37,6 @@ export interface TrophyMilestone {
   icon: string;
 }
 
-
 interface GamificationScreenProps {
   user: User;
   onUpdateUser: (updatedUser: User) => void;
@@ -65,9 +56,11 @@ export default function GamificationScreen({
   customers,
   licenseDetails,
   activeEvent,
-  onTriggerExpressEvent
+  onTriggerExpressEvent,
 }: GamificationScreenProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'quests' | 'leagues' | 'map' | 'season' | 'trophies' | 'store'>('quests');
+  const [activeSubTab, setActiveSubTab] = useState<'quests' | 'leagues' | 'map' | 'season' | 'trophies' | 'store'>(
+    'quests',
+  );
 
   const unlockedBadgesList = user.unlockedBadges || [];
   const completedQuestsList = user.completedMissionsToday || [];
@@ -76,9 +69,9 @@ export default function GamificationScreen({
 
   // Real statistical calculations for today's achievements
   const todayTransactions = useMemo(() => {
-    return transactions.filter(t => t.date.startsWith(todayStr));
+    return transactions.filter((t) => t.date.startsWith(todayStr));
   }, [transactions, todayStr]);
-  
+
   // Resolve local play stats for temporary actions (scans, invoices, perfect balances)
   const [dailyStats, setDailyStats] = useState(() => {
     try {
@@ -94,57 +87,60 @@ export default function GamificationScreen({
   }, [dailyStats, todayStr]);
 
   // Define actual Daily Quests
-  const quests: Quest[] = useMemo(() => [
-    {
-      id: 'quest-sale',
-      title: 'El Madrugador POS 🌅',
-      description: 'Realiza al menos 1 transacción de venta hoy.',
-      target: 1,
-      current: todayTransactions.length,
-      xpReward: 20,
-      gemReward: 10,
-      icon: '🛒',
-      type: 'sale'
-    },
-    {
-      id: 'quest-barcode',
-      title: 'Escaneo Veloz 🔍',
-      description: 'Escanea por lo menos 2 códigos de barra de productos en el visor.',
-      target: 2,
-      current: dailyStats.barcodeScans,
-      xpReward: 30,
-      gemReward: 15,
-      icon: '📷',
-      type: 'barcode'
-    },
-    {
-      id: 'quest-customer',
-      title: 'Camaradería Duolingo 👥',
-      description: 'Registra o actualiza al menos 1 cliente en Duo loyalty hoy.',
-      target: 1,
-      current: dailyStats.customersRegistered,
-      xpReward: 25,
-      gemReward: 10,
-      icon: '🤝',
-      type: 'customer'
-    },
-    {
-      id: 'quest-invoice',
-      title: 'Maestro Fiscal 🧾',
-      description: 'Genera o imprime 1 ticket de venta con timbrado electrónico.',
-      target: 1,
-      current: dailyStats.invoicesEmitted,
-      xpReward: 40,
-      gemReward: 20,
-      icon: '📡',
-      type: 'invoice'
-    }
-  ], [todayTransactions.length, dailyStats]);
+  const quests: Quest[] = useMemo(
+    () => [
+      {
+        id: 'quest-sale',
+        title: 'El Madrugador POS 🌅',
+        description: 'Realiza al menos 1 transacción de venta hoy.',
+        target: 1,
+        current: todayTransactions.length,
+        xpReward: 20,
+        gemReward: 10,
+        icon: '🛒',
+        type: 'sale',
+      },
+      {
+        id: 'quest-barcode',
+        title: 'Escaneo Veloz 🔍',
+        description: 'Escanea por lo menos 2 códigos de barra de productos en el visor.',
+        target: 2,
+        current: dailyStats.barcodeScans,
+        xpReward: 30,
+        gemReward: 15,
+        icon: '📷',
+        type: 'barcode',
+      },
+      {
+        id: 'quest-customer',
+        title: 'Camaradería Duolingo 👥',
+        description: 'Registra o actualiza al menos 1 cliente en Duo loyalty hoy.',
+        target: 1,
+        current: dailyStats.customersRegistered,
+        xpReward: 25,
+        gemReward: 10,
+        icon: '🤝',
+        type: 'customer',
+      },
+      {
+        id: 'quest-invoice',
+        title: 'Maestro Fiscal 🧾',
+        description: 'Genera o imprime 1 ticket de venta con timbrado electrónico.',
+        target: 1,
+        current: dailyStats.invoicesEmitted,
+        xpReward: 40,
+        gemReward: 20,
+        icon: '📡',
+        type: 'invoice',
+      },
+    ],
+    [todayTransactions.length, dailyStats],
+  );
 
   // Lifetime Trophies linked to DB stats
   const trophiesCount = useMemo(() => {
     const totalSales = transactions.length;
-    const printedTickets = transactions.filter(t => t.xpGained >= 15).length; // XP 15 is from printing tickets
+    const printedTickets = transactions.filter((t) => t.xpGained >= 15).length; // XP 15 is from printing tickets
     const loyalCustomers = customers.length;
     const currentMaxLevel = user.level;
     const storedPerfects = localStorage.getItem('duo_pos_perfect_shifts') || '1';
@@ -160,7 +156,7 @@ export default function GamificationScreen({
         xpReward: 100,
         gemReward: 50,
         badgeId: 'expert_cashier',
-        icon: '💼'
+        icon: '💼',
       },
       {
         id: 'trophy-level',
@@ -171,7 +167,7 @@ export default function GamificationScreen({
         xpReward: 150,
         gemReward: 75,
         badgeId: 'golden_nest',
-        icon: '👑'
+        icon: '👑',
       },
       {
         id: 'trophy-loyalty',
@@ -182,7 +178,7 @@ export default function GamificationScreen({
         xpReward: 120,
         gemReward: 60,
         badgeId: 'client_magnet',
-        icon: '👥'
+        icon: '👥',
       },
       {
         id: 'trophy-thermal',
@@ -193,7 +189,7 @@ export default function GamificationScreen({
         xpReward: 100,
         gemReward: 50,
         badgeId: 'iot_hero',
-        icon: '🖨️'
+        icon: '🖨️',
       },
       {
         id: 'trophy-shift',
@@ -204,19 +200,19 @@ export default function GamificationScreen({
         xpReward: 200,
         gemReward: 100,
         badgeId: 'perfect_audit',
-        icon: '📊'
-      }
+        icon: '📊',
+      },
     ] as TrophyMilestone[];
   }, [transactions, customers, user.level]);
 
   // Handle claiming quest rewards
   const handleClaimQuest = (questId: string) => {
-    const quest = quests.find(q => q.id === questId);
+    const quest = quests.find((q) => q.id === questId);
     if (!quest) return;
 
     playSound('success');
     const updatedMissions = [...completedQuestsList, quest.id];
-    
+
     let updatedXp = user.xp + quest.xpReward;
     let currentLevel = user.level;
     let title = user.levelTitle;
@@ -238,7 +234,7 @@ export default function GamificationScreen({
         'Experto en Finanzas 🥇',
         'Duo Maestro Glorioso 👑',
         'Dios del Escáner de Barras ⚡',
-        'Socio Corporativo de Duo 💎'
+        'Socio Corporativo de Duo 💎',
       ];
       title = titles[Math.min(currentLevel - 1, titles.length - 1)];
       playSound('levelup');
@@ -257,18 +253,20 @@ export default function GamificationScreen({
       gemsEarnedTotal: nextGemsTotal,
       completedMissionsToday: updatedMissions,
       completedMissionsTimestamp: todayStr,
-      weeklyXp: (user.weeklyXp ?? 0) + quest.xpReward
+      weeklyXp: (user.weeklyXp ?? 0) + quest.xpReward,
     };
 
     onUpdateUser(nextUser);
-    toast.success(`¡Misión reclamada! Ganaste +${quest.xpReward} XP y +${quest.gemReward} Gemas 💎`, { title: 'Recompensa Diaria' });
+    toast.success(`¡Misión reclamada! Ganaste +${quest.xpReward} XP y +${quest.gemReward} Gemas 💎`, {
+      title: 'Recompensa Diaria',
+    });
   };
 
   // Handle claiming lifetime trophies
   const handleClaimTrophy = (trophy: TrophyMilestone) => {
     playSound('levelup');
     const updatedBadges = [...unlockedBadgesList, trophy.id];
-    
+
     let updatedXp = user.xp + trophy.xpReward;
     let currentLevel = user.level;
     let title = user.levelTitle;
@@ -290,7 +288,7 @@ export default function GamificationScreen({
         'Experto en Finanzas 🥇',
         'Duo Maestro Glorioso 👑',
         'Dios del Escáner de Barras ⚡',
-        'Socio Corporativo de Duo 💎'
+        'Socio Corporativo de Duo 💎',
       ];
       title = titles[Math.min(currentLevel - 1, titles.length - 1)];
       toast.achievement(`¡Subiste al nivel ${currentLevel}! Título: ${title}`, { title: '¡NIVEL ALCANZADO! 🎉' });
@@ -307,11 +305,14 @@ export default function GamificationScreen({
       gems: nextGems,
       gemsEarnedTotal: nextGemsTotal,
       unlockedBadges: updatedBadges,
-      weeklyXp: (user.weeklyXp ?? 0) + trophy.xpReward
+      weeklyXp: (user.weeklyXp ?? 0) + trophy.xpReward,
     };
 
     onUpdateUser(nextUser);
-    toast.achievement(`¡Trofeo Conquistado! Unlocked [${trophy.title}] • +${trophy.xpReward} XP y +${trophy.gemReward} Gemas`, { title: 'Trofeo Desbloqueado 🏆' });
+    toast.achievement(
+      `¡Trofeo Conquistado! Unlocked [${trophy.title}] • +${trophy.xpReward} XP y +${trophy.gemReward} Gemas`,
+      { title: 'Trofeo Desbloqueado 🏆' },
+    );
   };
 
   // Local helper for daily quest triggers in demo control center
@@ -319,42 +320,70 @@ export default function GamificationScreen({
     playSound('click');
     if (type === 'scan') {
       setDailyStats((prev: any) => ({ ...prev, barcodeScans: Math.min(prev.barcodeScans + 1, 3) }));
-      toast.info('Se simuló un escaneo de código de barra inteligente. +1 escaneo.', { title: 'Depurador de Misiones 👾' });
+      toast.info('Se simuló un escaneo de código de barra inteligente. +1 escaneo.', {
+        title: 'Depurador de Misiones 👾',
+      });
     } else if (type === 'customer') {
       setDailyStats((prev: any) => ({ ...prev, customersRegistered: Math.min(prev.customersRegistered + 1, 1) }));
       toast.info('Se simuló el registro de un cliente Premium. +1 cliente hoy.', { title: 'Depurador de Misiones 👾' });
     } else {
       setDailyStats((prev: any) => ({ ...prev, invoicesEmitted: Math.min(prev.invoicesEmitted + 1, 1) }));
-      toast.info('Se simuló el timbrado con éxito de un comprobante legal fiscal. +1 firma.', { title: 'Depurador de Misiones 👾' });
+      toast.info('Se simuló el timbrado con éxito de un comprobante legal fiscal. +1 firma.', {
+        title: 'Depurador de Misiones 👾',
+      });
     }
   };
 
   // Render generic rarity tags
   const getRarityBadge = (rarity: string) => {
     switch (rarity) {
-      case 'comun': return <span className="text-[8px] bg-gray-100 text-gray-700 px-1.5 py-0.5 border border-gray-200 rounded font-black uppercase">Común</span>;
-      case 'raro': return <span className="text-[8px] bg-purple-100 text-purple-700 px-1.5 py-0.5 border border-purple-200 rounded font-black uppercase">Raro</span>;
-      case 'epico': return <span className="text-[8px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 border border-indigo-200 rounded font-black uppercase">Épico</span>;
-      case 'legendario': return <span className="text-[8px] bg-yellow-100 text-amber-800 px-1.5 py-0.5 border border-amber-300 rounded font-black uppercase animate-pulse">Legendario</span>;
-      default: return null;
+      case 'comun':
+        return (
+          <span className="text-[8px] bg-gray-100 text-gray-700 px-1.5 py-0.5 border border-gray-200 rounded font-black uppercase">
+            Común
+          </span>
+        );
+      case 'raro':
+        return (
+          <span className="text-[8px] bg-purple-100 text-purple-700 px-1.5 py-0.5 border border-purple-200 rounded font-black uppercase">
+            Raro
+          </span>
+        );
+      case 'epico':
+        return (
+          <span className="text-[8px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 border border-indigo-200 rounded font-black uppercase">
+            Épico
+          </span>
+        );
+      case 'legendario':
+        return (
+          <span className="text-[8px] bg-yellow-100 text-amber-800 px-1.5 py-0.5 border border-amber-300 rounded font-black uppercase animate-pulse">
+            Legendario
+          </span>
+        );
+      default:
+        return null;
     }
   };
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fadeIn font-sans pb-12 text-[#2d2d2d] text-left">
-      
       {/* SECTION 1: LEVEL UP PROGRESS HEADER CARD */}
       <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 border-b-[8px] rounded-3xl p-5 md:p-6 flex flex-col md:flex-row items-center gap-6 justify-between shadow-xs">
-        
         {/* User visual & current character details */}
         <div className="flex items-center gap-4.5 w-full md:w-auto">
           <div className="relative">
             <div className="bg-white border-2 border-green-200 p-1.5 rounded-3xl flex items-center justify-center shadow-md">
-              <AeroMascot size={60} activeAccessory={user.activeAccessory} level={user.level} mood={(() => {
-                const allDone = quests.every(q => q.current >= q.target);
-                if (allDone) return 'happy' as AeroMood;
-                return 'neutral' as AeroMood;
-              })()} />
+              <AeroMascot
+                size={60}
+                activeAccessory={user.activeAccessory}
+                level={user.level}
+                mood={(() => {
+                  const allDone = quests.every((q) => q.current >= q.target);
+                  if (allDone) return 'happy' as AeroMood;
+                  return 'neutral' as AeroMood;
+                })()}
+              />
             </div>
             {/* Active equipped tier badge */}
             <span className="absolute -bottom-1 -right-1 bg-yellow-400 text-amber-950 font-black text-[9px] px-1.5 py-0.5 rounded-full border border-white leading-none shadow z-10 uppercase">
@@ -400,14 +429,16 @@ export default function GamificationScreen({
             </div>
           </div>
         </div>
-
       </div>
 
       {/* SUB-TABS SELECTOR DE DUOPOS (Quests, Leagues, Map, Trophies, Store) */}
       <div className="flex border-b-2 border-gray-150 gap-1 sm:gap-2 overflow-x-auto scrollbar-none">
         <button
           type="button"
-          onClick={() => { playSound('click'); setActiveSubTab('quests'); }}
+          onClick={() => {
+            playSound('click');
+            setActiveSubTab('quests');
+          }}
           className={`px-4 sm:px-6 py-3 font-black text-xs sm:text-sm uppercase tracking-wider border-b-4 -mb-0.5 transition-all outline-none shrink-0 ${
             activeSubTab === 'quests'
               ? 'border-[#58cc02] text-[#58cc02] font-black'
@@ -418,7 +449,10 @@ export default function GamificationScreen({
         </button>
         <button
           type="button"
-          onClick={() => { playSound('click'); setActiveSubTab('leagues'); }}
+          onClick={() => {
+            playSound('click');
+            setActiveSubTab('leagues');
+          }}
           className={`px-4 sm:px-6 py-3 font-black text-xs sm:text-sm uppercase tracking-wider border-b-4 -mb-0.5 transition-all outline-none shrink-0 ${
             activeSubTab === 'leagues'
               ? 'border-[#8c52ff] text-[#8c52ff] font-black'
@@ -429,7 +463,10 @@ export default function GamificationScreen({
         </button>
         <button
           type="button"
-          onClick={() => { playSound('click'); setActiveSubTab('map'); }}
+          onClick={() => {
+            playSound('click');
+            setActiveSubTab('map');
+          }}
           className={`px-4 sm:px-6 py-3 font-black text-xs sm:text-sm uppercase tracking-wider border-b-4 -mb-0.5 transition-all outline-none shrink-0 ${
             activeSubTab === 'map'
               ? 'border-[#00d9ff] text-[#00d9ff] font-black'
@@ -440,7 +477,10 @@ export default function GamificationScreen({
         </button>
         <button
           type="button"
-          onClick={() => { playSound('click'); setActiveSubTab('season'); }}
+          onClick={() => {
+            playSound('click');
+            setActiveSubTab('season');
+          }}
           className={`px-4 sm:px-6 py-3 font-black text-xs sm:text-sm uppercase tracking-wider border-b-4 -mb-0.5 transition-all outline-none shrink-0 ${
             activeSubTab === 'season'
               ? 'border-[#ff4b93] text-[#ff4b93] font-black'
@@ -451,7 +491,10 @@ export default function GamificationScreen({
         </button>
         <button
           type="button"
-          onClick={() => { playSound('click'); setActiveSubTab('trophies'); }}
+          onClick={() => {
+            playSound('click');
+            setActiveSubTab('trophies');
+          }}
           className={`px-4 sm:px-6 py-3 font-black text-xs sm:text-sm uppercase tracking-wider border-b-4 -mb-0.5 transition-all outline-none shrink-0 ${
             activeSubTab === 'trophies'
               ? 'border-[#1cb0f6] text-[#1cb0f6] font-black'
@@ -462,7 +505,10 @@ export default function GamificationScreen({
         </button>
         <button
           type="button"
-          onClick={() => { playSound('click'); setActiveSubTab('store'); }}
+          onClick={() => {
+            playSound('click');
+            setActiveSubTab('store');
+          }}
           className={`px-4 sm:px-6 py-3 font-black text-xs sm:text-sm uppercase tracking-wider border-b-4 -mb-0.5 transition-all outline-none shrink-0 ${
             activeSubTab === 'store'
               ? 'border-[#ff9600] text-[#ff9600] font-black'
@@ -477,9 +523,9 @@ export default function GamificationScreen({
       {activeSubTab === 'quests' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           <div className="lg:col-span-2">
-            <QuestsSection 
-              activeQuest={quests.find(q => !completedQuestsList.includes(q.id)) || null}
-              dailyQuests={quests.filter(q => !completedQuestsList.includes(q.id))}
+            <QuestsSection
+              activeQuest={quests.find((q) => !completedQuestsList.includes(q.id)) || null}
+              dailyQuests={quests.filter((q) => !completedQuestsList.includes(q.id))}
               onClaimQuestReward={handleClaimQuest}
               onTriggerExpressEvent={onTriggerExpressEvent || (() => {})}
             />
@@ -488,26 +534,35 @@ export default function GamificationScreen({
           {/* Right sidebar: completed quests and demo controls */}
           <div className="space-y-4">
             <div className="bg-white border-2 border-gray-250 border-b-6 rounded-3xl p-5 space-y-4">
-              <h4 className="font-extrabold text-gray-800 text-sm uppercase tracking-wider">Misiones Completadas Hoy</h4>
-              
-              <div className="space-y-2">
-                {quests.filter(q => completedQuestsList.includes(q.id)).map((quest) => (
-                  <div key={quest.id} className="flex items-center justify-between p-3 bg-green-50 border border-green-150 rounded-xl">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{quest.icon}</span>
-                      <div className="text-left">
-                        <p className="font-bold text-xs text-green-950 leading-none">{quest.title}</p>
-                        <span className="text-[9px] font-black text-green-700/80 uppercase">Completada ✔️</span>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-black text-green-600 bg-white border border-green-200 px-2 py-0.5 rounded">
-                      +{quest.xpReward} XP
-                    </span>
-                  </div>
-                ))}
+              <h4 className="font-extrabold text-gray-800 text-sm uppercase tracking-wider">
+                Misiones Completadas Hoy
+              </h4>
 
-                {quests.filter(q => completedQuestsList.includes(q.id)).length === 0 && (
-                  <p className="text-xs text-gray-400 font-extrabold py-6 text-center">No has completado misiones hoy aún. ¡A cobrar!</p>
+              <div className="space-y-2">
+                {quests
+                  .filter((q) => completedQuestsList.includes(q.id))
+                  .map((quest) => (
+                    <div
+                      key={quest.id}
+                      className="flex items-center justify-between p-3 bg-green-50 border border-green-150 rounded-xl"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">{quest.icon}</span>
+                        <div className="text-left">
+                          <p className="font-bold text-xs text-green-950 leading-none">{quest.title}</p>
+                          <span className="text-[9px] font-black text-green-700/80 uppercase">Completada ✔️</span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-black text-green-600 bg-white border border-green-200 px-2 py-0.5 rounded">
+                        +{quest.xpReward} XP
+                      </span>
+                    </div>
+                  ))}
+
+                {quests.filter((q) => completedQuestsList.includes(q.id)).length === 0 && (
+                  <p className="text-xs text-gray-400 font-extrabold py-6 text-center">
+                    No has completado misiones hoy aún. ¡A cobrar!
+                  </p>
                 )}
               </div>
             </div>
@@ -547,21 +602,11 @@ export default function GamificationScreen({
       )}
 
       {/* TAB SUB-DISPLAY: LEAGUES */}
-      {activeSubTab === 'leagues' && (
-        <LeagueLeaderboard 
-          user={user}
-          onUpdateUser={onUpdateUser}
-        />
-      )}
+      {activeSubTab === 'leagues' && <LeagueLeaderboard user={user} onUpdateUser={onUpdateUser} />}
 
       {/* TAB SUB-DISPLAY: PROGRESSION MAP (🗺️ CAMINO DEL EMPRENDEDOR) */}
       {activeSubTab === 'map' && (
-        <SagaMap 
-          user={user}
-          onUpdateUser={onUpdateUser}
-          transactions={transactions}
-          customers={customers}
-        />
+        <SagaMap user={user} onUpdateUser={onUpdateUser} transactions={transactions} customers={customers} />
       )}
 
       {/* TAB SUB-DISPLAY: SEASON (🎟️ PASE DE TEMPORADA DE DUO) */}
@@ -572,21 +617,20 @@ export default function GamificationScreen({
             <div className="absolute right-0 top-0 opacity-10 text-[180px] leading-none pointer-events-none select-none font-bold">
               🎟️
             </div>
-            
+
             <div className="relative z-10 space-y-4">
               <div className="flex flex-wrap justify-between items-center gap-3">
                 <div className="space-y-1 text-left">
                   <span className="bg-white/25 backdrop-blur-xs text-white text-[10px] uppercase font-black px-2.5 py-0.5 rounded-lg">
                     Temporada Activa 📅
                   </span>
-                  <h3 className="text-2xl md:text-3xl font-black tracking-tight">
-                    🎟️ Pase de Temporada de Duo
-                  </h3>
+                  <h3 className="text-2xl md:text-3xl font-black tracking-tight">🎟️ Pase de Temporada de Duo</h3>
                   <p className="text-xs text-pink-100 font-extrabold max-w-xl">
-                    ¡Acumula XP en el POS para desbloquear recompensas exclusivas! Cada venta y misión diaria te ayuda a avanzar en el pase de Duo.
+                    ¡Acumula XP en el POS para desbloquear recompensas exclusivas! Cada venta y misión diaria te ayuda a
+                    avanzar en el pase de Duo.
                   </p>
                 </div>
-                
+
                 <button
                   type="button"
                   onClick={() => {
@@ -595,10 +639,12 @@ export default function GamificationScreen({
                       ...user,
                       seasonXp: (user.seasonXp ?? 0) + 150,
                       xp: user.xp + 150, // Keep in sync
-                      weeklyXp: (user.weeklyXp ?? 0) + 150
+                      weeklyXp: (user.weeklyXp ?? 0) + 150,
                     };
                     onUpdateUser(updatedUser);
-                    toast.success('¡Se simularon +150 XP de Temporada! Revisa las recompensas desbloqueadas.', { title: 'Simulación de XP' });
+                    toast.success('¡Se simularon +150 XP de Temporada! Revisa las recompensas desbloqueadas.', {
+                      title: 'Simulación de XP',
+                    });
                   }}
                   className="bg-white text-pink-600 font-black text-xs uppercase px-4 py-2 rounded-2xl border-b-4 border-pink-200 hover:bg-pink-50 active:translate-y-[2px] active:border-b-2 transition-all cursor-pointer shadow-xs"
                 >
@@ -610,14 +656,12 @@ export default function GamificationScreen({
               <div className="bg-black/15 border border-white/20 rounded-2xl p-4 space-y-2">
                 <div className="flex justify-between items-end text-xs font-black">
                   <span>PROGRESO DE TEMPORADA</span>
-                  <span className="text-sm font-black font-mono">
-                    {user.seasonXp ?? 0} / 1400 XP
-                  </span>
+                  <span className="text-sm font-black font-mono">{user.seasonXp ?? 0} / 1400 XP</span>
                 </div>
-                
+
                 {/* Custom bar */}
                 <div className="w-full bg-white/20 h-6 rounded-xl p-1 overflow-hidden relative border border-white/10 shadow-inner flex items-center">
-                  <div 
+                  <div
                     className="h-full rounded-lg bg-white transition-all duration-500"
                     style={{ width: `${Math.min(((user.seasonXp ?? 0) / 1400) * 100, 100)}%` }}
                   />
@@ -636,11 +680,14 @@ export default function GamificationScreen({
                 <span className="text-3xl">⚡</span>
                 <div className="text-left">
                   <h4 className="font-black text-sm uppercase tracking-wider">¡HORA FELIZ ACTIVA!</h4>
-                  <p className="text-xs font-extrabold opacity-90">Todo el XP obtenido de ventas se duplica, ¡ideal para subir el Pase de Temporada!</p>
+                  <p className="text-xs font-extrabold opacity-90">
+                    Todo el XP obtenido de ventas se duplica, ¡ideal para subir el Pase de Temporada!
+                  </p>
                 </div>
               </div>
               <span className="text-lg font-mono font-black bg-black/10 px-3 py-1 rounded-xl">
-                {Math.floor(activeEvent.remainingSeconds / 60)}:{(activeEvent.remainingSeconds % 60).toString().padStart(2, '0')}
+                {Math.floor(activeEvent.remainingSeconds / 60)}:
+                {(activeEvent.remainingSeconds % 60).toString().padStart(2, '0')}
               </span>
             </div>
           )}
@@ -649,10 +696,13 @@ export default function GamificationScreen({
           <div className="bg-white border-2 border-[#e5e5e5] border-b-4 rounded-3xl p-5 space-y-3 text-left">
             <h4 className="text-sm font-black text-gray-700 uppercase tracking-wide flex items-center gap-1.5">
               <span>👾 Panel de Control de Eventos Express</span>
-              <span className="bg-purple-100 text-purple-700 text-[9px] font-black uppercase px-2 py-0.5 rounded border border-purple-200">Pruebas en Vivo</span>
+              <span className="bg-purple-100 text-purple-700 text-[9px] font-black uppercase px-2 py-0.5 rounded border border-purple-200">
+                Pruebas en Vivo
+              </span>
             </h4>
             <p className="text-xs text-gray-500 font-extrabold">
-              Haz clic en cualquiera de los botones de abajo para disparar eventos express del cajero y simular el reto del POS en vivo:
+              Haz clic en cualquiera de los botones de abajo para disparar eventos express del cajero y simular el reto
+              del POS en vivo:
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <button
@@ -685,62 +735,78 @@ export default function GamificationScreen({
               {
                 tier: 1,
                 xpRequired: 100,
-                reward: { type: 'gems', value: 50, name: '50 Gemas 💎', icon: '💎', rarity: 'comun' }
+                reward: { type: 'gems', value: 50, name: '50 Gemas 💎', icon: '💎', rarity: 'comun' },
               },
               {
                 tier: 2,
                 xpRequired: 250,
-                reward: { type: 'xpBoost', value: 3, name: '3 Pociones de Doble XP 🧪', icon: '🧪', rarity: 'raro' }
+                reward: { type: 'xpBoost', value: 3, name: '3 Pociones de Doble XP 🧪', icon: '🧪', rarity: 'raro' },
               },
               {
                 tier: 3,
                 xpRequired: 450,
-                reward: { type: 'accessory', value: 'accessory-hat', name: 'Sombrero de Copa 🎩', icon: '🎩', rarity: 'epico' }
+                reward: {
+                  type: 'accessory',
+                  value: 'accessory-hat',
+                  name: 'Sombrero de Copa 🎩',
+                  icon: '🎩',
+                  rarity: 'epico',
+                },
               },
               {
                 tier: 4,
                 xpRequired: 700,
-                reward: { type: 'gems', value: 100, name: '100 Gemas 💎', icon: '💎', rarity: 'raro' }
+                reward: { type: 'gems', value: 100, name: '100 Gemas 💎', icon: '💎', rarity: 'raro' },
               },
               {
                 tier: 5,
                 xpRequired: 1000,
-                reward: { type: 'skin', value: 'retro-8bit', name: 'Skin Retro 8-Bits 🕹️', icon: '🕹️', rarity: 'legendario' }
+                reward: {
+                  type: 'skin',
+                  value: 'retro-8bit',
+                  name: 'Skin Retro 8-Bits 🕹️',
+                  icon: '🕹️',
+                  rarity: 'legendario',
+                },
               },
               {
                 tier: 6,
                 xpRequired: 1400,
-                reward: { type: 'title', value: 'Socio de Élite de Duo 👑🦉', name: 'Rango: Socio de Élite de Duo 👑🦉', icon: '👑', rarity: 'legendario' }
-              }
+                reward: {
+                  type: 'title',
+                  value: 'Socio de Élite de Duo 👑🦉',
+                  name: 'Rango: Socio de Élite de Duo 👑🦉',
+                  icon: '👑',
+                  rarity: 'legendario',
+                },
+              },
             ].map((tierItem) => {
               const currentXp = user.seasonXp ?? 0;
               const isUnlocked = currentXp >= tierItem.xpRequired;
               const isClaimed = (user.seasonRewardsClaimed || []).includes(tierItem.tier);
-              
+
               const handleClaim = () => {
                 if (!isUnlocked || isClaimed) return;
-                
+
                 let nextUser = { ...user };
                 const nextClaimed = [...(user.seasonRewardsClaimed || []), tierItem.tier];
                 nextUser.seasonRewardsClaimed = nextClaimed;
-                
+
                 playSound('success');
-                
+
                 let rewardMsg = '';
-                
+
                 if (tierItem.reward.type === 'gems') {
                   const gemsVal = tierItem.reward.value as number;
                   nextUser.gems = (user.gems ?? 40) + gemsVal;
                   nextUser.gemsEarnedTotal = (user.gemsEarnedTotal ?? 40) + gemsVal;
                   rewardMsg = `¡Canjeado +${gemsVal} Gemas 💎 exitosamente!`;
-                } 
-                else if (tierItem.reward.type === 'xpBoost') {
+                } else if (tierItem.reward.type === 'xpBoost') {
                   const boosterVal = tierItem.reward.value as number;
                   const currentCharges = parseInt(localStorage.getItem('duo_pos_xp_booster_charges') || '0', 10);
                   localStorage.setItem('duo_pos_xp_booster_charges', (currentCharges + boosterVal).toString());
                   rewardMsg = `¡Has recibido ${boosterVal} Pociones de Doble XP 🧪! Úsalas en tus siguientes ventas.`;
-                } 
-                else if (tierItem.reward.type === 'accessory') {
+                } else if (tierItem.reward.type === 'accessory') {
                   const accId = tierItem.reward.value as string;
                   const currentAccessories = user.unlockedAccessories || [];
                   if (currentAccessories.includes(accId)) {
@@ -752,8 +818,7 @@ export default function GamificationScreen({
                     nextUser.activeAccessory = accId;
                     rewardMsg = `¡Has desbloqueado y equipado el Sombrero de Copa 🎩 para Duo!`;
                   }
-                } 
-                else if (tierItem.reward.type === 'skin') {
+                } else if (tierItem.reward.type === 'skin') {
                   const skinVal = tierItem.reward.value as string;
                   const currentSkins = user.unlockedSkins || ['skin-standard'];
                   const skinId = `skin-${skinVal}`;
@@ -766,25 +831,24 @@ export default function GamificationScreen({
                     nextUser.activeSkin = skinVal;
                     rewardMsg = `¡Has desbloqueado y equipado la Skin Retro 8-Bits 🕹️!`;
                   }
-                } 
-                else if (tierItem.reward.type === 'title') {
+                } else if (tierItem.reward.type === 'title') {
                   const titleVal = tierItem.reward.value as string;
                   nextUser.levelTitle = titleVal;
                   rewardMsg = `¡Nuevo Rango Titular otorgado: "${titleVal}" ✨!`;
                 }
-                
+
                 onUpdateUser(nextUser);
                 toast.success(rewardMsg, { title: 'Recompensa del Pase 🎟️' });
               };
 
               return (
-                <div 
+                <div
                   key={tierItem.tier}
                   className={`bg-white border-2 rounded-3xl p-5 flex flex-col justify-between space-y-4 shadow-sm transition-all relative ${
-                    isClaimed 
-                      ? 'border-gray-200 opacity-75' 
-                      : isUnlocked 
-                        ? 'border-pink-300 hover:scale-[1.02] shadow-md' 
+                    isClaimed
+                      ? 'border-gray-200 opacity-75'
+                      : isUnlocked
+                        ? 'border-pink-300 hover:scale-[1.02] shadow-md'
                         : 'border-gray-150 grayscale'
                   }`}
                 >
@@ -796,27 +860,32 @@ export default function GamificationScreen({
                   </div>
 
                   <div className="flex items-center gap-4 py-2">
-                    <div className={`p-4 h-16 w-16 rounded-2xl flex items-center justify-center text-4xl shadow-inner ${
-                      isClaimed 
-                        ? 'bg-gray-100' 
-                        : isUnlocked 
-                          ? 'bg-pink-50 border border-pink-100 text-pink-600' 
-                          : 'bg-gray-100'
-                    }`}>
+                    <div
+                      className={`p-4 h-16 w-16 rounded-2xl flex items-center justify-center text-4xl shadow-inner ${
+                        isClaimed
+                          ? 'bg-gray-100'
+                          : isUnlocked
+                            ? 'bg-pink-50 border border-pink-100 text-pink-600'
+                            : 'bg-gray-100'
+                      }`}
+                    >
                       <span className="select-none">{tierItem.reward.icon}</span>
                     </div>
                     <div className="text-left space-y-1">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <h4 className="text-sm font-black text-gray-800 leading-tight">
-                          {tierItem.reward.name}
-                        </h4>
+                        <h4 className="text-sm font-black text-gray-800 leading-tight">{tierItem.reward.name}</h4>
                         {getRarityBadge(tierItem.reward.rarity)}
                       </div>
                       <p className="text-[10px] text-gray-400 font-extrabold leading-tight">
-                        {tierItem.reward.type === 'gems' ? 'Moneda premium virtual' : 
-                         tierItem.reward.type === 'xpBoost' ? 'Acelerador de experiencia' : 
-                         tierItem.reward.type === 'accessory' ? 'Personaliza tu mascota' : 
-                         tierItem.reward.type === 'skin' ? 'Tema estético global' : 'Título y Rango honorífico'}
+                        {tierItem.reward.type === 'gems'
+                          ? 'Moneda premium virtual'
+                          : tierItem.reward.type === 'xpBoost'
+                            ? 'Acelerador de experiencia'
+                            : tierItem.reward.type === 'accessory'
+                              ? 'Personaliza tu mascota'
+                              : tierItem.reward.type === 'skin'
+                                ? 'Tema estético global'
+                                : 'Título y Rango honorífico'}
                       </p>
                     </div>
                   </div>
@@ -863,21 +932,23 @@ export default function GamificationScreen({
               const pct = Math.min(Math.round((trophy.current / trophy.target) * 100), 100);
 
               return (
-                <div 
+                <div
                   key={trophy.id}
                   className={`bg-white border-2 rounded-3xl p-5 flex flex-col md:flex-row items-center justify-between gap-5 transition-all relative ${
-                    isClaimed 
-                      ? 'border-gray-250 bg-gray-50/50 opacity-65' 
-                      : isDone 
-                        ? 'border-indigo-300 shadow-[0_0_15px_rgba(28,176,246,0.1)] border-b-6 shadow-sm ring-1 ring-blue-150' 
+                    isClaimed
+                      ? 'border-gray-250 bg-gray-50/50 opacity-65'
+                      : isDone
+                        ? 'border-indigo-300 shadow-[0_0_15px_rgba(28,176,246,0.1)] border-b-6 shadow-sm ring-1 ring-blue-150'
                         : 'border-[#e5e5e5] border-b-6 shadow-sm hover:border-gray-300'
                   }`}
                 >
                   {/* Left: Trophy Emblem or Cup */}
                   <div className="flex flex-col sm:flex-row items-center gap-4.5 flex-1 w-full text-center sm:text-left">
-                    <div className={`p-4 h-16 w-16 rounded-2xl text-4xl flex items-center justify-center border-2 border-gray-100 flex-shrink-0 relative ${
-                      isDone && !isClaimed ? 'bg-[#e6f7ff] border-blue-200 scale-102 animate-bounce' : 'bg-white'
-                    }`}>
+                    <div
+                      className={`p-4 h-16 w-16 rounded-2xl text-4xl flex items-center justify-center border-2 border-gray-100 flex-shrink-0 relative ${
+                        isDone && !isClaimed ? 'bg-[#e6f7ff] border-blue-200 scale-102 animate-bounce' : 'bg-white'
+                      }`}
+                    >
                       <span className="absolute text-[11px] top-[-3px] right-[-3px]">👑</span>
                       {trophy.icon}
                     </div>
@@ -885,27 +956,34 @@ export default function GamificationScreen({
                     <div className="space-y-1 w-full">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 w-full">
                         <h4 className="font-extrabold text-[#3c3c3c] text-base tracking-tight">{trophy.title}</h4>
-                        {isClaimed && <span className="bg-indigo-100 text-indigo-700 text-[8.5px] font-black uppercase px-2 py-0.5 rounded-md w-fit mx-auto sm:mx-0">¡Desbloqueado!</span>}
+                        {isClaimed && (
+                          <span className="bg-indigo-100 text-indigo-700 text-[8.5px] font-black uppercase px-2 py-0.5 rounded-md w-fit mx-auto sm:mx-0">
+                            ¡Desbloqueado!
+                          </span>
+                        )}
                       </div>
 
-                      <p className="text-xs font-semibold text-gray-550 text-gray-500 leading-normal">{trophy.description}</p>
-                      
+                      <p className="text-xs font-semibold text-gray-550 text-gray-500 leading-normal">
+                        {trophy.description}
+                      </p>
+
                       <p className="text-[10px] text-gray-400 font-extrabold uppercase mt-1">
-                        Estadística actual: <strong className="text-gray-700 font-mono text-[11px]">{trophy.current}</strong> de <strong className="text-gray-700 font-mono text-[11px]">{trophy.target}</strong>
+                        Estadística actual:{' '}
+                        <strong className="text-gray-700 font-mono text-[11px]">{trophy.current}</strong> de{' '}
+                        <strong className="text-gray-700 font-mono text-[11px]">{trophy.target}</strong>
                       </p>
                     </div>
                   </div>
 
                   {/* Right: progress values / controls */}
                   <div className="flex flex-col items-center sm:items-end justify-center gap-3 w-full md:w-56 shrink-0 pt-3 md:pt-0 border-t md:border-t-0 md:border-l border-dashed border-gray-150 pl-0 md:pl-5">
-                    
                     <div className="w-full space-y-1">
                       <div className="flex justify-between items-center text-[9px] font-black text-gray-400 leading-none">
                         <span>Hito de Progreso</span>
                         <span>{pct}%</span>
                       </div>
                       <div className="bg-gray-155 h-2 rounded-full overflow-hidden w-full">
-                        <div 
+                        <div
                           className={`h-full rounded-full transition-all duration-500 ${isDone ? 'bg-indigo-500' : 'bg-amber-400'}`}
                           style={{ width: `${pct}%` }}
                         />
@@ -914,8 +992,12 @@ export default function GamificationScreen({
 
                     <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full justify-between sm:justify-end mt-1.5">
                       <div className="flex items-center gap-1">
-                        <span className="bg-blue-50 border border-blue-100 text-blue-750 text-[9px] font-black px-2 py-0.5 rounded-md">+{trophy.xpReward} XP</span>
-                        <span className="bg-amber-50 border border-amber-100 text-amber-700 text-[9px] font-black px-2 py-0.5 rounded-md">+{trophy.gemReward} 💎</span>
+                        <span className="bg-blue-50 border border-blue-100 text-blue-750 text-[9px] font-black px-2 py-0.5 rounded-md">
+                          +{trophy.xpReward} XP
+                        </span>
+                        <span className="bg-amber-50 border border-amber-100 text-amber-700 text-[9px] font-black px-2 py-0.5 rounded-md">
+                          +{trophy.gemReward} 💎
+                        </span>
                       </div>
 
                       {isClaimed ? (
@@ -946,13 +1028,8 @@ export default function GamificationScreen({
 
       {/* TAB SUB-DISPLAY: POINTS SHOP */}
       {activeSubTab === 'store' && (
-        <PointsShop 
-          user={user}
-          onUpdateUser={onUpdateUser}
-          licenseDetails={licenseDetails}
-        />
+        <PointsShop user={user} onUpdateUser={onUpdateUser} licenseDetails={licenseDetails} />
       )}
-
     </div>
   );
 }

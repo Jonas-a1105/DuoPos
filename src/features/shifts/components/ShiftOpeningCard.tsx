@@ -7,10 +7,7 @@ interface ShiftOpeningCardProps {
   onGrantXp: (amount: number) => void;
 }
 
-export default function ShiftOpeningCard({
-  onOpenShift,
-  onGrantXp
-}: ShiftOpeningCardProps) {
+export default function ShiftOpeningCard({ onOpenShift, onGrantXp }: ShiftOpeningCardProps) {
   const [openFund, setOpenFund] = useState('200');
 
   const selectOpeningPreset = (val: string) => {
@@ -32,12 +29,8 @@ export default function ShiftOpeningCard({
   return (
     <div className="max-w-xl mx-auto bg-white border-2 border-gray-200 border-b-8 rounded-3xl p-6 md:p-8 space-y-6 text-center animate-scaleUp text-gray-855 my-4">
       <div className="space-y-2">
-        <span className="text-7xl block select-none drop-shadow-xs leading-none animate-bounce">
-          🔓
-        </span>
-        <h3 className="text-xl font-black text-gray-800 uppercase tracking-tight">
-          Caja Cerrada temporalmente
-        </h3>
+        <span className="text-7xl block select-none drop-shadow-xs leading-none animate-bounce">🔓</span>
+        <h3 className="text-xl font-black text-gray-800 uppercase tracking-tight">Caja Cerrada temporalmente</h3>
         <p className="text-xs text-gray-400 font-extrabold max-w-sm mx-auto uppercase">
           Declara fondos iniciales para habilitar el motor de ventas
         </p>
@@ -49,7 +42,7 @@ export default function ShiftOpeningCard({
           Monto de Fondo en Efectivo Recomendado
         </span>
         <div className="grid grid-cols-4 gap-2">
-          {['100', '200', '500', '1000'].map(val => (
+          {['100', '200', '500', '1000'].map((val) => (
             <button
               key={val}
               type="button"
@@ -70,9 +63,7 @@ export default function ShiftOpeningCard({
             Fondo Inicial de Caja Manual ($)
           </label>
           <div className="relative">
-            <span className="absolute left-3.5 top-2.5 font-extrabold text-[#58cc02] text-sm leading-none">
-              $
-            </span>
+            <span className="absolute left-3.5 top-2.5 font-extrabold text-[#58cc02] text-sm leading-none">$</span>
             <input
               type="number"
               value={openFund}

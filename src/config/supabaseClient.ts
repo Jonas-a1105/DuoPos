@@ -28,12 +28,10 @@ if (isKeysValid) {
     '| Key Longitud:',
     supabaseAnonKey ? supabaseAnonKey.length : 0,
     '| Key Prefijo:',
-    supabaseAnonKey ? supabaseAnonKey.substring(0, 20) + '...' : 'ninguno'
+    supabaseAnonKey ? supabaseAnonKey.substring(0, 20) + '...' : 'ninguno',
   );
 } else {
-  console.warn(
-    '⚠️ Supabase URL o Anon Key no configurados. La app corre en modo local (localStorage únicamente).'
-  );
+  console.warn('⚠️ Supabase URL o Anon Key no configurados. La app corre en modo local (localStorage únicamente).');
   // Mock seguro para que la app no crash si Supabase no está configurado
   supabase = {
     auth: {

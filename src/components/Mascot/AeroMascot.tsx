@@ -23,17 +23,20 @@ const AeroMascot: React.FC<AeroMascotProps> = ({
   level = 1,
   animate = true,
   showSparkles = false,
-  className = ''
+  className = '',
 }) => {
   const [isBlinking, setIsBlinking] = useState(false);
 
   // Parpadeo periódico en estado neutral
   useEffect(() => {
     if (mood !== 'neutral' || !animate) return;
-    const interval = setInterval(() => {
-      setIsBlinking(true);
-      setTimeout(() => setIsBlinking(false), 180);
-    }, 4000 + Math.random() * 2000);
+    const interval = setInterval(
+      () => {
+        setIsBlinking(true);
+        setTimeout(() => setIsBlinking(false), 180);
+      },
+      4000 + Math.random() * 2000,
+    );
     return () => clearInterval(interval);
   }, [mood, animate]);
 
@@ -89,8 +92,28 @@ const AeroMascot: React.FC<AeroMascotProps> = ({
           <path d="M34 58 Q40 62 46 58" fill="none" stroke="#2c1401" strokeWidth="3" strokeLinecap="round" />
           <path d="M74 58 Q80 62 86 58" fill="none" stroke="#2c1401" strokeWidth="3" strokeLinecap="round" />
           {/* Efecto Zzz */}
-          <text className="duo-zzz duo-zzz-1" x="98" y="32" fontSize="12" fontWeight="900" fill="#f59e0b" opacity="0.85">Z</text>
-          <text className="duo-zzz duo-zzz-2" x="106" y="20" fontSize="9" fontWeight="900" fill="#fbbf24" opacity="0.65">z</text>
+          <text
+            className="duo-zzz duo-zzz-1"
+            x="98"
+            y="32"
+            fontSize="12"
+            fontWeight="900"
+            fill="#f59e0b"
+            opacity="0.85"
+          >
+            Z
+          </text>
+          <text
+            className="duo-zzz duo-zzz-2"
+            x="106"
+            y="20"
+            fontSize="9"
+            fontWeight="900"
+            fill="#fbbf24"
+            opacity="0.65"
+          >
+            z
+          </text>
         </g>
       );
     }
@@ -112,7 +135,7 @@ const AeroMascot: React.FC<AeroMascotProps> = ({
           <ellipse cx="41" cy="57" rx="4.5" ry="5" fill="#2c1401" />
           <polygon points="40,51 44,55 38,55" fill="white" />
           <path d="M32 46 H48" stroke="#2c1401" strokeWidth="2.5" strokeLinecap="round" />
-          
+
           <ellipse cx="80" cy="57" rx="9" ry="10" fill="white" stroke="#2c1401" strokeWidth="1.8" />
           <ellipse cx="79" cy="57" rx="4.5" ry="5" fill="#2c1401" />
           <polygon points="80,51 84,55 78,55" fill="white" />
@@ -127,7 +150,7 @@ const AeroMascot: React.FC<AeroMascotProps> = ({
         <ellipse cx="40" cy="57" rx="9" ry="10" fill="white" stroke="#2c1401" strokeWidth="1.5" />
         <ellipse cx="42" cy="57" rx="5.2" ry="5.7" fill="#2c1401" className="aero-eye-blink" />
         <circle cx="44" cy="54" r="2.2" fill="white" />
-        
+
         <ellipse cx="80" cy="57" rx="9" ry="10" fill="white" stroke="#2c1401" strokeWidth="1.5" />
         <ellipse cx="78" cy="57" rx="5.2" ry="5.7" fill="#2c1401" className="aero-eye-blink" />
         <circle cx="76" cy="54" r="2.2" fill="white" />
@@ -145,9 +168,7 @@ const AeroMascot: React.FC<AeroMascotProps> = ({
         </g>
       );
     }
-    return (
-      <path d="M53 66 L60 77 L67 66" fill="#fb923c" stroke="#ea580c" strokeWidth="1.5" strokeLinejoin="round" />
-    );
+    return <path d="M53 66 L60 77 L67 66" fill="#fb923c" stroke="#ea580c" strokeWidth="1.5" strokeLinejoin="round" />;
   };
 
   // ─── Accesorios en Capas ───
@@ -177,7 +198,13 @@ const AeroMascot: React.FC<AeroMascotProps> = ({
       case 'accessory-corona':
         return (
           <g className="aero-accessory-corona">
-            <path d="M30 20 L35 4 L45 14 L55 -2 L65 14 L75 4 L80 20 Z" fill="#fbbf24" stroke="#d97706" strokeWidth="1.5" strokeLinejoin="round" />
+            <path
+              d="M30 20 L35 4 L45 14 L55 -2 L65 14 L75 4 L80 20 Z"
+              fill="#fbbf24"
+              stroke="#d97706"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+            />
             <rect x="30" y="18" width="50" height="4" rx="1" fill="#f59e0b" stroke="#d97706" strokeWidth="1" />
             <circle cx="45" cy="12" r="2.5" fill="#ef4444" />
             <circle cx="55" cy="4" r="3" fill="#3b82f6" />
@@ -187,7 +214,12 @@ const AeroMascot: React.FC<AeroMascotProps> = ({
       case 'accessory-traje':
         return (
           <g className="aero-accessory-traje">
-            <path d="M46 84 L46 112 Q60 116 74 112 L74 84 Q60 80 46 84" fill="white" stroke="#e2e8f0" strokeWidth="1.2" />
+            <path
+              d="M46 84 L46 112 Q60 116 74 112 L74 84 Q60 80 46 84"
+              fill="white"
+              stroke="#e2e8f0"
+              strokeWidth="1.2"
+            />
             <path d="M40 82 L46 84 L48 98 L41 93 Z" fill="#0f172a" stroke="#020617" strokeWidth="0.8" />
             <path d="M80 82 L74 84 L72 98 L79 93 Z" fill="#0f172a" stroke="#020617" strokeWidth="0.8" />
             <path d="M57 84 L60 86 L63 84 L61 104 L60 106 L59 104 Z" fill="#ef4444" />
@@ -241,7 +273,7 @@ const AeroMascot: React.FC<AeroMascotProps> = ({
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        overflow: 'visible'
+        overflow: 'visible',
       }}
     >
       <svg
@@ -343,8 +375,20 @@ const AeroMascot: React.FC<AeroMascotProps> = ({
           )}
           {stage === 'teen' && (
             <g>
-              <path className="aero-wing-left" d="M23 66 Q8 75 14 96 Q22 90 26 80" fill="url(#wingFlameGrad)" stroke="#b91c1c" strokeWidth="0.8" />
-              <path className="aero-wing-right" d="M97 66 Q112 75 106 96 Q98 90 94 80" fill="url(#wingFlameGrad)" stroke="#b91c1c" strokeWidth="0.8" />
+              <path
+                className="aero-wing-left"
+                d="M23 66 Q8 75 14 96 Q22 90 26 80"
+                fill="url(#wingFlameGrad)"
+                stroke="#b91c1c"
+                strokeWidth="0.8"
+              />
+              <path
+                className="aero-wing-right"
+                d="M97 66 Q112 75 106 96 Q98 90 94 80"
+                fill="url(#wingFlameGrad)"
+                stroke="#b91c1c"
+                strokeWidth="0.8"
+              />
             </g>
           )}
           {(stage === 'adult' || stage === 'celestial') && (
@@ -368,31 +412,27 @@ const AeroMascot: React.FC<AeroMascotProps> = ({
           )}
 
           {/* 🍗 Cuerpo Base */}
-          <ellipse
-            cx="60"
-            cy="76"
-            rx="36"
-            ry="44"
-            fill="url(#phoenixBodyGrad)"
-            stroke="#b91c1c"
-            strokeWidth="1.8"
-          />
+          <ellipse cx="60" cy="76" rx="36" ry="44" fill="url(#phoenixBodyGrad)" stroke="#b91c1c" strokeWidth="1.8" />
 
           {/* Vientre / Pecho (Dorado brillante) */}
-          <ellipse
-            cx="60"
-            cy="88"
-            rx="20"
-            ry="25"
-            fill="url(#phoenixChestGrad)"
-            stroke="#ea580c"
-            strokeWidth="1"
-          />
+          <ellipse cx="60" cy="88" rx="20" ry="25" fill="url(#phoenixChestGrad)" stroke="#ea580c" strokeWidth="1" />
 
           {/* Patas de fénix doradas */}
           <g className="aero-feet">
-            <path d="M43 118 L40 128 L34 130 M40 128 L40 132 M40 128 L46 130" fill="none" stroke="#f59e0b" strokeWidth="3.2" strokeLinecap="round" />
-            <path d="M77 118 L80 128 L86 130 M80 128 L80 132 M80 128 L74 130" fill="none" stroke="#f59e0b" strokeWidth="3.2" strokeLinecap="round" />
+            <path
+              d="M43 118 L40 128 L34 130 M40 128 L40 132 M40 128 L46 130"
+              fill="none"
+              stroke="#f59e0b"
+              strokeWidth="3.2"
+              strokeLinecap="round"
+            />
+            <path
+              d="M77 118 L80 128 L86 130 M80 128 L80 132 M80 128 L74 130"
+              fill="none"
+              stroke="#f59e0b"
+              strokeWidth="3.2"
+              strokeLinecap="round"
+            />
           </g>
         </g>
 
