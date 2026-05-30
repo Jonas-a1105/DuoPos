@@ -6,6 +6,19 @@ vi.mock('../services/sounds', () => ({
   playSound: vi.fn(),
 }));
 
+vi.mock('../services/db', () => {
+  const mockGenericStore = {
+    get: vi.fn(() => Promise.resolve(null)),
+    put: vi.fn(() => Promise.resolve()),
+    delete: vi.fn(() => Promise.resolve()),
+  };
+  return {
+    db: {
+      generic_store: mockGenericStore,
+    },
+  };
+});
+
 vi.mock('../components/Modal/FlashNotifications', () => ({
   toast: {
     success: vi.fn(),
