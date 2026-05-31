@@ -104,9 +104,12 @@ export const useUserStore = create<UserState>((set, get) => ({
     set({ users });
     localStorage.setItem('duo_pos_users', JSON.stringify(users));
 
-    // Sync profiles to Supabase (if authenticated user, id is a valid uuid)
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(updatedUser.id);
-    if (isUuid) {
+    // Sync profiles to Supabase (if authenticated user: Clerk ID starting with 'user_' or a valid UUID)
+    const shouldSync =
+      updatedUser.id &&
+      (updatedUser.id.startsWith('user_') ||
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(updatedUser.id));
+    if (shouldSync) {
       try {
         await supabase
           .from('profiles')
