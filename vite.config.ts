@@ -18,11 +18,13 @@ export default defineConfig(() => {
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
+    worker: {
+      format: 'es' as const,
+    },
     build: {
       rollupOptions: {
         output: {
-          format: 'es',
-          workerFormat: 'es',
+          format: 'es' as const,
         },
       },
     },
