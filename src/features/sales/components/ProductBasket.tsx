@@ -121,6 +121,10 @@ export default function ProductBasket({
   const [appliedPromo, setAppliedPromo] = useState('');
   const [promoMessage, setPromoMessage] = useState('');
 
+  const isTaxIncl = billingSettings?.taxIncludedInPrice;
+  const displayedSubtotal = isTaxIncl ? Math.max(0, totalAmount - taxAmount + discountAmount) : subtotal;
+  const displayedSubtotalVES = isTaxIncl ? Math.max(0, totalAmountVES - taxAmountVES + discountAmountVES) : subtotalVES;
+
   // Free Sale / Ad-Hoc Item Creator Modal States
   const [isFreeSaleModalOpen, setIsFreeSaleModalOpen] = useState(false);
   const [freeSaleName, setFreeSaleName] = useState('');
@@ -612,11 +616,11 @@ export default function ProductBasket({
 
             <div className="space-y-1.5 text-xs text-gray-500 font-extrabold">
               <div className="flex justify-between items-center">
-                <span>Subtotal:</span>
+                <span>{isTaxIncl ? 'Subtotal (sin IVA):' : 'Subtotal:'}</span>
                 <div className="text-right">
-                  <span className="text-[#3c3c3c] font-black">${subtotal.toFixed(2)} USD</span>
+                  <span className="text-[#3c3c3c] font-black">${displayedSubtotal.toFixed(2)} USD</span>
                   <span className="block text-[10px] text-gray-400 font-bold">
-                    {subtotalVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.
+                    {displayedSubtotalVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.
                   </span>
                 </div>
               </div>
@@ -639,7 +643,7 @@ export default function ProductBasket({
               )}
 
               <div className="flex justify-between items-center">
-                <span>Recargo por Impuesto:</span>
+                <span>{isTaxIncl ? 'Impuesto (IVA Incluido):' : 'Recargo por Impuesto:'}</span>
                 <div className="text-right">
                   <span className="text-[#3c3c3c] font-black">${taxAmount.toFixed(2)} USD</span>
                   <span className="block text-[10px] text-gray-400 font-bold">
@@ -1215,11 +1219,11 @@ export default function ProductBasket({
               {cart.length > 0 && (
                 <div className="space-y-1.5 text-xs text-gray-500 font-extrabold p-3 bg-gray-50 rounded-2xl border border-gray-100">
                   <div className="flex justify-between items-center text-[11px]">
-                    <span>Subtotal:</span>
+                    <span>{isTaxIncl ? 'Subtotal (sin IVA):' : 'Subtotal:'}</span>
                     <span className="text-gray-700">
-                      ${subtotal.toFixed(2)} USD •{' '}
+                      ${displayedSubtotal.toFixed(2)} USD •{' '}
                       <span className="text-gray-400 font-bold">
-                        {subtotalVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
+                        {displayedSubtotalVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
                         Bs.
                       </span>
                     </span>
@@ -1241,7 +1245,7 @@ export default function ProductBasket({
                     </div>
                   )}
                   <div className="flex justify-between items-center text-[11px]">
-                    <span>Impuesto Ventas:</span>
+                    <span>{isTaxIncl ? 'Impuesto (IVA Incluido):' : 'Impuesto Ventas:'}</span>
                     <span className="text-gray-700">
                       ${taxAmount.toFixed(2)} USD •{' '}
                       <span className="text-gray-400 font-bold">

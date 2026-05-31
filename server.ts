@@ -39,7 +39,7 @@ async function startServer() {
     standardHeaders: true,
     legacyHeaders: false,
   });
-  app.use(limiter);
+  app.use("/api", limiter);
 
   app.use(express.json({ limit: "50mb" }));
 

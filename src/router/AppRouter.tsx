@@ -347,17 +347,32 @@ export default function AppRouter() {
     }
     if (user) {
       const today = new Date().toISOString().split('T')[0];
-      let streak = user.streak;
-      if (user.lastSaleDate !== today) streak = user.streak + 1;
-      handleGrantXp(15);
+      
+      // Otorgar XP y esperar a que el store se actualice con el nuevo nivel/XP
+      const isHappyHourActive = activeEvent?.type === 'happy_hour';
+      await useUserStore.getState().grantXp(15, isHappyHourActive);
+      
       triggerDuoHappy();
       try {
         const dayStatsRaw = localStorage.getItem(`duo_pos_daily_acts_${today}`);
         const currentStats = dayStatsRaw ? JSON.parse(dayStatsRaw) : { barcodeScans: 0, invoicesEmitted: 0, customersRegistered: 0 };
         localStorage.setItem(`duo_pos_daily_acts_${today}`, JSON.stringify(currentStats));
       } catch {}
-      const updatedUser: User = { ...user, streak, lastSaleDate: today, gems: (user.gems ?? 40) + 5, gemsEarnedTotal: (user.gemsEarnedTotal ?? 40) + 5 };
-      saveUser(updatedUser);
+      
+      // Obtener el usuario actualizado con el nuevo nivel/XP para evitar sobreescritura de datos
+      const freshUser = useUserStore.getState().user;
+      if (freshUser) {
+        let streak = freshUser.streak;
+        if (freshUser.lastSaleDate !== today) streak = freshUser.streak + 1;
+        const updatedUser: User = {
+          ...freshUser,
+          streak,
+          lastSaleDate: today,
+          gems: (freshUser.gems ?? 40) + 5,
+          gemsEarnedTotal: (freshUser.gemsEarnedTotal ?? 40) + 5,
+        };
+        await saveUser(updatedUser);
+      }
     }
   };
 
