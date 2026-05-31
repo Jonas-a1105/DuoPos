@@ -39,11 +39,28 @@ function ClerkSessionSync({ onSyncUser }: ClerkSessionSyncProps) {
     const loadClerkUserProfile = async () => {
       if (clerkUser) {
         try {
-          const { data: userProfile, error } = await supabase
+          let { data: userProfile, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', clerkUser.id)
             .maybeSingle();
+
+          // Self-healing: If JWT verification fails (401), the Clerk-Supabase template integration is misconfigured or expired.
+          // Reset the client token to fallback to Supabase Anon Key.
+          if (error && ((error as any).status === 401 || error.message?.includes('JWT') || error.message?.includes('token') || error.message?.includes('401'))) {
+            console.warn('⚠️ Clerk-Supabase JWT Verification failed (401). Falling back to Supabase Anon Key for local-first sync...', error);
+            setSupabaseToken(null);
+            setIsTokenSynced(false);
+
+            const retry = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', clerkUser.id)
+              .maybeSingle();
+
+            userProfile = retry.data;
+            error = retry.error;
+          }
 
           let finalProfile = userProfile;
 
@@ -72,11 +89,25 @@ function ClerkSessionSync({ onSyncUser }: ClerkSessionSyncProps) {
               completed_missions_today: [],
             };
 
-            const { data: newProfile, error: insertErr } = await supabase
+            let { data: newProfile, error: insertErr } = await supabase
               .from('profiles')
               .insert(defaultProfile)
               .select()
               .maybeSingle();
+
+            // Self-healing insert
+            if (insertErr && ((insertErr as any).status === 401 || insertErr.message?.includes('JWT') || insertErr.message?.includes('401'))) {
+              console.warn('⚠️ Clerk-Supabase JWT Verification failed on insert. Retrying insert with Supabase Anon Key...', insertErr);
+              setSupabaseToken(null);
+              const retryInsert = await supabase
+                .from('profiles')
+                .insert(defaultProfile)
+                .select()
+                .maybeSingle();
+
+              newProfile = retryInsert.data;
+              insertErr = retryInsert.error;
+            }
 
             if (insertErr) {
               console.error('Error al autocrear perfil en Supabase:', insertErr);
