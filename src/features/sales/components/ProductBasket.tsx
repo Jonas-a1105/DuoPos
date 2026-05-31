@@ -6,7 +6,8 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Trash2, Plus, Minus, Tag, Users } from 'lucide-react';
 import { CartItem, Customer, Product, LegalBillingSettings, HardwareDeviceSettings } from '../../../types/index';
-import { TableState, KitchenOrder } from '../HospitalityAddon';
+import { TableState, KitchenOrder } from './HospitalityAddon';
+
 import { playSound } from '../../../services/sounds';
 import { toast } from '../../../components/Modal/FlashNotifications';
 

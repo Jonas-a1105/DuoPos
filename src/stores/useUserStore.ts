@@ -4,6 +4,7 @@ import { playSound } from '../services/sounds';
 import { toast } from '../components/Modal/FlashNotifications';
 import { supabase } from '../config/supabaseClient';
 import { syncUserPreferences } from '../services/supabaseSync';
+import { emitXpEarned, emitLevelUp } from '../features/gamification/gamification.events';
 
 interface UserState {
   user: User | null;
@@ -196,6 +197,14 @@ export const useUserStore = create<UserState>((set, get) => ({
 
       playSound('levelup');
 
+      emitLevelUp({
+        userId: user.id,
+        username: user.username || 'Usuario',
+        previousLevel: user.level,
+        newLevel: currentLevel,
+        levelTitle: title,
+      });
+
       toast.achievement(`¡Subiste al nivel ${currentLevel}! Título: ${title}`, {
         title: '¡NIVEL ALCANZADO! 🎉',
         duration: 8000,
@@ -217,5 +226,13 @@ export const useUserStore = create<UserState>((set, get) => ({
     };
 
     await get().updateUser(updatedUser);
+
+    emitXpEarned({
+      userId: user.id,
+      username: user.username || 'Usuario',
+      xpGained: xpGained,
+      totalXp: updatedXp,
+      source: 'sale',
+    });
   },
 }));

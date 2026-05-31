@@ -49,7 +49,7 @@ class SupabaseConnector implements PowerSyncBackendConnector {
 
         if (op.op === UpdateType.PUT) {
           // Operación de Inserción o Actualización (Upsert)
-          const record = { id: op.id, ...op.opData };
+          const record: any = { id: op.id, ...op.opData };
 
           // Des-serializar campos JSON especiales si corresponde (como en daily_stats o app_settings)
           if (table === 'daily_stats' && typeof record.stats_json === 'string') {
@@ -93,7 +93,7 @@ class SupabaseConnector implements PowerSyncBackendConnector {
       }
 
       // Confirmar a PowerSync que la transacción se subió con éxito para removerla de la cola local
-      await database.updateCrudTransaction(transaction.writeCheckpoint);
+      await (database as any).updateCrudTransaction((transaction as any).writeCheckpoint);
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : String(err);
       console.error(`❌ Error en conector PowerSync al subir cambios (última ID: ${lastOpId}):`, errMsg);

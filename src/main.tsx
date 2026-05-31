@@ -12,6 +12,14 @@ import { env } from './config/env';
 // Inicializar PowerSync en segundo plano
 initPowerSync();
 
+// Inicializar escuchadores del Bus de Eventos global
+import { initInventoryListeners } from './features/inventory/listeners/SyncStockOnSale';
+initInventoryListeners();
+
+import { initSalesListeners } from './features/sales/listeners';
+initSalesListeners();
+
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -27,7 +35,8 @@ const PUBLISHABLE_KEY = env.VITE_CLERK_PUBLISHABLE_KEY;
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <PowerSyncContext.Provider db={powerSync}>
+      <PowerSyncContext.Provider value={powerSync}>
+
         <BrowserRouter>
           {PUBLISHABLE_KEY ? (
             <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">

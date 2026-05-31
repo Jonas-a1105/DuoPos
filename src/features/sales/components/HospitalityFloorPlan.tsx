@@ -5,8 +5,9 @@
 
 import React from 'react';
 import { ChefHat } from 'lucide-react';
-import { TableState, KitchenOrder, MOCK_WAITERS } from '../HospitalityAddon';
+import { TableState, KitchenOrder, MOCK_WAITERS } from './HospitalityAddon';
 import { CartItem, Customer } from '../../../types/index';
+
 import { playSound } from '../../../services/sounds';
 
 interface HospitalityFloorPlanProps {
