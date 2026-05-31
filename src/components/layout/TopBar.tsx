@@ -6,7 +6,8 @@ import { isSupabaseConfigured } from '../../config/supabaseClient';
 import { playSound } from '../../services/audio/soundService';
 import { addAuditLog } from '../../services/security/auditLogger';
 import { toast } from '../../shared/ui';
-import { Flame, Volume2, VolumeX, Cloud, Cpu } from 'lucide-react';
+import { Flame, Volume2, VolumeX, Cloud, Cpu, LogOut } from 'lucide-react';
+import { useSession } from '../../hooks/useSession';
 
 interface TopBarProps {
   isMuted: boolean;
@@ -19,6 +20,7 @@ interface TopBarProps {
 
 export default function TopBar({ isMuted, toggleMute, onOpenHardwareHub, onSync, isSyncing, lastSyncTime }: TopBarProps) {
   const user = useUserStore((s) => s.user);
+  const { logoutUser } = useSession();
   const exchangeRates = useSalesStore((s) => s.exchangeRates);
   const activeRateType = useSalesStore((s) => s.activeRateType);
   const setActiveRateType = useSalesStore((s) => s.setActiveRateType);
@@ -127,6 +129,12 @@ export default function TopBar({ isMuted, toggleMute, onOpenHardwareHub, onSync,
             className={`p-1.5 border rounded-xl flex items-center justify-center transition-all cursor-pointer ${isMuted ? 'border-red-200 text-red-500 bg-red-50 hover:bg-red-100' : 'border-green-200 text-green-600 bg-green-50 hover:bg-green-100'}`}
             title={isMuted ? 'Sonidos Silenciados - Clic para Activar' : 'Sonidos Activados - Clic para Silenciar'}>
             {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+          </button>
+          <button type="button" onClick={() => { playSound('click'); logoutUser(); }}
+            className="p-1 px-2 border border-red-200 text-red-500 bg-red-50 hover:bg-red-100 rounded-xl flex items-center justify-center transition-all cursor-pointer gap-1 text-[10px] sm:text-xs font-black uppercase"
+            title="Cerrar Caja / Sesión">
+            <LogOut size={12} className="text-red-400" />
+            <span className="text-[10px] hidden sm:inline">Cerrar Caja</span>
           </button>
         </div>
       </div>

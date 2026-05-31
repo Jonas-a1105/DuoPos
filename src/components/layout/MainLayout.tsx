@@ -90,8 +90,8 @@ export default function MainLayout({ children, isMuted, toggleMute, onOpenHardwa
   return (
     <div className={`min-h-screen font-sans flex flex-col relative antialiased transition-all duration-300 theme-${user?.activeSkin || 'standard'} ${themeClasses.outer}`}>
       <div className="flex-1 flex flex-col md:flex-row max-w-[1440px] w-full mx-auto md:px-4 lg:px-8 mt-4">
-        <Sidebar themeClasses={themeClasses} isMuted={isMuted} toggleMute={toggleMute} />
-        <main className="flex-1 px-4 md:px-0 md:pl-4 overflow-y-auto min-h-screen">
+        <Sidebar themeClasses={themeClasses} isMuted={isMuted} toggleMute={toggleMute} onSync={onSync} isSyncing={isSyncing} />
+        <main className="flex-1 px-4 md:px-0 md:pl-4 overflow-y-auto min-h-screen pb-24 md:pb-0">
           <TopBar
             isMuted={isMuted}
             toggleMute={toggleMute}
