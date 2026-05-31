@@ -447,9 +447,9 @@ export default function AppRouter() {
 
   return (
     <MainLayout isMuted={isMuted} toggleMute={toggleMute} onOpenHardwareHub={() => setIsHardwareHubOpen(true)} onSync={syncStateFromSupabase} isSyncing={isSyncing} lastSyncTime={lastSyncTime}>
-      {/* Install Banner */}
+      {/* Install Banner (Mobile only, hidden on desktop since the sidebar has a prominent install button) */}
       {showInstallBanner && !isSimInstalled && (
-        <div className="bg-[#58cc02] text-white py-2.5 px-4 text-xs md:text-sm font-black text-center relative z-40 flex items-center justify-center gap-2 border-b-4 border-[#46a302] shadow-md animate-slideDown">
+        <div className="md:hidden bg-[#58cc02] text-white py-2.5 px-4 text-xs md:text-sm font-black text-center relative z-40 flex items-center justify-center gap-2 border-b-4 border-[#46a302] shadow-md animate-slideDown">
           <span className="animate-bounce">📲</span>
           <span>¡Accede más rápido! Instala <strong>DuoPOS</strong> en tu PC o móvil para ver el layout nativo flotante.</span>
           <button onClick={() => setIsInstallModalOpen(true)} className="bg-white text-[#58cc02] font-black text-[10px] md:text-xs py-1 px-3.5 rounded-xl border border-[#dddddd] border-b-2 hover:bg-gray-50 active:translate-y-0.5 max-w-xs mx-1 cursor-pointer">Instalar (+55 XP)</button>
