@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { supabase, setSupabaseToken } from '../../config/supabaseClient';
 import type { User } from '../../types/index';
@@ -10,6 +10,7 @@ interface ClerkSessionSyncProps {
 function ClerkSessionSync({ onSyncUser }: ClerkSessionSyncProps) {
   const { userId, getToken, isLoaded: isAuthLoaded } = useAuth();
   const { user: clerkUser, isLoaded: isUserLoaded } = useUser();
+  const [isTokenSynced, setIsTokenSynced] = useState(false);
 
   useEffect(() => {
     if (!isAuthLoaded) return;
@@ -19,18 +20,21 @@ function ClerkSessionSync({ onSyncUser }: ClerkSessionSyncProps) {
         try {
           const token = await getToken({ template: 'supabase' });
           setSupabaseToken(token);
+          setIsTokenSynced(true);
         } catch (err) {
           console.error('Error getting Supabase token from Clerk:', err);
+          setIsTokenSynced(false);
         }
       } else {
         setSupabaseToken(null);
+        setIsTokenSynced(false);
       }
     };
     syncToken();
   }, [userId, getToken, isAuthLoaded]);
 
   useEffect(() => {
-    if (!isUserLoaded) return;
+    if (!isUserLoaded || !isTokenSynced) return;
 
     const loadClerkUserProfile = async () => {
       if (clerkUser) {
@@ -42,6 +46,10 @@ function ClerkSessionSync({ onSyncUser }: ClerkSessionSyncProps) {
             .maybeSingle();
 
           let finalProfile = userProfile;
+
+          if (error) {
+            console.error('Error checking profile, attempting self-healing...', error);
+          }
 
           if (!finalProfile) {
             console.log('Self-healing Clerk: Creando perfil comercial en Supabase...');
@@ -70,6 +78,9 @@ function ClerkSessionSync({ onSyncUser }: ClerkSessionSyncProps) {
               .select()
               .maybeSingle();
 
+            if (insertErr) {
+              console.error('Error al autocrear perfil en Supabase:', insertErr);
+            }
             finalProfile = newProfile || defaultProfile;
           }
 
@@ -104,7 +115,7 @@ function ClerkSessionSync({ onSyncUser }: ClerkSessionSyncProps) {
       }
     };
     loadClerkUserProfile();
-  }, [clerkUser, isUserLoaded]);
+  }, [clerkUser, isUserLoaded, isTokenSynced]);
 
   return null;
 }
