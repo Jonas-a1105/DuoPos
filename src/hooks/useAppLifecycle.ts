@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useUserStore } from '../stores/useUserStore';
 import { useSalesStore } from '../features/sales/store/useSalesStore';
 import { useInventoryStore } from '../features/inventory/store/useInventoryStore';
+import { useCustomerStore } from '../features/customers/store/useCustomerStore';
 import { supabase, isSupabaseConfigured } from '../config/supabaseClient';
 import {
   syncLoad,
@@ -27,6 +28,10 @@ export function useAppLifecycle() {
   const transactions = useSalesStore((s) => s.transactions);
 
   const setProducts = useInventoryStore((s) => s.setProducts);
+  const setCustomers = useCustomerStore((s) => s.setCustomers);
+  const setActiveShift = useSalesStore((s) => s.setActiveShift);
+  const setShiftHistory = useSalesStore((s) => s.setShiftHistory);
+  const activeRegisterId = useSalesStore((s) => s.activeRegisterId);
 
   const location = useLocation();
   const activeTab = location.pathname === '/' ? 'dashboard' : location.pathname.substring(1);
@@ -137,6 +142,8 @@ export function useAppLifecycle() {
 
   useEffect(() => {
     if (!user || !isSupabaseConfigured()) return;
+
+    // 1. Products Realtime Subscription
     const productsChannel = supabase
       .channel('realtime-products-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, async () => {
@@ -153,6 +160,8 @@ export function useAppLifecycle() {
         } catch (e) { console.error('Error reloading products:', e); }
       })
       .subscribe();
+
+    // 2. Transactions Realtime Subscription
     const transactionsChannel = supabase
       .channel('realtime-transactions-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, async () => {
@@ -162,9 +171,93 @@ export function useAppLifecycle() {
         } catch (e) { console.error('Error reloading transactions:', e); }
       })
       .subscribe();
+
+    // 3. Profiles (User Stats) Realtime Subscription
+    const profilesChannel = supabase
+      .channel('realtime-profiles-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, async (payload) => {
+        try {
+          const updated = payload.new as any;
+          if (updated) {
+            const mappedUser = {
+              id: updated.id,
+              username: updated.username,
+              email: updated.email,
+              avatar: updated.avatar,
+              streak: Number(updated.streak),
+              lastSaleDate: updated.last_sale_date,
+              xp: Number(updated.xp),
+              level: Number(updated.level),
+              dailyGoal: Number(updated.daily_goal),
+              levelTitle: updated.level_title,
+              role: updated.role,
+              gems: Number(updated.gems),
+              gemsEarnedTotal: Number(updated.gems_earned_total),
+              unlockedSkins: updated.unlocked_skins || ['standard'],
+              activeSkin: updated.active_skin || 'standard',
+              unlockedBadges: updated.unlocked_badges || [],
+              completedMissionsToday: updated.completed_missions_today || [],
+            };
+
+            const current = useUserStore.getState().user;
+            if (
+              current &&
+              (current.xp !== mappedUser.xp ||
+               current.level !== mappedUser.level ||
+               current.gems !== mappedUser.gems ||
+               current.streak !== mappedUser.streak ||
+               current.activeSkin !== mappedUser.activeSkin ||
+               current.avatar !== mappedUser.avatar ||
+               JSON.stringify(current.unlockedSkins) !== JSON.stringify(mappedUser.unlockedSkins) ||
+               JSON.stringify(current.unlockedBadges) !== JSON.stringify(mappedUser.unlockedBadges))
+            ) {
+              console.log('🔄 [Realtime Profile Sync] Updating stats...', mappedUser);
+              useUserStore.getState().setUser(mappedUser);
+              localStorage.setItem('duo_pos_active_user', JSON.stringify(mappedUser));
+            }
+          }
+        } catch (e) { console.error('Error reloading profile in realtime:', e); }
+      })
+      .subscribe();
+
+    // 4. Customers Realtime Subscription
+    const customersChannel = supabase
+      .channel('realtime-customers-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, async () => {
+        try {
+          const loaded = await syncLoad('customers', 'duo_pos_customers', []);
+          setCustomers(loaded);
+        } catch (e) { console.error('Error reloading customers in realtime:', e); }
+      })
+      .subscribe();
+
+    // 5. Cash Shifts Realtime Subscription
+    const shiftsChannel = supabase
+      .channel('realtime-shifts-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cash_shifts' }, async () => {
+        try {
+          const loaded = await syncLoad<any>('cash_shifts', 'duo_pos_shift_history', [], { orderBy: 'opening_time', ascending: false });
+          const active = loaded.find((s) => s.status === 'open' && s.branchId === activeBranchId && s.registerId === activeRegisterId);
+          if (active) {
+            setActiveShift(active);
+            localStorage.setItem('duo_pos_active_shift', JSON.stringify(active));
+          } else {
+            setActiveShift(null);
+            localStorage.removeItem('duo_pos_active_shift');
+          }
+          const history = loaded.filter((s) => s.status === 'closed' && s.branchId === activeBranchId && s.registerId === activeRegisterId);
+          setShiftHistory(history);
+          localStorage.setItem('duo_pos_shift_history', JSON.stringify(loaded));
+        } catch (e) { console.error('Error reloading shifts in realtime:', e); }
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(productsChannel);
       supabase.removeChannel(transactionsChannel);
+      supabase.removeChannel(profilesChannel);
+      supabase.removeChannel(customersChannel);
+      supabase.removeChannel(shiftsChannel);
     };
-  }, [user, activeBranchId]);
+  }, [user, activeBranchId, activeRegisterId]);
 }
