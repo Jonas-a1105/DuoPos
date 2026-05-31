@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { Product, User, Supplier } from '../../../types';
 import { CATEGORIES } from '../../../initialData';
-import { playSound } from '../../../services/sounds';
-import { exportProductsToExcel } from '../../../services/exportService';
-import { parseProductsExcel, downloadProductsTemplate } from '../../../services/importService';
-import { addAuditLog } from '../../../services/auditService';
+import { playSound } from '../../../services/audio/soundService';
+import { exportProductsToExcel } from '../../../services/files/excelExportService';
+import { parseProductsExcel, downloadProductsTemplate } from '../../../services/files/csvParserService';
+import { addAuditLog } from '../../../services/security/auditLogger';
 import { Search, Download, Edit, Trash, Plus, X, Check } from 'lucide-react';
 
 interface ProductCatalogProps {

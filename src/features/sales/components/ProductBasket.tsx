@@ -8,8 +8,8 @@ import { ShoppingCart, Trash2, Plus, Minus, Tag, Users } from 'lucide-react';
 import { CartItem, Customer, Product, LegalBillingSettings, HardwareDeviceSettings } from '../../../types/index';
 import { TableState, KitchenOrder } from './HospitalityAddon';
 
-import { playSound } from '../../../services/sounds';
-import { toast } from '../../../components/Modal/FlashNotifications';
+import { playSound } from '../../../services/audio/soundService';
+import { toast } from '../../../shared/ui/FlashNotifications/FlashNotifications';
 
 interface ProductBasketProps {
   cart: CartItem[];

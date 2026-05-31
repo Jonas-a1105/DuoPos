@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Customer } from '../../../types';
-import { playSound } from '../../../services/sounds';
+import { playSound } from '../../../services/audio/soundService';
 
 interface CustomerFormModalProps {
   isOpen: boolean;

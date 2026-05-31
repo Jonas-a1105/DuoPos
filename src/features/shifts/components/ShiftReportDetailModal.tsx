@@ -1,6 +1,6 @@
 import React from 'react';
 import { CashShift } from '../../../types';
-import { playSound } from '../../../services/sounds';
+import { playSound } from '../../../services/audio/soundService';
 import { Printer } from 'lucide-react';
 
 interface ShiftReportDetailModalProps {

@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import { User, LicenseDetails } from '../types';
-import { playSound } from '../services/sounds';
-import { toast } from '../components/Modal/FlashNotifications';
+import { playSound } from '../services/audio/soundService';
+import { toast } from '../shared/ui/FlashNotifications/FlashNotifications';
 import { supabase } from '../config/supabaseClient';
-import { syncUserPreferences } from '../services/supabaseSync';
+import { syncUserPreferences } from '../database/supabaseSync';
 import { emitXpEarned, emitLevelUp } from '../features/gamification/gamification.events';
 
 interface UserState {

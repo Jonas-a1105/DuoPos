@@ -1,5 +1,5 @@
 import React from 'react';
-import { playSound } from '../../../services/sounds';
+import { playSound } from '../../../services/audio/soundService';
 import { Sliders, Laptop, Cpu, Info } from 'lucide-react';
 
 interface AppSettingsProps {

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Supplier } from '../../../types';
 import { CATEGORIES } from '../../../initialData';
-import { playSound } from '../../../services/sounds';
+import { playSound } from '../../../services/audio/soundService';
 import { Edit, Trash, X, Check, Truck } from 'lucide-react';
 
 interface SupplierManagerProps {

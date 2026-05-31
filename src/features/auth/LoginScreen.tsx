@@ -4,7 +4,7 @@ import { DUO_CHARACTERS, Character } from '../../initialData';
 import { KeyRound, Mail, User2, ChevronRight, Award, Loader2, Check, Eye, EyeOff } from 'lucide-react';
 import { supabase, isSupabaseConfigured, setSupabaseToken } from '../../config/supabaseClient';
 import { useSignIn, useSignUp } from '@clerk/clerk-react';
-import { playSound } from '../../services/sounds';
+import { playSound } from '../../services/audio/soundService';
 
 // Clerk global type declaration for window.Clerk
 declare global {

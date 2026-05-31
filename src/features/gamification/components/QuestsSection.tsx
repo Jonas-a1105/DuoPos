@@ -1,7 +1,7 @@
 import React from 'react';
 import { Zap, CheckCircle2, Trophy, Sparkles, Flame, Gift, HelpCircle, RefreshCw } from 'lucide-react';
 import AeroGuideModal from './AeroGuideModal';
-import { playSound } from '../../../services/sounds';
+import { playSound } from '../../../services/audio/soundService';
 
 interface Quest {
   id: string;

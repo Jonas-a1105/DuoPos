@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { playSound } from '../../../services/sounds';
+import { playSound } from '../../../services/audio/soundService';
 import { X, ArrowRight, ArrowLeft, Zap, Flame, Trophy, Coins } from 'lucide-react';
 
 interface AeroGuideModalProps {

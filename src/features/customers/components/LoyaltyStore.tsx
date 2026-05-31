@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Customer, LeagueType } from '../../../types';
-import { playSound } from '../../../services/sounds';
-import { toast } from '../../../components/Modal/FlashNotifications';
+import { playSound } from '../../../services/audio/soundService';
+import { toast } from '../../../shared/ui/FlashNotifications/FlashNotifications';
 import { LEAGUE_METADATA } from '../CustomersScreen';
 
 interface LoyaltyStoreProps {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Customer, CashShift } from '../../../types';
-import { playSound } from '../../../services/sounds';
-import { toast } from '../../../components/Modal/FlashNotifications';
+import { playSound } from '../../../services/audio/soundService';
+import { toast } from '../../../shared/ui/FlashNotifications/FlashNotifications';
 
 interface DebtPaymentModalProps {
   customer: Customer | null;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Customer } from '../../../types';
-import { playSound } from '../../../services/sounds';
+import { playSound } from '../../../services/audio/soundService';
 import { Clock, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 
 interface CustomerLedgerModalProps {

@@ -5,8 +5,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { Branch, CashRegister, CashShift, User } from '../../../types/index';
-import { playSound } from '../../../services/sounds';
-import { syncInsert } from '../../../services/supabaseSync';
+import { playSound } from '../../../services/audio/soundService';
+import { syncInsert } from '../../../database/supabaseSync';
 import { X } from 'lucide-react';
 
 export interface RegisterManagerProps {

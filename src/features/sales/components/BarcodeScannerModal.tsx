@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Barcode, Camera } from 'lucide-react';
 import { Product } from '../../../types/index';
-import { playSound } from '../../../services/sounds';
+import { playSound } from '../../../services/audio/soundService';
 
 interface BarcodeScannerModalProps {
   isOpen: boolean;

@@ -5,7 +5,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Product, User, Supplier, PurchaseOrder } from '../../types/index';
-import { playSound } from '../../services/sounds';
+import { playSound } from '../../services/audio/soundService';
 
 import ProductCatalog from './components/ProductCatalog';
 import CriticalAlerts from './components/CriticalAlerts';

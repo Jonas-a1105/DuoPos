@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { User, Transaction, Product } from '../../../types';
-import AeroMascot from '../../../components/Mascot/AeroMascot';
-import { playSound } from '../../../services/sounds';
+import AeroMascot from '../../../shared/ui/Mascot/AeroMascot';
+import { playSound } from '../../../services/audio/soundService';
 import { Send, Brain, HelpCircle } from 'lucide-react';
 
 interface DuoCopilotTabProps {

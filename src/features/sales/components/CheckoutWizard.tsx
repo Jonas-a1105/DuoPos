@@ -6,8 +6,8 @@
 import React, { useEffect } from 'react';
 import { Customer, LegalBillingSettings, User } from '../../../types/index';
 import { Character, DUO_CHARACTERS } from '../../../initialData';
-import { playSound } from '../../../services/sounds';
-import { isVenezuelanTaxContext } from '../../../services/fiscal';
+import { playSound } from '../../../services/audio/soundService';
+import { isVenezuelanTaxContext } from '../../../services/fiscal/index';
 
 interface CheckoutWizardProps {
   isOpen: boolean;

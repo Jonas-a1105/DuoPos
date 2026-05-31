@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { playSound } from '../../../services/sounds';
-import { toast } from '../../../components/Modal/FlashNotifications';
-import { LicenseDetails } from '../../../services/licensing';
+import { playSound } from '../../../services/audio/soundService';
+import { toast } from '../../../shared/ui/FlashNotifications/FlashNotifications';
+import { LicenseDetails } from '../../../services/security/licensingService';
 import { Laptop, Cpu, RefreshCw, Check } from 'lucide-react';
 
 interface UpdatesSettingsProps {

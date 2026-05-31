@@ -14,9 +14,9 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
 } from 'lucide-react';
-import { playSound } from '../../../services/sounds';
-import { exportCustomersToExcel } from '../../../services/exportService';
-import { parseCustomersExcel, downloadCustomersTemplate } from '../../../services/importService';
+import { playSound } from '../../../services/audio/soundService';
+import { exportCustomersToExcel } from '../../../services/files/excelExportService';
+import { parseCustomersExcel, downloadCustomersTemplate } from '../../../services/files/csvParserService';
 import { LEAGUE_METADATA } from '../CustomersScreen';
 
 interface CustomerDirectoryProps {

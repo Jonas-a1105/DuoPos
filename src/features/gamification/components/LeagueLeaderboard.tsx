@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { User } from '../../../types';
-import { playSound } from '../../../services/sounds';
-import { toast } from '../../../components/Modal/FlashNotifications';
+import { playSound } from '../../../services/audio/soundService';
+import { toast } from '../../../shared/ui/FlashNotifications/FlashNotifications';
 
 interface LeagueLeaderboardProps {
   user: User;

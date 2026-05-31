@@ -1,0 +1,19 @@
+name: Supabase Deploy
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/functions/**'
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+      - run: supabase link --project-ref ${{ vars.SUPABASE_PROJECT_REF }}
+      - run: supabase db push
+      - run: supabase functions deploy fiscal-localization-engine --no-verify-jwt
+      - run: supabase functions deploy stripe-billing-webhook
+      - run: supabase functions deploy cloud-data-consolidator
+      - run: supabase functions deploy ai-smart-inventory

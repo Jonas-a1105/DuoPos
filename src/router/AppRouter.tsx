@@ -8,11 +8,11 @@ import {
   syncLoad, syncSave, syncInsert, syncDelete, flushPendingQueue, generateUUID,
   syncInsertTransaction, syncSaveShift, syncSavePurchaseOrder, getLocalData,
   setLocalData, syncDailyStats, syncUserPreferences, pruneOldLocalStorage,
-} from '../services/supabaseSync';
+} from '../database/supabaseSync';
 import { useUserStore } from '../stores/useUserStore';
-import { useSalesStore } from '../stores/useSalesStore';
-import { useInventoryStore } from '../stores/useInventoryStore';
-import { useCustomerStore } from '../stores/useCustomerStore';
+import { useSalesStore } from '../features/sales/store/useSalesStore';
+import { useInventoryStore } from '../features/inventory/store/useInventoryStore';
+import { useCustomerStore } from '../features/customers/store/useCustomerStore';
 import { DashboardScreen } from '../features/dashboard';
 import { SalesScreen } from '../features/sales';
 import { InventoryScreen } from '../features/inventory';
@@ -28,12 +28,12 @@ import RoleLockWarningModal from '../features/auth/components/RoleLockWarningMod
 import PinLockModal from '../features/auth/components/PinLockModal';
 import HardwareHubModal from '../features/settings/components/HardwareHubModal';
 import LicenseBlockScreen from '../features/settings/components/LicenseBlockScreen';
-import { addAuditLog } from '../services/auditService';
+import { addAuditLog } from '../services/security/auditLogger';
 import { FlashNotifications, toast } from '../shared/ui';
-import { playSound } from '../services/sounds';
-import { HardwareDeviceSettings, DEFAULT_HARDWARE_SETTINGS } from '../services/printService';
-import { validateLicenseKeyOnline, generateHardwareFingerprint, PLANS, detectClockTampering } from '../services/licensing';
-import type { LicenseDetails } from '../services/licensing';
+import { playSound } from '../services/audio/soundService';
+import { HardwareDeviceSettings, DEFAULT_HARDWARE_SETTINGS } from '../services/print/printService';
+import { validateLicenseKeyOnline, generateHardwareFingerprint, PLANS, detectClockTampering } from '../services/security/licensingService';
+import type { LicenseDetails } from '../services/security/licensingService';
 import { useExchangeRates } from '../hooks/useExchangeRates';
 import { useInventory } from '../hooks/useInventory';
 import { useCustomers } from '../hooks/useCustomers';

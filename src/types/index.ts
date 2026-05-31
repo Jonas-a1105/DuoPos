@@ -386,5 +386,5 @@ export interface ExpressEvent {
   expiresAt: number;
 }
 
-export type { LicenseDetails } from '../services/licensing';
-export type { HardwareDeviceSettings } from '../services/printService';
+export type { LicenseDetails } from '../services/security/licensingService';
+export type { HardwareDeviceSettings } from '../services/print/printService';

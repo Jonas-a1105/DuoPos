@@ -5,8 +5,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { Product, Branch, StockTransfer } from '../../../types/index';
-import { playSound } from '../../../services/sounds';
-import { syncSaveStockTransfer, generateUUID } from '../../../services/supabaseSync';
+import { playSound } from '../../../services/audio/soundService';
+import { syncSaveStockTransfer, generateUUID } from '../../../database/supabaseSync';
 import { ArrowLeftRight, AlertCircle, X } from 'lucide-react';
 
 interface CEDISCenterProps {

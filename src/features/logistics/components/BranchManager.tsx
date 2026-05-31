@@ -5,9 +5,9 @@
 
 import React, { useState } from 'react';
 import { Product, Branch, CashRegister, User } from '../../../types/index';
-import { playSound } from '../../../services/sounds';
-import { syncInsert } from '../../../services/supabaseSync';
-import { LicenseDetails, PLANS } from '../../../services/licensing';
+import { playSound } from '../../../services/audio/soundService';
+import { syncInsert } from '../../../database/supabaseSync';
+import { LicenseDetails, PLANS } from '../../../services/security/licensingService';
 import { Plus, MapPin, X } from 'lucide-react';
 
 interface BranchManagerProps {

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Transaction, Product, User } from '../../../types';
-import AeroMascot from '../../../components/Mascot/AeroMascot';
+import AeroMascot from '../../../shared/ui/Mascot/AeroMascot';
 
 interface AdvancedAnalyticsTabProps {
   transactions: Transaction[];

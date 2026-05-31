@@ -2,11 +2,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useUserStore } from './useUserStore';
 
-vi.mock('../services/sounds', () => ({
+vi.mock('../services/audio/soundService', () => ({
   playSound: vi.fn(),
 }));
 
-vi.mock('../services/db', () => {
+vi.mock('../database/db', () => {
   const mockGenericStore = {
     get: vi.fn(() => Promise.resolve(null)),
     put: vi.fn(() => Promise.resolve()),
@@ -19,7 +19,7 @@ vi.mock('../services/db', () => {
   };
 });
 
-vi.mock('../components/Modal/FlashNotifications', () => ({
+vi.mock('../shared/ui/FlashNotifications/FlashNotifications', () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),

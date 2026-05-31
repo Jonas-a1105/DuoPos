@@ -8,7 +8,7 @@ import { ChefHat } from 'lucide-react';
 import { TableState, KitchenOrder, MOCK_WAITERS } from './HospitalityAddon';
 import { CartItem, Customer } from '../../../types/index';
 
-import { playSound } from '../../../services/sounds';
+import { playSound } from '../../../services/audio/soundService';
 
 interface HospitalityFloorPlanProps {
   isHospitalityActive: boolean;

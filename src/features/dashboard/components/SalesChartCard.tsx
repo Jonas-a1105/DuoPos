@@ -2,7 +2,7 @@ import React from 'react';
 import { Transaction, Product, User } from '../../../types';
 import { DEFAULT_PRODUCTS } from '../../../initialData';
 import { Check, Sparkles } from 'lucide-react';
-import { playSound } from '../../../services/sounds';
+import { playSound } from '../../../services/audio/soundService';
 
 interface SalesChartCardProps {
   transactions: Transaction[];

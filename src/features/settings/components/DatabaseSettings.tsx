@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Download, Upload, Info, Database } from 'lucide-react';
-import { playSound } from '../../../services/sounds';
-import { toast } from '../../../components/Modal/FlashNotifications';
-import { setLocalData } from '../../../services/supabaseSync';
+import { playSound } from '../../../services/audio/soundService';
+import { toast } from '../../../shared/ui/FlashNotifications/FlashNotifications';
+import { setLocalData } from '../../../database/supabaseSync';
 import { User, Product, Transaction } from '../../../types';
 
 interface DatabaseSettingsProps {

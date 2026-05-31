@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Coins } from 'lucide-react';
 import { User } from '../../../types';
-import { playSound } from '../../../services/sounds';
-import { toast } from '../../../components/Modal/FlashNotifications';
-import { LicenseDetails } from '../../../services/licensing';
+import { playSound } from '../../../services/audio/soundService';
+import { toast } from '../../../shared/ui/FlashNotifications/FlashNotifications';
+import { LicenseDetails } from '../../../services/security/licensingService';
 
 interface StoreItem {
   id: string;

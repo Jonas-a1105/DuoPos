@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { User, Transaction, Product, Customer, ExpressEvent } from '../../types';
-import { playSound } from '../../services/sounds';
-import { toast } from '../../components/Modal/FlashNotifications';
-import AeroMascot from '../../components/Mascot/AeroMascot';
-import type { AeroMood } from '../../components/Mascot/AeroMascot';
-import { LicenseDetails } from '../../services/licensing';
+import { playSound } from '../../services/audio/soundService';
+import { toast } from '../../shared/ui/FlashNotifications/FlashNotifications';
+import AeroMascot from '../../shared/ui/Mascot/AeroMascot';
+import type { AeroMood } from '../../shared/ui/Mascot/AeroMascot';
+import { LicenseDetails } from '../../services/security/licensingService';
 import { Trophy, Coins, Zap, CheckCircle2, Lock, ShieldAlert, Gift } from 'lucide-react';
 
 // Subcomponents modularized

@@ -35,7 +35,7 @@ import {
   ShieldCheck,
   ZapOff,
 } from 'lucide-react';
-import { playSound } from '../../services/sounds';
+import { playSound } from '../../services/audio/soundService';
 
 interface LandingPageProps {
   onEnterApp: () => void;

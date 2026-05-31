@@ -1,0 +1,219 @@
+
+RAÍZ DEL PROYECTO, DEVOPS Y ENTORNO GLOBAL
+
+duopos-enterprise/
+├── .github/                            # 🚀 CAPA DE INTEGRACIÓN Y DESPLIEGUE CONTINUO (CI/CD)
+│   ├── workflows/
+│   │   ├── frontend-deploy.yml         # Despliegue automatizado de la SPA (Vercel/Cloudflare)
+│   │   ├── supabase-deploy.yml         # Despliegue y testeo de Edge Functions y Migraciones
+│   │   └── run-tests.yml               # Suite de pruebas automatizadas en cada Pull Request
+│   └── PULL_REQUEST_TEMPLATE.md        # Plantilla obligatoria de control de cambios para el equipo
+│
+├── .husky/                             # 🐶 AUTOMATIZACIONES DE PRE-COMMIT
+│   ├── pre-commit                      # Ejecuta Linter y Formateador antes de permitir un commit
+│   └── pre-push                        # Ejecuta la suite de pruebas unitarias antes de subir al servidor
+│
+├── docker/                             # 🐳 ENTORNO DE DESARROLLO LOCAL AISLADO
+│   ├── docker-compose.yml              # Orquestador de servicios locales (PostgreSQL, Redis, MinIO)
+│   ├── postgresql.conf                 # Ajustes de rendimiento para la base de datos de desarrollo
+│   └── redis.conf                      # Configuración de caché local para colas de tareas
+│
+├── developer-tools/                    # 🛠️ SCRIPTS EXCLUSIVOS DE INGENIERÍA
+│   ├── seeders/
+│   │   ├── initial-catalog.sql         # Datos maestros iniciales de producción (Países, Monedas)
+│   │   └── stress-test-mock.ts         # Generador de 100,000 productos/ventas para pruebas de carga
+│   ├── scripts/
+│   │   ├── backup-sqlite.sh            # Script de emergencia para respaldar la base de datos local
+│   │   └── encrypt-secrets.js          # Utilidad para cifrar credenciales offline en el cliente
+│   └── benchmarks/
+│       └── sync-performance.ts         # Medidor de latencia de sincronización local vs nube
+│
+├── tailwind.config.js                  # 🎨 TOKENS DEL SISTEMA DE DISEÑO GLOBAL
+├── tsconfig.json                       # 🧭 CONFIGURACIÓN MÁSTER DE TYPESCRIPT (Path Aliases `@/`)
+├── vite.config.ts                      # ⚡ OPTIMIZADOR DE COMPILACIÓN (PWA, Plugins, Code-Splitting)
+├── postcss.config.js                   # Procesador de CSS de última generación
+├── eslint.config.js                    # Reglas estrictas de calidad y anti-código espagueti
+├── .prettierrc                         # Estándar estético unificado de escritura de código
+├── .env.production                     # Variables de infraestructura para producción real
+├── .env.development                    # Variables de infraestructura para desarrollo local
+├── .env.example                        # Guía pública de variables obligatorias del sistema
+├── package.json                        # Manifiesto global de dependencias y scripts de ejecución
+└── index.html                          # Punto de anclaje del DOM de la aplicación web
+
+CAPA BACKEND CENTRALIZADA
+
+supabase/
+├── config.toml                         # Configuración central del ecosistema Supabase local
+├── seed.sql                            # Datos semilla para levantar entornos locales idénticos
+├── migrations/                         # 🗄️ HISTORIAL INMUTABLE DE ESQUEMAS RELACIONALES (PostgreSQL)
+│   ├── 20260101000000_core_auth.sql            # Tablas de Tenants, Sucursales, Usuarios y Roles RLS
+│   ├── 20260102000000_inventory_schema.sql    # Tablas de Productos, Lotes, Almacenes e Impuestos
+│   ├── 20260103000000_sales_schema.sql        # Tablas de Ventas, Pagos, Cajas y Clientes
+│   ├── 20260104000000_fiscal_schema.sql       # Tablas de Folios, Facturas Emitidas y Certificados
+│   └── 20260105000000_rls_security_policies.sql # Reglas estrictas de Row Level Security (Seguridad multi-inquilino)
+│
+└── functions/                          # ⚡ SUPABASE EDGE FUNCTIONS (Deno Runtime Serverless)
+    ├── _shared/                        # Código compartido entre funciones de la nube
+    │   ├── supabaseAdmin.ts            # Cliente con privilegios bypass para tareas del sistema
+    │   └── errorHandler.ts             # Capturador y formateador unificado de excepciones de la nube
+    │
+    ├── fiscal-localization-engine/     # 🧾 MOTOR FISCAL MULTI-PAÍS (PAC, SAT, DIAN, AFIP)
+    │   ├── index.ts                    # Enrutador de solicitudes de timbrado
+    │   ├── mexico-sat-strategy.ts      # Integración específica con Facturama/SAT para México
+    │   ├── colombia-dian-strategy.ts   # Integración específica para Colombia
+    │   └── deno.json                   # Dependencias de la Edge Function
+    │
+    ├── stripe-billing-webhook/         # 💳 CONTROL DE SUSCRIPCIONES SAAS DE DUOPOS
+    │   └── index.ts                    # Escucha altas, bajas y cancelaciones de planes de pago
+    │
+    ├── cloud-data-consolidator/        # 📊 PROCESADOR DE ANALÍTICAS MASIVAS
+    │   └── index.ts                    # Agrupa reportes nocturnos para evitar sobrecargar al cliente
+    │
+    └── ai-smart-inventory/             # 🧠 MOTOR DE INTELIGENCIA ARTIFICIAL (Predicción de Demanda)
+        └── index.ts                    # Analiza tendencias históricas y sugiere compras de stock
+
+CAPA FRONTEND PRINCIPAL
+
+src/
+├── main.tsx                            # 🚀 Punto de ignición de la app e inicialización de escuchadores
+├── App.tsx                             # Orquestador maestro de contextos de React y Layouts de UI
+├── index.css                           # Inyección de directivas Tailwind y reseteos CSS globales
+│
+├── config/                             # ⚙️ REGLAS DE CONTROL GLOBAL
+│   ├── env.ts                          # Validador en tiempo de compilación de variables de entorno con Zod
+│   ├── businessRules.ts                # Reglas inmutables del negocio (Porcentajes base, comisiones, límites)
+│   └── i18n.ts                         # Configuración del motor de traducción internacional (ES, EN, PT)
+│
+├── assets/                             # 🖼️ ARCHIVOS MULTIMEDIA CRÍTICOS
+│   ├── images/                         # Logotipos oficiales, marcas de agua y placeholders offline
+│   └── sounds/                         # Audios interactivos para alertas de la interfaz de la caja
+│
+# =========================================================================
+# 🗄️ A. MOTOR LOCAL-FIRST (PERSISTENCIA E INFRAESTRUCTURA DE DATOS LOCAL)
+# =========================================================================
+├── database/                           
+│   ├── db.ts                           # Instancia y métodos crudos de conexión a la base de datos SQLite
+│   ├── powersyncClient.ts              # Inicializador del cliente reactivo en tiempo real PowerSync
+│   ├── powersyncSchema.ts              # Declaración estricta de las tablas de SQLite en Typescript
+│   ├── supabaseSync.ts                 # Orquestador del flujo de subida de mutaciones locales a la nube
+│   ├── syncRules.ts                    # Filtros de descarga de datos (Ej: El cajero solo descarga datos de SU sucursal)
+│   └── storage/
+│       └── encryptedSecureStorage.ts   # Manejador para cifrar tokens y datos sensibles en el disco local
+│
+# =========================================================================
+# 🌍 B. NÚCLEO COMPARTIDO GLOBAL (SHARED - TOTALMENTE ENCAPSULADO Y REUTILIZABLE)
+# =========================================================================
+├── shared/                             
+│   ├── events/                         
+│   │   └── EventBus.ts                 # 🧠 EL SISTEMA NERVIOSO CENTRAL (Manejador Pub/Sub desacoplado)
+│   │
+│   ├── hooks/                          # Hooks funcionales técnicos sin lógica de negocio
+│   │   ├── useNetworkStatus.ts         # Monitoreo reactivo del estado de la conexión a internet
+│   │   ├── useDebounce.ts              # Optimizador de peticiones para inputs de alta velocidad
+│   │   ├── useBarcodeReader.ts         # Interceptor global del teclado para pistolas de código de barras
+│   │   └── useFileSystem.ts            # Acceso a la API de archivos locales para guardar reportes
+│   │
+│   ├── stores/                         # Estado global persistido exclusivo de infraestructura
+│   │   └── globalAuthStore.ts          # Estado del cajero activo, permisos de rol y token de sesión local
+│   │
+│   ├── utils/                          # Formateadores técnicos generales
+│   │   ├── crypto.ts                   # Utilidades de firmas digitales y cifrado en el cliente
+│   │   └── formatters.ts               # Formateadores de fechas, zonas horarias y monedas internacionales
+│   │
+│   └── ui/                             # 🧱 EL SISTEMA DE DISEÑO ATÓMICO (Componentes de Presentación Puros)
+│       ├── index.ts                    # Archivo barril de exportaciones públicas de UI
+│       ├── Button/
+│       │   ├── Button.tsx              # Botón estandarizado con variantes de diseño y estados de carga
+│       │   ├── Button.stories.tsx      # Archivo de documentación visual para Storybook
+│       │   └── Button.test.tsx         # Pruebas unitarias de accesibilidad y eventos de clic
+│       ├── Input/
+│       │   └── Input.tsx               # Campo de entrada con labels flotantes y manejo de errores
+│       ├── Modal/
+│       │   └── Modal.tsx               # Contenedor flotante animado con portales de React (React Portals)
+│       ├── Badge/
+│       │   └── Badge.tsx               # Etiquetas de estado de diseño adaptativo
+│       ├── Table/
+│       │   └── Table.tsx               # Tabla virtualizada de alto rendimiento para procesar miles de filas
+│       └── Card/
+│           └── Card.tsx                # Contenedor visual estandarizado de la aplicación
+
+SERVICIOS TÉCNICOS INTERNOS
+
+src/services/
+├── print/
+│   ├── printService.ts                 # Fachada pública de control de tiqueteras térmicas
+│   ├── escPosEncoder.ts                # Compilador de datos a comandos crudos binarios ESC/POS
+│   └── templates/
+│       ├── salesTicketTemplate.ts      # Plantilla visual de diseño del ticket de venta
+│       └── inventoryReportTemplate.ts  # Plantilla de impresión de cortes de caja e inventario
+│
+├── audio/
+│   └── soundService.ts                 # Controlador de Web Audio API para reproducir efectos sin retrasos
+│
+├── security/
+│   ├── licensingService.ts             # Validador fuera de línea de licencias criptográficas de DuoPOS
+│   └── auditLogger.ts                  # Bitácora inmutable de acciones críticas (Previene fraudes de cajeros)
+│
+├── files/
+│   ├── excelExportService.ts           # Compilador de arreglos de datos a archivos binarios XLSX
+│   └── csvParserService.ts             # Lector, limpiador y parseador de datos cargados masivamente
+│
+└── saas/
+    └── subscriptionEnforcer.ts         # Bloqueador de interfaces si el cliente excede su plan contratado
+
+MÓDULOS DE NEGOCIO AVANZADOS
+
+src/features/sales/
+├── index.ts                            # 🚪 LA ADUANA (Único punto de entrada/salida del módulo)
+├── schemas.ts                          # 🎯 Contratos de datos y validaciones Zod de tickets y carritos
+├── sales.events.ts                     # 📢 Declaración del catálogo de gritos globales ('SALE_COMPLETED')
+├── constants.ts                        # Valores fijos exclusivos (Límites de artículos, tiempos de gracia)
+│
+├── components/                         # 👁️ CAPA VISUAL DECLARATIVA (Pinta la UI consumiendo shared/ui)
+│   ├── SalesScreen.tsx                 # Contenedor máster de la pantalla de ventas
+│   ├── ProductBasket.tsx               # Lista del carrito de compras actual
+│   ├── CheckoutWizard.tsx              # Selector de pasos de cobro (Efectivo/Tarjeta/Crédito)
+│   ├── BarcodeScannerModal.tsx         # Modal de captura rápida de códigos de barras
+│   ├── CashDrawerPanel.tsx             # Control de ingresos, egresos y aperturas de la caja de dinero
+│   ├── RetailControlDeck.tsx           # Diseño de caja adaptado a tiendas de abarrotes/ropa
+│   ├── HospitalityFloorPlan.tsx        # Diseño de caja adaptado a restaurantes (Mapa de mesas interactivo)
+│   ├── HospitalityAddonSelector.tsx    # Selector de modificadores de alimentos (Ej: Término de la carne)
+│   ├── PaymentTerminalModal.tsx        # Interfaz de conexión con terminales bancarias integradas
+│   ├── FiscalInspectorModal.tsx        # Pantalla de confirmación previa antes de facturar
+│   ├── ServiceControlDeck.tsx          # Diseño de caja adaptado a salones de belleza/talleres
+│   ├── TransactionSuccessSplash.tsx    # Pantalla de confirmación de éxito tras el pago
+│   └── subcomponents/
+│       ├── BasketItemRow.tsx           # Fila individual de un artículo dentro del carrito
+│       └── QuickActionButton.tsx       # Botones configurables de atajos de teclado de la caja
+│
+├── hooks/                              # 🧠 CONTROLADORES DE LOGICA Y QUERIES EN TIEMPO REAL
+│   ├── useCart.ts                      # Operaciones internas del carrito (Agregar, quitar, aplicar descuentos)
+│   ├── useCheckout.ts                  # Proceso de guardado en SQLite local y disparo del EventBus
+│   └── useSalesHistory.ts              # Live Query de PowerSync para listar tickets cobrados en el turno
+│
+├── context/                            # 🌐 ESTADO COMPARTIDO INTERNO (Evita el paso excesivo de props)
+│   └── CheckoutContext.tsx             # Comparte datos transitorios del pago entre los componentes del flujo
+│
+├── listeners/                          # 👂 ESCUCHADORES INTERNOS DEL MÓDULO
+│   └── index.ts                        # Inicializador de escuchas propios del contexto de ventas
+│
+├── utils/                              # 🛠️ MATEMÁTICAS INTERNAS EXCLUSIVAS
+│   └── salesMath.ts                    # Algoritmo de cálculo de impuestos desglosados, IVA y promociones
+│
+└── __tests__/                          # 🧪 SUITE DE PRUEBAS AUTOMATIZADAS DEL MÓDULO
+    ├── salesMath.test.ts               # Valida que los cálculos de IVA y centavos den exactos
+    ├── useCart.test.ts                 # Prueba la mutación del carrito ante adiciones concurrentes
+    └── SalesScreen.test.tsx            # Prueba de renderizado e interacciones de la pantalla principal
+
+INFRAESTRUCTURA DE ENRUTAMIENTO
+
+src/router/
+├── AppRouter.tsx                       # Declaración central de rutas (React Router o TanStack Router)
+├── routes.ts                           # Diccionario estricto de rutas de la app (`/sales`, `/inventory`)
+├── guards/
+│   ├── AuthGuard.tsx                   # Bloqueador que redirige al Login si no hay una sesión activa
+│   └── RoleGuard.tsx                   # Validador de permisos (Ej: Impide que un cajero entre al inventario)
+└── layouts/
+    ├── DashboardLayout.tsx             # Estructura visual con barra lateral y navegación principal
+    └── KioskLayout.tsx                 # Estructura visual de pantalla completa dedicada a la caja registradora
+

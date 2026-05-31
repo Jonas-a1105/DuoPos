@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { User, Transaction, Customer } from '../../../types';
 import { DUO_CHARACTERS } from '../../../initialData';
-import { playSound } from '../../../services/sounds';
-import { toast } from '../../../components/Modal/FlashNotifications';
+import { playSound } from '../../../services/audio/soundService';
+import { toast } from '../../../shared/ui/FlashNotifications/FlashNotifications';
 
 interface SagaMapProps {
   user: User;

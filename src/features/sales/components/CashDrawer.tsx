@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { User, CashShift } from '../../../types/index';
-import { playSound } from '../../../services/sounds';
+import { playSound } from '../../../services/audio/soundService';
 
 interface CashDrawerProps {
   user: User;

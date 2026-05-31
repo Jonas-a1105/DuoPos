@@ -6,10 +6,10 @@
 import React, { useMemo, useState } from 'react';
 import { User, Transaction, Product } from '../../types';
 import { DUO_CHARACTERS } from '../../initialData';
-import { playSound } from '../../services/sounds';
+import { playSound } from '../../services/audio/soundService';
 import { Award, Flame, MessageSquare, Download, Upload } from 'lucide-react';
-import { setLocalData } from '../../services/supabaseSync';
-import { toast } from '../../components/Modal/FlashNotifications';
+import { setLocalData } from '../../database/supabaseSync';
+import { toast } from '../../shared/ui/FlashNotifications/FlashNotifications';
 
 // Subcomponents imports
 import BentoStats from './components/BentoStats';

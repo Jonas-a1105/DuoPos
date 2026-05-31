@@ -5,9 +5,9 @@
 
 import React, { useState, useMemo } from 'react';
 import { Product, Branch, CashRegister, StockTransfer, CashShift, Transaction, User } from '../../types/index';
-import { playSound } from '../../services/sounds';
-import { syncInsert, syncSaveStockTransfer, generateUUID } from '../../services/supabaseSync';
-import { LicenseDetails, PLANS } from '../../services/licensing';
+import { playSound } from '../../services/audio/soundService';
+import { syncInsert, syncSaveStockTransfer, generateUUID } from '../../database/supabaseSync';
+import { LicenseDetails, PLANS } from '../../services/security/licensingService';
 import {
   Building2,
   Monitor,

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Customer, LeagueType, CashShift } from '../../types';
-import { playSound } from '../../services/sounds';
+import { playSound } from '../../services/audio/soundService';
 
 // Subcomponents imports
 import CustomerDirectory from './components/CustomerDirectory';

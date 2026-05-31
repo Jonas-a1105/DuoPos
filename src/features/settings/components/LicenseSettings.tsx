@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../../types';
-import { playSound } from '../../../services/sounds';
-import { toast } from '../../../components/Modal/FlashNotifications';
+import { playSound } from '../../../services/audio/soundService';
+import { toast } from '../../../shared/ui/FlashNotifications/FlashNotifications';
 import {
   LicenseDetails,
   PLANS,
   SubscriptionTier,
   revokeLicenseOnline,
   listLicensesOnline,
-} from '../../../services/licensing';
+} from '../../../services/security/licensingService';
 import { ShieldCheck, Laptop, Cpu, Key, RefreshCw } from 'lucide-react';
 
 interface LicenseSettingsProps {

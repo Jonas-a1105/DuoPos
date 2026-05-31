@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { Product, LegalBillingSettings } from '../../../types/index';
-import { playSound } from '../../../services/sounds';
+import { playSound } from '../../../services/audio/soundService';
 
 interface RetailControlDeckProps {
   isHospitalityActive: boolean;

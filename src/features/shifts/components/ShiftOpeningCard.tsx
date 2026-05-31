@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { playSound } from '../../../services/sounds';
-import { toast } from '../../../components/Modal/FlashNotifications';
+import { playSound } from '../../../services/audio/soundService';
+import { toast } from '../../../shared/ui/FlashNotifications/FlashNotifications';
 
 interface ShiftOpeningCardProps {
   onOpenShift: (amount: number) => void;

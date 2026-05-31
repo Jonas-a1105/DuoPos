@@ -6,9 +6,9 @@
 import React, { useState } from 'react';
 import { Transaction, User, LegalBillingSettings, HardwareDeviceSettings } from '../../../types/index';
 import { Character, DUO_CHARACTERS } from '../../../initialData';
-import { playSound } from '../../../services/sounds';
-import { toast } from '../../../components/Modal/FlashNotifications';
-import { generateRawEscPos } from '../../../services/printService';
+import { playSound } from '../../../services/audio/soundService';
+import { toast } from '../../../shared/ui/FlashNotifications/FlashNotifications';
+import { generateRawEscPos } from '../../../services/print/printService';
 
 interface TransactionSuccessSplashProps {
   celebrateTxn: Transaction | null;

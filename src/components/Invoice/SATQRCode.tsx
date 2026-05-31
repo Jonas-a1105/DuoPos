@@ -1,6 +1,6 @@
 import { QRCodeSVG } from 'qrcode.react';
 import { Transaction, LegalBillingSettings } from '../../types';
-import { getSATQrUrl } from '../../services/fiscal';
+import { getSATQrUrl } from '../../services/fiscal/index';
 
 interface SATQRCodeProps {
   transaction: Transaction;

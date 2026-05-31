@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Product, Supplier, PurchaseOrder, PurchaseOrderItem } from '../../../types';
-import { playSound } from '../../../services/sounds';
+import { playSound } from '../../../services/audio/soundService';
 import { PlusCircle, X, Check } from 'lucide-react';
 
 interface PurchaseOrderWizardProps {

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Supplier } from '../../../types';
-import { playSound } from '../../../services/sounds';
+import { playSound } from '../../../services/audio/soundService';
 import { Calendar, DollarSign, Check, Info, AlertTriangle, Clock, ArrowRight } from 'lucide-react';
 
 interface AccountsPayableProps {

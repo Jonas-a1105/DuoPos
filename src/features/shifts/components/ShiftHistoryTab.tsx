@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { CashShift } from '../../../types';
-import { playSound } from '../../../services/sounds';
+import { playSound } from '../../../services/audio/soundService';
 
 interface ShiftHistoryTabProps {
   shiftHistory: CashShift[];

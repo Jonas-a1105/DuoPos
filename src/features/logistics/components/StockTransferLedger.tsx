@@ -5,8 +5,8 @@
 
 import React from 'react';
 import { StockTransfer, Product } from '../../../types/index';
-import { playSound } from '../../../services/sounds';
-import { syncSaveStockTransfer } from '../../../services/supabaseSync';
+import { playSound } from '../../../services/audio/soundService';
+import { syncSaveStockTransfer } from '../../../database/supabaseSync';
 import { ChevronRight, CheckCircle2 } from 'lucide-react';
 
 interface StockTransferLedgerProps {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { playSound } from '../../../services/sounds';
+import { playSound } from '../../../services/audio/soundService';
 import { ArrowUpRight, ArrowDownRight, Layers } from 'lucide-react';
 
 interface ShiftMovementModalProps {

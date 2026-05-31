@@ -5,8 +5,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { CreditCard, Wifi, ShieldCheck, HelpCircle, Activity, Delete, Key, Check, RefreshCw, X } from 'lucide-react';
-import { HardwareDeviceSettings } from '../../../services/printService';
-import { playSound } from '../../../services/sounds';
+import { HardwareDeviceSettings } from '../../../services/print/printService';
+import { playSound } from '../../../services/audio/soundService';
 
 interface PaymentTerminalModalProps {
   isOpen: boolean;

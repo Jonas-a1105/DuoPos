@@ -26,8 +26,8 @@ import {
   getSATQrUrl,
   isVenezuelanTaxContext,
   generateSENIATInvoiceText,
-} from '../../../services/fiscal';
-import { playSound } from '../../../services/sounds';
+} from '../../../services/fiscal/index';
+import { playSound } from '../../../services/audio/soundService';
 import SATQRCode from '../../../components/Invoice/SATQRCode';
 
 interface FiscalInspectorModalProps {

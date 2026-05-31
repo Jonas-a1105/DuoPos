@@ -1,4 +1,4 @@
-import { SubscriptionTier, PLANS } from './licensing';
+import { SubscriptionTier, PLANS } from './security/licensingService';
 
 export interface EnforcementResult {
   allowed: boolean;

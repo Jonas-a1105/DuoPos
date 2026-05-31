@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { LegalBillingSettings, TaxCategoryOverride, User } from '../../types';
 import { Percent, Building2, Receipt, ShieldCheck, Save, Sliders, Info, CheckCircle2, RefreshCw, Download } from 'lucide-react';
-import { playSound } from '../../services/sounds';
-import { LicenseDetails } from '../../services/licensing';
+import { playSound } from '../../services/audio/soundService';
+import { LicenseDetails } from '../../services/security/licensingService';
 
 import TaxesSettings from './components/TaxesSettings';
 import CompanySettings from './components/CompanySettings';

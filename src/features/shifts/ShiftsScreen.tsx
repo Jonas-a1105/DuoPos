@@ -6,8 +6,8 @@
 import React, { useState, useMemo } from 'react';
 import { User, CashShift, Transaction } from '../../types/index';
 import { Printer, Clock, Layers, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { playSound } from '../../services/sounds';
-import { toast } from '../../components/Modal/FlashNotifications';
+import { playSound } from '../../services/audio/soundService';
+import { toast } from '../../shared/ui/FlashNotifications/FlashNotifications';
 
 // Subcomponents imports
 import ShiftOpeningCard from './components/ShiftOpeningCard';

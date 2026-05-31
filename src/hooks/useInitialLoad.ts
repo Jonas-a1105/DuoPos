@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import { Product, Customer, Transaction, Branch, CashRegister, StockTransfer, Supplier, PurchaseOrder } from '../types';
 import { DEFAULT_PRODUCTS, DEFAULT_CUSTOMERS, DEFAULT_BILLING_SETTINGS } from '../initialData';
-import { syncLoad, flushPendingQueue, getLocalData, setLocalData } from '../services/supabaseSync';
+import { syncLoad, flushPendingQueue, getLocalData, setLocalData } from '../database/supabaseSync';
 import { useUserStore } from '../stores/useUserStore';
-import { useSalesStore } from '../stores/useSalesStore';
-import { useInventoryStore } from '../stores/useInventoryStore';
-import { useCustomerStore } from '../stores/useCustomerStore';
+import { useSalesStore } from '../features/sales/store/useSalesStore';
+import { useInventoryStore } from '../features/inventory/store/useInventoryStore';
+import { useCustomerStore } from '../features/customers/store/useCustomerStore';
 
 const DEFAULT_BRANCHES: Branch[] = [
   {

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Product } from '../../../types';
-import { playSound } from '../../../services/sounds';
+import { playSound } from '../../../services/audio/soundService';
 
 interface CriticalAlertsProps {
   products: Product[];

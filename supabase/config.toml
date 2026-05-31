@@ -1,0 +1,12 @@
+[auth]
+enabled = true
+
+[db]
+port = 54322
+
+[analytics]
+enabled = false
+
+[functions]
+enabled = true
+include = ["fiscal-localization-engine", "stripe-billing-webhook", "cloud-data-consolidator", "ai-smart-inventory"]

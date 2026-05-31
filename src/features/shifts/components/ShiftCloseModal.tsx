@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { playSound } from '../../../services/sounds';
-import { toast } from '../../../components/Modal/FlashNotifications';
+import { playSound } from '../../../services/audio/soundService';
+import { toast } from '../../../shared/ui/FlashNotifications/FlashNotifications';
 import { Calculator } from 'lucide-react';
-import AeroMascot from '../../../components/Mascot/AeroMascot';
+import AeroMascot from '../../../shared/ui/Mascot/AeroMascot';
 import { User } from '../../../types';
 
 interface ShiftCloseModalProps {

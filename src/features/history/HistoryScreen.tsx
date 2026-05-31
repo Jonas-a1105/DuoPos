@@ -19,10 +19,10 @@ import {
   Download,
 } from 'lucide-react';
 import FiscalInspectorModal from '../sales/components/FiscalInspectorModal';
-import { playSound } from '../../services/sounds';
-import { exportTransactionsToExcel, exportAuditLogsToExcel } from '../../services/exportService';
+import { playSound } from '../../services/audio/soundService';
+import { exportTransactionsToExcel, exportAuditLogsToExcel } from '../../services/files/excelExportService';
 import SATQRCode from '../../components/Invoice/SATQRCode';
-import { getAuditLogs, type AuditLog } from '../../services/auditService';
+import { getAuditLogs, type AuditLog } from '../../services/security/auditLogger';
 
 const generateMockCFDIXML = (txn: Transaction) => {
   if (!txn.invoiceData) return '';
