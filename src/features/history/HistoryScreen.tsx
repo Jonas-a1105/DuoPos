@@ -366,7 +366,7 @@ export default function HistoryScreen({
                     </div>
                   )}
                   <div className="flex justify-between items-center">
-                    <span>Impuesto Ventas (8%):</span>
+                    <span>Impuesto Ventas ({activeReceipt.items[0]?.taxRateApplied !== undefined ? activeReceipt.items[0].taxRateApplied : (billingSettings?.generalTaxRate ?? 16)}%):</span>
                     <span className="text-gray-850">${activeReceipt.tax.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center text-lg font-black text-gray-850 border-t border-gray-100 pt-2">
