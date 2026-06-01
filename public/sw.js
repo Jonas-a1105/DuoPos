@@ -1,10 +1,7 @@
 const CACHE_NAME = 'duopos-cache-v2';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/src/main.tsx',
-  '/src/App.tsx',
-  '/src/index.css'
+  './',
+  'index.html'
 ];
 
 // Installation phase

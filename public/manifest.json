@@ -4,19 +4,19 @@
   "description": "Sistema de gestión de caja, inventario multi-moneda y CRM de lealtad de alto rendimiento.",
   "icons": [
     {
-      "src": "/logo.svg",
+      "src": "logo.svg",
       "type": "image/svg+xml",
       "sizes": "512x512",
       "purpose": "any maskable"
     },
     {
-      "src": "/logo.png",
+      "src": "logo.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any"
     }
   ],
-  "start_url": "/",
+  "start_url": "./",
   "background_color": "#f7f7f7",
   "theme_color": "#ff8525",
   "display": "standalone",
