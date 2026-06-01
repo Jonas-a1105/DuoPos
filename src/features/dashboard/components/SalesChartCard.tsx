@@ -94,7 +94,7 @@ export default function SalesChartCard({ transactions, products, user, onNavigat
       <div className="bg-white border-2 border-[#e5e5e5] border-b-[6px] rounded-3xl p-6 flex flex-col justify-between">
         <div className="space-y-4">
           <h4 className="text-lg font-black text-gray-850 flex items-center gap-1.5 pb-2 border-b border-gray-100 uppercase text-xs tracking-wider">
-            ⚡ Misiones Activas ({isGoalReached ? '1' : '0'}/1)
+            📊 Metas de Operación ({isGoalReached ? '1' : '0'}/1)
           </h4>
 
           <div className="space-y-3">
@@ -117,7 +117,7 @@ export default function SalesChartCard({ transactions, products, user, onNavigat
                   ¡Salva el Negocio!
                 </h5>
                 <p className="text-xs text-gray-400 font-bold mt-0.5">
-                  Alcanza $${user.dailyGoal} en ventas del día. (+40 XP)
+                  Alcanza $${user.dailyGoal} en ventas del día.
                 </p>
               </div>
             </div>
@@ -145,7 +145,7 @@ export default function SalesChartCard({ transactions, products, user, onNavigat
                   Artesano Comercial
                 </h5>
                 <p className="text-xs text-gray-400 font-bold mt-0.5">
-                  Registra un nuevo producto personalizado en inventario. (+15 XP)
+                  Registra un nuevo producto personalizado en inventario.
                 </p>
               </div>
             </div>

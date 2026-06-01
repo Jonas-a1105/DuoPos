@@ -28,7 +28,7 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
 
     if (selectedCust.gems < reward.cost) {
       toast.warning(
-        `⚠️ Saldo insuficiente. El cliente ${selectedCust.name} tiene ${selectedCust.gems} Gemas, pero el cupón "${reward.name}" requiere ${reward.cost} Gemas.`,
+        `⚠️ Saldo de cashback insuficiente. El cliente ${selectedCust.name} tiene $${(selectedCust.gems / 10).toFixed(2)} USD, pero el cupón "${reward.name}" requiere $${(reward.cost / 10).toFixed(2)} USD.`,
       );
       playSound('error');
       return;
@@ -44,7 +44,7 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
           amount: 0,
           type: 'pay' as const, // Treat as informational deduction
           date: new Date().toISOString(),
-          notes: `Canjeó Certificado: "${reward.name}" (${reward.icon}) - Deducción: ${reward.cost} G`,
+          notes: `Canjeó Certificado: "${reward.name}" (${reward.icon}) - Débito Cashback: $${(reward.cost / 10).toFixed(2)} USD`,
         },
         ...(selectedCust.creditHistory || []),
       ],
@@ -54,7 +54,7 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
     playSound('levelup');
 
     setRewardSuccessMsg(
-      `🎉 ¡Felicidades! Se canjeó con éxito "${reward.name}" para el cliente ${selectedCust.name}. Se le han debitado ${reward.cost} Puntos.`,
+      `🎉 ¡Felicidades! Se canjeó con éxito "${reward.name}" para el cliente ${selectedCust.name}. Se le han debitado $${(reward.cost / 10).toFixed(2)} USD.`,
     );
     setTimeout(() => {
       setRewardSuccessMsg('');
@@ -70,7 +70,7 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
             <span>🏆</span> Factor Multiplicador por Categoría de Cliente
           </div>
           <p className="text-xs text-amber-700 leading-relaxed font-bold">
-            Los clientes acumulan puntos de fidelidad por cada venta finalizada. A mayor volumen de compras, mayor es su categoría de cliente y el factor multiplicador de puntos.
+            Los clientes acumulan saldo de cashback por cada venta finalizada. A mayor volumen de compras, mayor es su categoría de cliente y el factor multiplicador de cashback.
           </p>
         </div>
       </div>
@@ -147,7 +147,7 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
               <option value="">-- Buscar & Elegir Cliente --</option>
               {customers.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} ({c.gems} Puntos)
+                  {c.name} (${(c.gems / 10).toFixed(2)} USD de Cashback)
                 </option>
               ))}
             </select>
@@ -159,7 +159,7 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
                 return (
                   <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2 mt-2">
                     <div className="flex justify-between items-center text-xs">
-                      <span className="font-black text-gray-700">Estatus de Lealtad:</span>
+                      <span className="font-black text-gray-700">Categoría de Cliente:</span>
                       <span
                         className={`${meta.bg} ${meta.border} ${meta.text} border text-[9px] font-black uppercase px-2 py-0.5 rounded-lg flex items-center gap-1 select-none`}
                       >
@@ -167,8 +167,8 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
                       </span>
                     </div>
                     <div className="flex justify-between text-xs font-bold font-mono">
-                      <span>Puntos Disponibles:</span>
-                      <span className="text-[#58cc02] font-black">{sel.gems} Pts</span>
+                      <span>Cashback Disponible:</span>
+                      <span className="text-[#58cc02] font-black">${(sel.gems / 10).toFixed(2)} USD</span>
                     </div>
                   </div>
                 );
@@ -183,11 +183,11 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
               <div className="flex items-center gap-1.5">
                 <span className="text-xl">🎁</span>
                 <div className="text-left">
-                  <h3 className="text-xs font-black uppercase text-gray-750">
+                  <h3 className="text-xs font-black uppercase text-gray-755">
                     Catálogo de Beneficios y Cupones StockMaster Pro
                   </h3>
                   <p className="text-[9px] text-gray-400 font-bold uppercase">
-                    Haz click en canjear para debitar los puntos del cliente
+                    Haz click en canjear para debitar el cashback del cliente
                   </p>
                 </div>
               </div>
@@ -214,7 +214,7 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
                   name: 'Rebanada de Pizza Familiar de Jamón',
                   cost: 350,
                   icon: '🍕',
-                  desc: 'Aplica para comida caliente o lunch del día. ¡Canje de racha!',
+                  desc: 'Aplica para comida caliente o lunch del día. ¡Canje de ahorro!',
                 },
                 {
                   id: 'item-4',
@@ -250,7 +250,7 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
                       <div className="flex items-center justify-between">
                         <span className="text-2xl">{reward.icon}</span>
                         <span className="bg-amber-400 text-amber-955 text-[10px] font-black uppercase px-2 py-0.5 rounded-lg border border-amber-300 font-mono">
-                          {reward.cost} Puntos
+                          ${(reward.cost / 10).toFixed(2)} USD
                         </span>
                       </div>
                       <h4 className="text-xs font-black text-gray-800 leading-snug mt-1.5">{reward.name}</h4>

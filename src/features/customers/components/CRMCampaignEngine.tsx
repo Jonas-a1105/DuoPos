@@ -68,9 +68,9 @@ export default function CRMCampaignEngine({ customers, onUpdateCustomer }: CRMCa
     } else if (tmplKey === 'vip_perk') {
       messageText =
         '💎 BENEFICIO EXCLUSIVO VIP: Estimado cliente, por su alto volumen de compras esta semana, le otorgamos un 5% de descuento directo en su próxima facturación. ¡Gracias por confiar en StockMaster Pro!';
-    } else if (tmplKey === 'gift_coupon') {
+    } else if (tmplKey === 'gift_gems') {
       messageText =
-        '🎁 INCENTIVO DE FIDELIDAD: ¡Felicidades! Queremos premiar su preferencia otorgándole un cupón especial de descuento del 10% en su próxima visita para su catálogo de productos. Código: FIDELIDAD10.';
+        '🎁 INCENTIVO DE FIDELIDAD: ¡Felicidades! Queremos premiar su preferencia otorgándole un bono especial de $10.00 USD de Cashback en su monedero de ahorro para su próxima visita. ¡Gracias por su confianza!';
     } else if (tmplKey === 'reactivation') {
       messageText =
         '👋 ¡Le extrañamos en nuestro establecimiento! Presente este mensaje en su próxima compra y obtenga un cupón de 10% de descuento automático en caja. ¡Le esperamos!';
@@ -116,7 +116,7 @@ export default function CRMCampaignEngine({ customers, onUpdateCustomer }: CRMCa
               : crmTemplate === 'vip_perk'
                 ? 'Promoción VIP 2.5x Multiplicador'
                 : crmTemplate === 'gift_gems'
-                  ? 'Inyección Masiva de Gemas (+100 G)'
+                  ? 'Bono de Fidelidad Cashback (+$10.00 USD)'
                   : 'Campaña de Reactivación de Clientes';
 
           const channelName =

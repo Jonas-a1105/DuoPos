@@ -337,7 +337,7 @@ export default function AppSettings({
             value={customTicketFooter}
             onChange={(e) => setCustomTicketFooter(e.target.value)}
             className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-200 text-xs font-bold rounded-xl outline-none focus:border-amber-500 focus:bg-white"
-            placeholder="Ej: Recuerda registrar tu racha y ganar gemas en nuestra app"
+            placeholder="Ej: ¡Gracias por tu compra! Vuelve pronto"
           />
         </div>
 

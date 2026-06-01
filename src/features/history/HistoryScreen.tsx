@@ -252,9 +252,6 @@ export default function HistoryScreen({
                         <div className="space-y-0.5 min-w-0">
                           <div className="flex flex-wrap items-baseline gap-1.5">
                             <span className="font-black text-gray-850 text-sm truncate">ID: {t.id}</span>
-                            <span className="text-[10px] bg-white border border-gray-200 px-1.5 py-0.2 rounded-md font-bold text-gray-500 uppercase tracking-wider text-[8px] flex items-center gap-0.5">
-                              XP: +{t.xpGained} ✨
-                            </span>
                             {isRefunded && (
                               <span className="text-[9px] bg-red-105 text-red-705 border border-red-200 px-1.5 py-0.5 rounded font-black uppercase leading-none">
                                 Reembolsado
@@ -296,8 +293,8 @@ export default function HistoryScreen({
             {activeReceipt ? (
               <div className="bg-white border-2 border-[#e5e5e5] border-b-[8px] rounded-3xl p-5 md:p-6 space-y-5 shadow-sm sticky top-4 animate-scaleUp">
                 <div className="text-center pb-4 border-b-2 border-dashed border-gray-200 space-y-2">
-                  <span className="text-4xl block animate-bounce">🦉</span>
-                  <h3 className="text-xl font-black text-gray-800">Recibo de Racha</h3>
+                  <span className="text-4xl block animate-bounce">🏢</span>
+                  <h3 className="text-xl font-black text-gray-800">Recibo de Venta</h3>
                   <p className="text-xs text-gray-405 font-extrabold uppercase tracking-wide leading-none">
                     Transacción #{activeReceipt.id}
                   </p>
@@ -324,7 +321,7 @@ export default function HistoryScreen({
                         ? '💸 Efectivo'
                         : activeReceipt.paymentMethod === 'card'
                           ? '💳 Tarjeta'
-                          : '⭐ Cupos Duo'}
+                          : '💵 Cashback'}
                     </span>
                   </div>
                 </div>
@@ -346,7 +343,7 @@ export default function HistoryScreen({
                         </div>
                         <span className="text-gray-805 text-xs flex-shrink-0 pl-1">
                           {it.quantity} unidades •{' '}
-                          <span className="font-extrabold text-gray-900">${(it.price * it.quantity).toFixed(2)}</span>
+                          <span className="font-extrabold text-gray-905">${(it.price * it.quantity).toFixed(2)}</span>
                         </span>
                       </div>
                     ))}
@@ -367,7 +364,7 @@ export default function HistoryScreen({
                   )}
                   <div className="flex justify-between items-center">
                     <span>Impuesto Ventas ({activeReceipt.items[0]?.taxRateApplied !== undefined ? activeReceipt.items[0].taxRateApplied : (billingSettings?.generalTaxRate ?? 16)}%):</span>
-                    <span className="text-gray-850">${activeReceipt.tax.toFixed(2)}</span>
+                    <span className="text-gray-855">${activeReceipt.tax.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center text-lg font-black text-gray-850 border-t border-gray-100 pt-2">
                     <span className="flex items-center gap-0.5 font-extrabold">Total Cierre:</span>
@@ -375,12 +372,12 @@ export default function HistoryScreen({
                   </div>
                 </div>
 
-                {/* Reward Notification Banner */}
-                <div className="bg-[#f2ffd9] border border-[#d2f09d] rounded-2xl p-3 flex items-center justify-between text-xs font-bold text-gray-650">
-                  <span className="flex items-center gap-1 text-[#58cc02] font-black uppercase">
-                    <Sparkles size={14} /> Recompensa:
+                {/* Cashback Notification Banner */}
+                <div className="bg-sky-50 border border-sky-150 rounded-2xl p-3 flex items-center justify-between text-xs font-bold text-gray-650">
+                  <span className="flex items-center gap-1 text-sky-600 font-black uppercase">
+                    💳 Cashback Acumulado:
                   </span>
-                  <span className="text-[#58cc02] font-black font-mono">+{activeReceipt.xpGained} XP Ganados</span>
+                  <span className="text-sky-600 font-black font-mono">+${(Math.max(1, Math.floor(activeReceipt.total)) / 10).toFixed(2)} USD</span>
                 </div>
 
                 {/* ADVANCED LEGAL INVOICE CFDI VIEWER */}

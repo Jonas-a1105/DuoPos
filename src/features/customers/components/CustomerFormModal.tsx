@@ -75,8 +75,7 @@ export default function CustomerFormModal({
         creditUsed: 0,
         creditHistory: [],
       });
-      playSound('levelup');
-      onGrantXp(25); // Gamified registry task!
+      playSound('success');
     }
 
     onClose();
@@ -173,7 +172,7 @@ export default function CustomerFormModal({
             type="submit"
             className="w-full bg-[#58cc02] text-white border-b-4 border-[#3c9e01] hover:bg-[#61e002] active:translate-y-[2px] active:border-b-2 py-3 rounded-xl font-black text-xs uppercase tracking-wider text-center cursor-pointer transition-all mt-4 flex items-center justify-center gap-1"
           >
-            <span>{editingCustomer ? 'Guardar Cambios ⚡' : 'Alta de Cliente (+25 XP) 🎉'}</span>
+            <span>{editingCustomer ? 'Guardar Cambios ⚡' : 'Alta de Cliente 🎉'}</span>
           </button>
         </form>
       </div>

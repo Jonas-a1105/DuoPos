@@ -71,7 +71,7 @@ export default function SettingsScreen({
   const [ticketWidth, setTicketWidth] = useState<'80mm' | '58mm'>(settings.ticketWidth || '80mm');
   const [customTicketHeader, setCustomTicketHeader] = useState(settings.customTicketHeader || '');
   const [customTicketFooter, setCustomTicketFooter] = useState(
-    settings.customTicketFooter || '¡Gracias por su racha de compra!',
+    settings.customTicketFooter || '¡Gracias por su preferencia!',
   );
   const [kdsDelayMinutes, setKdsDelayMinutes] = useState(settings.kdsDelayMinutes || 10);
   const [pacUsername, setPacUsername] = useState(settings.pacUsername || '');
@@ -114,7 +114,7 @@ export default function SettingsScreen({
     };
 
     onSaveSettings(updatedSettings);
-    onGrantXp(50); // XP gained for legal alignment!
+    // XP removed
     playSound('levelup');
 
     setSaveSuccess(true);
@@ -132,18 +132,17 @@ export default function SettingsScreen({
         </div>
         <div className="relative z-10 space-y-2">
           <div className="flex items-center gap-2">
-            <span className="bg-[#ffd700] text-amber-950 text-[10px] font-black uppercase px-2 py-0.5 tracking-wider rounded-lg border border-white leading-none">
+            <span className="bg-[#ffd700] text-amber-955 text-[10px] font-black uppercase px-2 py-0.5 tracking-wider rounded-lg border border-white leading-none">
               Módulo Fiscal Avanzado 🏛️
             </span>
-            <span className="text-white text-xs font-bold font-mono">★ Cumplimiento de Racha Legal</span>
+            <span className="text-white text-xs font-bold font-mono">★ Cumplimiento Normativo / Legal</span>
           </div>
           <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight leading-none">
             Impuestos y Facturación Electrónica SAT Mock
           </h2>
           <p className="text-xs md:text-sm text-green-50 leading-relaxed max-w-xl font-bold">
             Configura las tasas impositivas por categoría, el cálculo de precios inclusive/neto y emite timbrados
-            fiscales con firma criptográfica simétrica. ¡Gana <strong>+50 XP</strong> de racha comercial al guardar
-            cambios validos!
+            fiscales con firma criptográfica simétrica. Ajustes validados y sincronizados en tiempo real.
           </p>
         </div>
       </div>
@@ -351,7 +350,7 @@ export default function SettingsScreen({
               <span className="text-2xl animate-bounce">⚡</span>
               <div>
                 <p className="text-xs font-black text-gray-800 leading-none">Guardar Configuración Fiscal</p>
-                <p className="text-[10px] text-gray-400 font-extrabold uppercase mt-1">Otorga +50 XP a tu cuenta</p>
+                <p className="text-[10px] text-gray-400 font-extrabold uppercase mt-1">Sincronización instantánea</p>
               </div>
             </div>
 
@@ -359,7 +358,7 @@ export default function SettingsScreen({
               {saveSuccess && (
                 <span className="text-xs font-black text-[#58cc02] animate-pulse flex items-center gap-1">
                   <CheckCircle2 size={14} strokeWidth={3} />
-                  ¡Ajustes Fiscales del SAT Sincronizados con Racha!
+                  ¡Ajustes Fiscales del SAT Sincronizados con Éxito!
                 </span>
               )}
 

@@ -488,10 +488,10 @@ export default function ShiftsScreen({
                                     ? 'Efectivo 💵'
                                     : txn.paymentMethod === 'card'
                                       ? 'Electrónico'
-                                      : 'Puntos 💎'}
+                                      : 'Cashback 💵'}
                               </span>
                             </div>
-                            <p className="text-[9px] text-gray-450 font-bold mt-1.5">
+                            <p className="text-[9px] text-gray-455 font-bold mt-1.5">
                               {new Date(txn.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} •{' '}
                               {txn.items.length} artículos cobrados
                               {txn.isMixedPayment &&
@@ -502,9 +502,6 @@ export default function ShiftsScreen({
                           <div className="text-right">
                             <span className="text-xs font-black font-mono block text-gray-850">
                               ${txn.total.toFixed(2)}
-                            </span>
-                            <span className="text-[8px] text-gray-400 font-extrabold uppercase leading-none block mt-0.5">
-                              +{txn.xpGained} XP
                             </span>
                           </div>
                         </div>

@@ -124,7 +124,7 @@ export default function CheckoutWizard({
             {[
               { key: 'cash', label: 'Efectivo', icon: '💸' },
               { key: 'card', label: 'Tarjeta', icon: '💳' },
-              { key: 'points', label: 'DuoPuntos', icon: '⭐' },
+              { key: 'points', label: 'Cashback', icon: '💵' },
               { key: 'credit', label: 'Fiado', icon: '📝' },
             ].map((item) => (
               <button
@@ -171,7 +171,7 @@ export default function CheckoutWizard({
               </span>
             </div>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer select-none">
+          <label className="relative inline-flex inline-flex items-center cursor-pointer select-none">
             <input
               type="checkbox"
               checked={isMixedPayment}
@@ -340,12 +340,12 @@ export default function CheckoutWizard({
         ) : paymentMethod === 'points' ? (
           <div className="p-4 bg-blue-50 bg-opacity-80 rounded-2xl border border-blue-200 text-left space-y-2 text-xs font-bold text-gray-700">
             <p className="text-blue-800 font-black uppercase text-[10px] flex items-center gap-1">
-              <span>⭐</span> Canje por DuoPuntos / Certificados
+              <span>💵</span> Canje por Saldo Cashback
             </p>
-            <p>Se realiza el descuento de puntos de su racha activa.</p>
+            <p>Se realiza el descuento del saldo de cashback acumulado del cliente.</p>
             {selectedCustomer && (
               <p className="text-[10px] text-gray-500">
-                Saldo actual de gemas: <strong className="text-green-600">{selectedCustomer.gems} G</strong>
+                Saldo de Cashback: <strong className="text-green-600">${(selectedCustomer.gems / 10).toFixed(2)} USD</strong>
               </p>
             )}
           </div>
@@ -362,10 +362,10 @@ export default function CheckoutWizard({
         {selectedCustomer && (
           <div className="bg-sky-50 border border-sky-150 p-3 rounded-2xl flex items-center justify-between text-xs font-bold leading-normal text-sky-900 text-left">
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-xl select-none">🎓</span>
+              <span className="text-xl select-none">💳</span>
               <div className="min-w-0">
                 <span className="text-[9px] uppercase font-black text-sky-400 block leading-tight">
-                  Cliente Premium de la Racha
+                  Programa de Ahorro / Cashback
                 </span>
                 <span className="text-gray-800 font-extrabold truncate text-xs block">{selectedCustomer.name}</span>
               </div>
@@ -373,10 +373,10 @@ export default function CheckoutWizard({
 
             <div className="text-right shrink-0 font-extrabold">
               {gemsToRedeem > 0 && (
-                <p className="text-red-500 font-black font-mono text-[10px]">📉 Canjea: -{gemsToRedeem} Gems</p>
+                <p className="text-red-500 font-black font-mono text-[10px]">📉 Débito: -${(gemsToRedeem / 10).toFixed(2)} USD</p>
               )}
               <p className="text-[#58cc02] font-black font-mono text-[10px]">
-                📈 Acumula: +{Math.max(1, Math.floor(totalAmount))} Gems
+                📈 Crédito: +${(Math.max(1, Math.floor(totalAmount)) / 10).toFixed(2)} USD
               </p>
             </div>
           </div>

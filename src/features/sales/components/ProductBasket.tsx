@@ -489,8 +489,8 @@ export default function ProductBasket({
             )}
           </div>
 
-          {/* Asociar Cliente de Lealtad */}
-          {cart.length > 0 && (
+            {/* Asociar Cliente de Lealtad */}
+            {cart.length > 0 && (
             <div className="bg-[#fcfcfc] border-2 border-gray-100 rounded-2xl p-3 space-y-2 mt-2 select-none text-left">
               <div className="flex justify-between items-center bg-white border border-gray-155 p-2 rounded-xl">
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -501,14 +501,13 @@ export default function ProductBasket({
                         {selectedCustomer.name}
                       </p>
                       <p className="text-[9px] text-gray-400 font-extrabold uppercase tracking-wide flex items-center gap-0.5">
-                        <span>Liga {selectedCustomer.league}</span> •{' '}
-                        <span className="text-[#58cc02]">💎 {selectedCustomer.gems} G</span>
+                        <span className="text-[#58cc02]">Cashback: ${(selectedCustomer.gems / 10).toFixed(2)} USD</span>
                       </p>
                     </div>
                   ) : (
                     <div>
                       <p className="text-xs font-black text-gray-400">Sin cliente asociado</p>
-                      <p className="text-[9px] text-gray-300 font-bold uppercase">Suma racha de lealtad</p>
+                      <p className="text-[9px] text-gray-300 font-bold uppercase">Programa de Cashback</p>
                     </div>
                   )}
                 </div>
@@ -521,7 +520,7 @@ export default function ProductBasket({
                       setUseGemsDiscount(false);
                       playSound('click');
                     }}
-                    className="text-red-500 hover:text-red-650 font-extrabold text-[10px] uppercase border border-red-100 px-2 py-1 rounded-lg hover:bg-red-50 cursor-pointer"
+                    className="text-red-500 hover:text-red-655 font-extrabold text-[10px] uppercase border border-red-100 px-2 py-1 rounded-lg hover:bg-red-50 cursor-pointer"
                   >
                     Quitar
                   </button>
@@ -541,7 +540,7 @@ export default function ProductBasket({
                     <option value="">+ Asociar</option>
                     {customers.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.name} (💎{c.gems})
+                        {c.name} (${(c.gems / 10).toFixed(2)} USD)
                       </option>
                     ))}
                   </select>
@@ -551,7 +550,7 @@ export default function ProductBasket({
               {selectedCustomer && selectedCustomer.gems >= 10 && (
                 <div className="bg-white border border-gray-150 rounded-xl p-2.5 space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2 cursor-pointer font-extrabold text-[10px] uppercase tracking-wider text-gray-650">
+                    <label className="flex items-center gap-2 cursor-pointer font-extrabold text-[10px] uppercase tracking-wider text-gray-655">
                       <input
                         type="checkbox"
                         checked={useGemsDiscount}
@@ -561,18 +560,16 @@ export default function ProductBasket({
                         }}
                         className="rounded border-gray-300 text-[#58cc02] focus:ring-[#58cc02] cursor-pointer"
                       />
-                      <span>Canjear Gemas de Duo</span>
+                      <span>Aplicar Cashback</span>
                     </label>
                     <span className="text-xs font-black font-mono text-[#58cc02] flex items-center gap-0.5">
-                      💎 {selectedCustomer.gems}
+                      ${(selectedCustomer.gems / 10).toFixed(2)} USD
                     </span>
                   </div>
 
                   {useGemsDiscount && (
                     <div className="text-[10px] text-gray-400 font-bold leading-normal pt-1.5 border-t border-dashed">
-                      Canjeando <span className="text-[#58cc02] font-black">{gemsToRedeem} gemas</span> por un descuento
-                      directo de <span className="text-gray-800 font-black">${gemsDiscount.toFixed(2)} USD</span> (10
-                      Gemas = $1.00 desc).
+                      Canjeando <span className="text-[#58cc02] font-black">${(gemsToRedeem / 10).toFixed(2)} USD de cashback</span> por un descuento directo de <span className="text-gray-800 font-black">${gemsDiscount.toFixed(2)} USD</span>.
                     </div>
                   )}
                 </div>
@@ -1113,9 +1110,8 @@ export default function ProductBasket({
                       {selectedCustomer ? (
                         <div className="min-w-0 text-left">
                           <p className="text-xs font-black text-gray-800 truncate">{selectedCustomer.name}</p>
-                          <p className="text-[9px] text-gray-400 font-extrabold uppercase tracking-wide">
-                            Liga {selectedCustomer.league} •{' '}
-                            <span className="text-[#58cc02]">💎 {selectedCustomer.gems} G</span>
+                          <p className="text-[9px] text-[#58cc02] font-extrabold uppercase tracking-wide">
+                            Cashback: ${(selectedCustomer.gems / 10).toFixed(2)} USD
                           </p>
                         </div>
                       ) : (
@@ -1133,7 +1129,7 @@ export default function ProductBasket({
                           setUseGemsDiscount(false);
                           playSound('click');
                         }}
-                        className="text-red-500 hover:text-red-650 font-extrabold text-[10px] uppercase border border-red-100 px-2 py-1 rounded-lg hover:bg-red-50 cursor-pointer"
+                        className="text-red-500 hover:text-red-655 font-extrabold text-[10px] uppercase border border-red-100 px-2 py-1 rounded-lg hover:bg-red-50 cursor-pointer"
                       >
                         Quitar
                       </button>
@@ -1152,7 +1148,7 @@ export default function ProductBasket({
                         <option value="">+ Asociar Cliente</option>
                         {customers.map((c) => (
                           <option key={c.id} value={c.id}>
-                            {c.name} (💎{c.gems})
+                            {c.name} (${(c.gems / 10).toFixed(2)} USD)
                           </option>
                         ))}
                       </select>
@@ -1172,9 +1168,9 @@ export default function ProductBasket({
                             }}
                             className="rounded border-gray-300 text-[#58cc02]"
                           />
-                          <span>Canjear Gemas</span>
+                          <span>Aplicar Cashback</span>
                         </label>
-                        <span className="text-xs font-black font-mono text-[#58cc02]">💎 {selectedCustomer.gems}</span>
+                        <span className="text-xs font-black font-mono text-[#58cc02]">${(selectedCustomer.gems / 10).toFixed(2)} USD</span>
                       </div>
                       {useGemsDiscount && (
                         <p className="text-[9px] text-gray-400 font-bold mt-1.5 pt-1.5 border-t border-dashed text-left">
