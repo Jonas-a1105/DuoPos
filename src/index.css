@@ -8,10 +8,12 @@
 
   --color-gray-105: #f4f5f7;
   --color-gray-150: #eef0f2;
+  --color-gray-155: #eef0f2;
   --color-gray-205: #e2e8f0;
   --color-gray-210: #e2e8f0;
   --color-gray-250: #cbd5e1;
   --color-gray-550: #64748b;
+  --color-gray-555: #94a3b8;
   --color-gray-650: #475569;
   --color-gray-750: #334155;
   --color-gray-805: #1e293b;
@@ -654,3 +656,9 @@
   transform: scale(1.06) translateY(-2px);
   filter: drop-shadow(0 6px 15px rgba(251, 191, 36, 0.25));
 }
+
+/* Ensure all default borders in light-theme contexts default to soft modern gray instead of inheriting dark text colors */
+*, ::after, ::before, ::backdrop {
+  border-color: var(--duo-card-border, #e5e5e5);
+}
+
