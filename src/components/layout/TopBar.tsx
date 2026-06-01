@@ -50,11 +50,11 @@ export default function TopBar({ isMuted, toggleMute, onOpenHardwareHub, onSync,
     <div className="bg-white border-2 border-[#e5e5e5] border-b-4 rounded-2xl p-2.5 sm:p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-6 mt-1 md:mt-0 shadow-xs">
       <div className="flex items-center justify-between w-full md:w-auto gap-2 flex-wrap">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-red-500 fill-red-500 font-extrabold flex items-center gap-1 bg-red-50 border border-red-100 px-2 py-1 rounded-xl text-xs md:text-sm shadow-xs select-none">
-            <Flame size={14} fill="currentColor" className="flex-shrink-0 animate-pulse text-red-500" /> {user.streak} días racha
+          <span className="text-slate-700 font-extrabold flex items-center gap-1.5 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-xl text-xs md:text-sm shadow-xs select-none">
+            💼 {licenseDetails.companyName || 'StockMaster Pro'}
           </span>
-          <span className="text-[#58cc02] font-extrabold flex items-center gap-1 bg-green-50 border border-green-100 px-2 py-1 rounded-xl text-xs md:text-sm shadow-xs select-none">
-            👑 Nivel {user.level}
+          <span className="text-emerald-700 font-extrabold flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-xl text-xs md:text-sm shadow-xs select-none">
+            🟢 Caja Abierta
           </span>
         </div>
 

@@ -10,7 +10,7 @@ export function useSession() {
 
   // Supabase Auth State Change Listener (fallback when Clerk is not configured)
   useEffect(() => {
-    if (!!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
+    if (import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
       return; // Clerk handles session via ClerkSessionSync component
     }
     const {

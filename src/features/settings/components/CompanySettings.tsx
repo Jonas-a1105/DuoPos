@@ -28,7 +28,7 @@ export default function CompanySettings({
   return (
     <div className="space-y-6 animate-fadeIn text-left">
       <div className="border-b pb-3 flex items-center gap-2">
-        <span className="text-2xl select-none">馃彚</span>
+        <span className="text-2xl select-none">??</span>
         <div>
           <h3 className="text-sm font-black uppercase text-gray-800 tracking-tight font-sans">
             Datos de Empresa Emisor Corporativo
@@ -40,27 +40,29 @@ export default function CompanySettings({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-sans text-gray-700">
-        {/* Raz贸n Social */}
+        {/* Raz髇 Social */}
         <div className="md:col-span-2 space-y-1">
-          <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">
-            Raz贸n Social / Denominaci贸n Comercial
+          <label htmlFor="company-name" className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">
+            Raz髇 Social / Denominaci髇 Comercial
           </label>
           <input
+            id="company-name"
             type="text"
             required
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
             className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-200 text-xs font-bold rounded-xl outline-none focus:border-amber-500 focus:bg-white"
-            placeholder="Ej: B煤hos Felices S.A. de C.V."
+            placeholder="Ej: B鷋os Felices S.A. de C.V."
           />
         </div>
 
-        {/* RFC / Identificaci贸n Fiscal */}
+        {/* RFC / Identificaci髇 Fiscal */}
         <div className="space-y-1">
-          <label className="text-[10px] uppercase font-black text-gray-455 tracking-wider block">
-            RFC / Identificaci贸n Fiscal Tributaria
+          <label htmlFor="tax-id" className="text-[10px] uppercase font-black text-gray-455 tracking-wider block">
+            RFC / Identificaci髇 Fiscal Tributaria
           </label>
           <input
+            id="tax-id"
             type="text"
             required
             value={companyTaxId}
@@ -70,12 +72,13 @@ export default function CompanySettings({
           />
         </div>
 
-        {/* R茅gimen Fiscal */}
+        {/* R間imen Fiscal */}
         <div className="space-y-1">
-          <label className="text-[10px] uppercase font-black text-gray-455 tracking-wider block">
-            R茅gimen Fiscal (Cat谩logo SAT)
+          <label htmlFor="company-regime" className="text-[10px] uppercase font-black text-gray-455 tracking-wider block">
+            R間imen Fiscal (Cat醠ogo SAT)
           </label>
           <select
+            id="company-regime"
             value={companyRegime}
             onChange={(e) => setCompanyRegime(e.target.value)}
             className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-205 text-xs font-bold rounded-xl outline-none focus:border-amber-500 focus:bg-white cursor-pointer"
@@ -84,18 +87,19 @@ export default function CompanySettings({
             <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
             <option value="605">605 - Sueldos y Salarios e Ingresos Asimilados a Salarios</option>
             <option value="606">606 - Arrendamiento</option>
-            <option value="612">612 - Personas F铆sicas con Actividades Empresariales y Profesionales</option>
-            <option value="621">621 - Incorporaci贸n Fiscal</option>
-            <option value="626">626 - R茅gimen Simplificado de Confianza (RESICO)</option>
+            <option value="612">612 - Personas F韘icas con Actividades Empresariales y Profesionales</option>
+            <option value="621">621 - Incorporaci髇 Fiscal</option>
+            <option value="626">626 - R間imen Simplificado de Confianza (RESICO)</option>
           </select>
         </div>
 
-        {/* C贸digo Postal */}
+        {/* C骴igo Postal */}
         <div className="space-y-1">
-          <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">
-            Lugar de Expedici贸n (C贸digo Postal CP)
+          <label htmlFor="postal-code" className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">
+            Lugar de Expedici髇 (C骴igo Postal CP)
           </label>
           <input
+            id="postal-code"
             type="text"
             required
             value={companyPostalCode}
@@ -105,18 +109,19 @@ export default function CompanySettings({
           />
         </div>
 
-        {/* Direcci贸n F铆sica */}
+        {/* Direcci髇 F韘ica */}
         <div className="md:col-span-2 space-y-1">
-          <label className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">
+          <label htmlFor="company-address" className="text-[10px] uppercase font-black text-gray-450 tracking-wider block">
             Domicilio de Oficina & Bodega Principal
           </label>
           <input
+            id="company-address"
             type="text"
             required
             value={companyAddress}
             onChange={(e) => setCompanyAddress(e.target.value)}
             className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-205 text-xs font-bold rounded-xl outline-none focus:border-amber-500 focus:bg-white"
-            placeholder="Ej: Av. de la Racha 404, Col. Bosques del B煤ho, Ciudad de M茅xico"
+            placeholder="Ej: Av. de la Racha 404, Col. Bosques del B鷋o, Ciudad de M閤ico"
           />
         </div>
       </div>

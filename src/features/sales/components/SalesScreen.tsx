@@ -667,7 +667,7 @@ export default function SalesScreen({
 
     playSound('kaching');
 
-    let xpGranted = Math.max(10, Math.round(totalAmount / 4));
+    const xpGranted = Math.max(10, Math.round(totalAmount / 4));
     const newTxnId = `TXN-${Math.floor(1000 + Math.random() * 9000)}`;
 
     let calculatedInvoice = undefined;

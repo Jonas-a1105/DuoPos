@@ -406,7 +406,7 @@ export async function syncLoad<T>(
     ) {
       cleanId = ensureValidUuid(rawItem.id, prefix as any);
     }
-    let item = { ...rawItem, id: cleanId };
+    const item = { ...rawItem, id: cleanId };
 
     if (table === 'products') {
       const mapped = 'price' in item ? mapProductFromDb(item) : item;

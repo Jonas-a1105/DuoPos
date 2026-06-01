@@ -166,14 +166,14 @@ export default function CustomerDirectory({
             }}
             className="bg-white border-2 border-gray-200 border-b-4 rounded-xl px-3.5 py-1.5 font-bold text-xs outline-none focus:border-[#1cb0f6] text-gray-700 max-w-xs cursor-pointer select-none"
           >
-            <option value="all">Todas las Ligas 🏆</option>
-            <option value="Bronce">🥉 Liga Bronce</option>
-            <option value="Plata">🥈 Liga Plata</option>
-            <option value="Oro">🥇 Liga Oro</option>
-            <option value="Zafiro">🔹 Liga Zafiro</option>
-            <option value="Rubí">❤️ Liga Rubí</option>
-            <option value="Esmeralda">🟢 Liga Esmeralda</option>
-            <option value="Obsidiana">💎 Liga Obsidiana</option>
+            <option value="all">Todas las Categorías 🏆</option>
+            <option value="Bronce">🥉 Nivel Bronce</option>
+            <option value="Plata">🥈 Nivel Plata</option>
+            <option value="Oro">🥇 Nivel Oro</option>
+            <option value="Zafiro">🔹 Nivel Zafiro</option>
+            <option value="Rubí">❤️ Nivel Rubí</option>
+            <option value="Esmeralda">🟢 Nivel Esmeralda</option>
+            <option value="Obsidiana">💎 Nivel VIP</option>
           </select>
 
           <button
@@ -181,7 +181,7 @@ export default function CustomerDirectory({
             className="flex-1 md:flex-none py-2 px-4 bg-[#58cc02] text-white border-b-4 border-[#3c9e01] hover:bg-[#61e002] active:translate-y-[2px] active:border-b-2 font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
           >
             <UserPlus size={15} strokeWidth={3} />
-            <span>Nuevo Cliente (+25 XP)</span>
+            <span>Nuevo Cliente 👥</span>
           </button>
 
           <button
@@ -235,7 +235,7 @@ export default function CustomerDirectory({
             onClick={onOpenNewForm}
             className="mt-2 py-2 px-4 bg-[#1cb0f6] text-white border-b-4 border-[#128bd0] hover:bg-[#34beff] active:translate-y-[2px] rounded-xl font-black text-xs uppercase"
           >
-            Registrar Cliente de Racha ⚡
+            Registrar Cliente Frecuente 👥
           </button>
         </div>
       ) : (
@@ -283,10 +283,10 @@ export default function CustomerDirectory({
                         setManualGemsAdjustOpen(cust.id);
                         playSound('click');
                       }}
-                      title="Ajuste manual de gemas"
+                      title="Ajuste manual de puntos de fidelidad"
                     >
                       <span>{meta.emoji}</span>
-                      <span>LIGA {meta.name}</span>
+                      <span>{meta.name}</span>
                     </div>
                   </div>
 
@@ -372,17 +372,17 @@ export default function CustomerDirectory({
                     <span className="text-lg">💎</span>
                     <div className="text-left">
                       <span className="text-[8px] uppercase font-black text-gray-400 block leading-tight">
-                        Gemas Loyalty
+                        Puntos Loyalty
                       </span>
                       <span className="text-xs font-black text-[#58cc02] font-mono leading-none">
-                        {cust.gems} <span className="text-[9px] text-gray-400">G</span>
+                        {cust.gems} <span className="text-[9px] text-gray-400">Pts</span>
                       </span>
                     </div>
                   </div>
 
                   <div className="text-right shrink-0">
                     <span className="text-[8px] uppercase font-black text-gray-400 block leading-none">
-                      Compras de Racha
+                      Compras Registradas
                     </span>
                     <span className="text-xs font-black text-gray-500 font-mono inline-block">
                       {cust.purchasesCount} ventas
@@ -438,7 +438,7 @@ export default function CustomerDirectory({
                     onClick={() => {
                       if (
                         confirm(
-                          `¿Estás seguro de que deseas eliminar a ${cust.name}? El historial cargado persistirá pero ya no acumulará gemas.`,
+                          `¿Estás seguro de que deseas eliminar a ${cust.name}? El historial cargado persistirá.`,
                         )
                       ) {
                         onDeleteCustomer(cust.id);
@@ -456,7 +456,7 @@ export default function CustomerDirectory({
                 {manualGemsAdjustOpen === cust.id && (
                   <div className="absolute inset-0 z-10 bg-white/95 backdrop-blur-xs rounded-3xl p-4 flex flex-col justify-center space-y-3">
                     <span className="text-[10px] uppercase font-black text-gray-400 block tracking-wider text-center">
-                      Ajustar Gemas Manuales - {cust.name}
+                      Ajustar Puntos Manuales - {cust.name}
                     </span>
                     <div className="grid grid-cols-2 gap-2">
                       <button
@@ -486,7 +486,7 @@ export default function CustomerDirectory({
                     </div>
 
                     <div className="relative">
-                      <span className="absolute left-3 top-1.5 font-mono font-black text-[#58cc02] text-xs">G</span>
+                      <span className="absolute left-3 top-1.5 font-mono font-black text-[#58cc02] text-xs">Pts</span>
                       <input
                         type="number"
                         value={adjustAmount}
@@ -526,14 +526,14 @@ export default function CustomerDirectory({
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fadeIn text-gray-800">
           <div className="bg-white border-4 border-gray-205 border-b-[10px] rounded-3xl max-w-lg w-full p-6 space-y-5 relative text-left">
             
-            {/* Header / Owl illustration */}
+            {/* Header / illustration */}
             <div className="flex items-center gap-4">
               <span className="text-5xl select-none animate-bounce">
-                {importResult.imported.length > 0 ? '🦉' : '❌'}
+                {importResult.imported.length > 0 ? '📂' : '❌'}
               </span>
               <div>
                 <h3 className="text-xl font-black text-gray-800 uppercase tracking-wide">
-                  {importResult.imported.length > 0 ? '¡Importación de Clientes Lista!' : 'Fallo en Importación'}
+                  {importResult.imported.length > 0 ? '¡Importación de Clientes Completada!' : 'Fallo en Importación'}
                 </h3>
                 <p className="text-xs text-gray-400 font-extrabold uppercase">
                   Auditoría y Bitácora del Archivo Excel
@@ -591,7 +591,7 @@ export default function CustomerDirectory({
                 }}
                 className="w-full bg-[#58cc02] text-white hover:bg-[#61e002] py-3 font-black text-sm rounded-2xl border-b-4 border-green-700 uppercase tracking-wide cursor-pointer transition-all active:translate-y-0.5 active:border-b-2 text-center flex items-center justify-center gap-1"
               >
-                ¡Entendido, Duo! 🚀
+                ¡Entendido! 🚀
               </button>
             </div>
           </div>

@@ -32,7 +32,7 @@ export const LEAGUE_METADATA: Record<
   { name: string; color: string; bg: string; border: string; text: string; emoji: string; nextThreshold: number }
 > = {
   Bronce: {
-    name: 'Bronce',
+    name: 'Nivel Bronce',
     color: '#cd7f32',
     bg: 'bg-[#faf2eb]',
     border: 'border-[#e6c2a4]',
@@ -41,7 +41,7 @@ export const LEAGUE_METADATA: Record<
     nextThreshold: 150,
   },
   Plata: {
-    name: 'Plata',
+    name: 'Nivel Plata',
     color: '#c0c0c0',
     bg: 'bg-[#f2f2f2]',
     border: 'border-[#d9d9d9]',
@@ -50,7 +50,7 @@ export const LEAGUE_METADATA: Record<
     nextThreshold: 300,
   },
   Oro: {
-    name: 'Oro',
+    name: 'Nivel Oro',
     color: '#ffd700',
     bg: 'bg-[#fffbeb]',
     border: 'border-[#fde047]',
@@ -59,7 +59,7 @@ export const LEAGUE_METADATA: Record<
     nextThreshold: 600,
   },
   Zafiro: {
-    name: 'Zafiro',
+    name: 'Nivel Zafiro',
     color: '#1cb0f6',
     bg: 'bg-[#f0f9ff]',
     border: 'border-[#bae6fd]',
@@ -68,7 +68,7 @@ export const LEAGUE_METADATA: Record<
     nextThreshold: 1200,
   },
   Rubí: {
-    name: 'Rubí',
+    name: 'Nivel Rubí',
     color: '#ff4b4b',
     bg: 'bg-[#fef2f2]',
     border: 'border-[#fecaca]',
@@ -77,7 +77,7 @@ export const LEAGUE_METADATA: Record<
     nextThreshold: 2500,
   },
   Esmeralda: {
-    name: 'Esmeralda',
+    name: 'Nivel Esmeralda',
     color: '#58cc02',
     bg: 'bg-[#f0fdf4]',
     border: 'border-[#bbf7d0]',
@@ -86,7 +86,7 @@ export const LEAGUE_METADATA: Record<
     nextThreshold: 5000,
   },
   Obsidiana: {
-    name: 'Obsidiana',
+    name: 'Nivel VIP',
     color: '#4b4b4b',
     bg: 'bg-[#f4f4f5]',
     border: 'border-[#e4e4e7]',
@@ -150,14 +150,14 @@ export default function CustomersScreen({
       {/* HEADER HERO */}
       <div className="bg-[#1cb0f6] border-2 border-[#128bd0] border-b-8 rounded-3xl p-5 md:p-6 text-white relative overflow-hidden shadow-xs">
         <div className="absolute right-4 -bottom-3 opacity-15 text-8xl md:text-9xl select-none font-black translate-x-4">
-          🎓
+          💼
         </div>
         <div className="relative z-10 space-y-2">
           <div className="flex items-center gap-2">
             <span className="bg-[#ffd700] text-amber-955 text-[10px] font-black uppercase px-2 py-0.5 tracking-wider rounded-lg border border-white leading-none">
-              Finanzas de Racha 💸
+              Fidelidad y Crédito 💼
             </span>
-            <span className="text-white text-xs font-bold font-mono">★ Crédito Social y Fidelidad DuoPOS</span>
+            <span className="text-white text-xs font-bold font-mono">★ Crédito Comercial y Puntos de Fidelidad</span>
           </div>
           <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight leading-none">
             Clientes, Fiado y Líneas de Crédito
@@ -216,7 +216,7 @@ export default function CustomersScreen({
           }`}
         >
           <span>💎</span>
-          <span>Tienda VIP & Fidelización</span>
+          <span>Tienda de Beneficios y Puntos</span>
         </button>
         <button
           onClick={() => {
@@ -230,7 +230,7 @@ export default function CustomersScreen({
           }`}
         >
           <span>🚀</span>
-          <span>CRM & Campañas de Racha</span>
+          <span>CRM & Campañas de Fidelización</span>
         </button>
       </div>
 
@@ -277,9 +277,9 @@ export default function CustomersScreen({
             💎
           </div>
           <div className="text-left">
-            <span className="text-[9px] uppercase font-black text-gray-400 block leading-tight">Gemas de Canje</span>
+            <span className="text-[9px] uppercase font-black text-gray-400 block leading-tight">Puntos de Canje</span>
             <span className="text-base font-black text-amber-500 font-mono leading-none">
-              {customers.reduce((acc, c) => acc + c.gems, 0)} <span className="text-[10px] text-gray-450">G</span>
+              {customers.reduce((acc, c) => acc + c.gems, 0)} <span className="text-[10px] text-gray-450">Pts</span>
             </span>
           </div>
         </div>

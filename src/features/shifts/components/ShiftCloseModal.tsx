@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { playSound } from '../../../services/audio/soundService';
 import { toast } from '../../../shared/ui/FlashNotifications/FlashNotifications';
 import { Calculator } from 'lucide-react';
-import AeroMascot from '../../../shared/ui/Mascot/AeroMascot';
 import { User } from '../../../types';
 
 interface ShiftCloseModalProps {
@@ -190,7 +189,7 @@ export default function ShiftCloseModal({
                     ¡Caja Cuadrada Perfectamente!
                   </strong>
                   ¡Excelente! El efectivo reportado coincide exactamente con las proyecciones teóricas del sistema de
-                  StockMaster Pro. Recibirá un bono de XP.
+                  StockMaster Pro.
                 </div>
               )}
             </div>
@@ -310,20 +309,13 @@ export default function ShiftCloseModal({
             />
           </div>
 
-          {/* Solver suggestions with Mascot */}
-          <div className="bg-amber-50 border border-amber-200 p-3 rounded-2xl flex gap-3 text-xs text-amber-900 text-left items-center">
-            <div className="shrink-0">
-              <AeroMascot
-                size={32}
-                activeAccessory={user.activeAccessory}
-                mood="neutral"
-                level={user.level}
-                animate={false}
-              />
+          {/* Solver suggestions */}
+          <div className="bg-slate-50 border border-slate-200 p-3 rounded-2xl flex gap-3 text-xs text-slate-705 text-left items-center">
+            <div className="shrink-0 bg-slate-100 p-1.5 rounded-xl text-lg select-none">
+              💡
             </div>
             <p className="font-extrabold leading-normal">
-              Aero dice: "Recuerda contar billetes y monedas por separado. Un arqueo impecable mantiene sana tu racha
-              financiera y ¡tu liga feliz! 🛡️"
+              <strong>Consejo de Cuadre:</strong> Recuerda contar billetes y monedas por separado. Un arqueo impecable y ordenado asegura la transparencia contable y facilita las auditorías de administración.
             </p>
           </div>
 

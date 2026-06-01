@@ -10,21 +10,21 @@ export function loadLicenseDetails(): LicenseDetails {
   try {
     const saved = localStorage.getItem(LICENSE_STORAGE_KEY);
     if (saved) {
-      const raw = JSON.parse(saved) as Record<string, unknown>;
+      const raw = JSON.parse(saved) as LicenseDetails;
       const tier = raw.tier as string;
       if (tier === 'trial') {
-        raw.tier = 'free' as any;
+        raw.tier = 'free';
         raw.clientLimit = PLANS.free.clientLimit;
         raw.salesLimit = PLANS.free.salesLimit;
       }
       if (tier === 'unlimited_racha' || tier === 'enterprise_buhoflota') {
-        raw.tier = 'pro' as any;
+        raw.tier = 'pro';
         raw.clientLimit = PLANS.pro.clientLimit;
         raw.salesLimit = PLANS.pro.salesLimit;
       }
       return raw as unknown as LicenseDetails;
     }
-  } catch {}
+  } catch (error) { console.error(error); }
   return getDefaultLicense();
 }
 
@@ -45,7 +45,7 @@ export function getDefaultLicense(): LicenseDetails {
 export function saveLicenseDetails(details: LicenseDetails) {
   try {
     localStorage.setItem(LICENSE_STORAGE_KEY, JSON.stringify(details));
-  } catch {}
+  } catch (error) { console.error(error); }
 }
 
 export function useLicenseValidation(
@@ -143,3 +143,4 @@ export function useLicenseActivation(options: {
 
   return { activateLicense, resetLicense };
 }
+

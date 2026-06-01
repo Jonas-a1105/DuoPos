@@ -4,7 +4,7 @@ import { playSound } from '../services/audio/soundService';
 import { toast } from '../shared/ui/FlashNotifications/FlashNotifications';
 import { supabase } from '../config/supabaseClient';
 import { syncUserPreferences } from '../database/supabaseSync';
-import { emitXpEarned, emitLevelUp } from '../features/gamification/gamification.events';
+
 
 interface UserState {
   user: User | null;
@@ -136,106 +136,7 @@ export const useUserStore = create<UserState>((set, get) => ({
     }
   },
 
-  grantXp: async (amount, isHappyHourActive = false) => {
-    const { user } = get();
-    if (!user) return;
-
-    let xpGained = amount;
-    let chargesNum = 0;
-    try {
-      const savedCharges = localStorage.getItem('duo_pos_xp_booster_charges') || '0';
-      chargesNum = parseInt(savedCharges, 10);
-    } catch (e) {
-      void e;
-    }
-
-    if (chargesNum > 0) {
-      xpGained = amount * 2;
-      chargesNum = chargesNum - 1;
-      set({ xpBoosterCharges: chargesNum });
-      localStorage.setItem('duo_pos_xp_booster_charges', String(chargesNum));
-      toast.achievement(`🧪 ¡Poción de Doble XP Activa! Ganaste el doble: +${xpGained} XP`, {
-        title: 'Booster de Fila 🧪',
-      });
-    }
-
-    if (isHappyHourActive) {
-      xpGained = xpGained * 2;
-      toast.achievement(`⚡ ¡Hora Feliz Activa! XP duplicado: +${xpGained} XP`, { title: 'Hora Feliz de Ventas ⚡' });
-    }
-
-    let updatedXp = user.xp + xpGained;
-    let currentLevel = user.level;
-    let title = user.levelTitle;
-    let didLevelUp = false;
-
-    // Check if level transition happens
-    let neededXp = currentLevel * 100;
-    while (updatedXp >= neededXp) {
-      updatedXp -= neededXp;
-      currentLevel += 1;
-      neededXp = currentLevel * 100;
-      didLevelUp = true;
-    }
-
-    if (didLevelUp) {
-      const titles = [
-        'Novato del Stock 🌱',
-        'Cajero de Bronce 🥉',
-        'Supervisor del Gremio 🥈',
-        'Experto en Finanzas 🥇',
-        'Maestro de Inventario 👑',
-        'Defensor del Fénix ⚡',
-        'Socio de Élite de StockMaster 💎',
-      ];
-      title = titles[Math.min(currentLevel - 1, titles.length - 1)];
-
-      set({
-        levelUpAchieved: {
-          oldLevel: user.level,
-          newLevel: currentLevel,
-          title: title,
-        },
-      });
-
-      playSound('levelup');
-
-      emitLevelUp({
-        userId: user.id,
-        username: user.username || 'Usuario',
-        previousLevel: user.level,
-        newLevel: currentLevel,
-        levelTitle: title,
-      });
-
-      toast.achievement(`¡Subiste al nivel ${currentLevel}! Título: ${title}`, {
-        title: '¡NIVEL ALCANZADO! 🎉',
-        duration: 8000,
-      });
-    } else {
-      toast.info(`¡Ganaste +${xpGained} XP! Sigue así ⚡`, {
-        title: 'XP Reincorporado',
-        duration: 2500,
-      });
-    }
-
-    const updatedUser: User = {
-      ...user,
-      xp: updatedXp,
-      level: currentLevel,
-      levelTitle: title,
-      weeklyXp: (user.weeklyXp ?? 0) + xpGained,
-      seasonXp: (user.seasonXp ?? 0) + xpGained,
-    };
-
-    await get().updateUser(updatedUser);
-
-    emitXpEarned({
-      userId: user.id,
-      username: user.username || 'Usuario',
-      xpGained: xpGained,
-      totalXp: updatedXp,
-      source: 'sale',
-    });
+  grantXp: async () => {
+    // No-op to eliminate gamification completely
   },
 }));

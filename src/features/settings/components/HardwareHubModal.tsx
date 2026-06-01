@@ -3,28 +3,28 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
-  Check,
   RefreshCcw,
-  Wifi,
-  Pocket,
-  Play,
-  Sparkles,
-  Terminal,
-  HelpCircle,
-  Monitor,
   Weight,
+  Wifi,
   Printer,
   Barcode,
-  Pocket as CashDrawerIcon,
   ChevronRight,
   Disc,
   Eye,
   Settings,
   ShieldCheck,
   Download,
+  Upload,
+  Terminal,
+  HelpCircle,
+  Monitor,
+  Check,
+  Sparkles,
+  Play,
+  Pocket,
 } from 'lucide-react';
 import {
   HardwareDeviceSettings,
@@ -33,6 +33,29 @@ import {
 } from '../../../services/print/printService';
 import { playSound } from '../../../services/audio/soundService';
 import { toast } from '../../../shared/ui';
+
+function CashDrawerIcon({ size = 24, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <rect width="20" height="12" x="2" y="3" rx="2" />
+      <path d="M2 15h20" />
+      <path d="M6 15v4c0 1-1 2-2 2" />
+      <path d="M18 15v4c0 1 1 2 2 2" />
+      <path d="M10 9h4" />
+    </svg>
+  );
+}
 
 interface HardwareHubModalProps {
   settings: HardwareDeviceSettings;
@@ -183,7 +206,7 @@ export default function HardwareHubModal({ settings, onSaveSettings, onClose }: 
     setScannerHitsLog((prev) => [`[SCANNER] Código detectado: "${code}" (Prefijo: none, Sufijo: LF/CR)`, ...prev]);
 
     // Broadcast a keydown event sequence so our global listener processes it!
-    let chars = code.split('');
+    const chars = code.split('');
     let index = 0;
 
     const interval = setInterval(() => {
@@ -457,8 +480,8 @@ export default function HardwareHubModal({ settings, onSaveSettings, onClose }: 
                                 ...localSettings,
                                 weighingScale: {
                                   ...localSettings.weighingScale,
-                                  stabilizationDelayMs: Number(e.target.value),
-                                },
+                                  stabilizationDelayMs: Number(e.target.value)
+                                }
                               });
                             }}
                             className="w-full bg-gray-50 border-2 border-gray-200 p-1.5 text-xs font-bold rounded-xl text-center"
@@ -754,56 +777,56 @@ export default function HardwareHubModal({ settings, onSaveSettings, onClose }: 
                         </label>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Right live printer output panel */}
-                  <div className="lg:col-span-7 space-y-4">
-                    <div className="bg-[#111] border-2 border-slate-850 rounded-3xl p-4 text-white font-mono space-y-3 shadow-lg relative max-h-[360px] overflow-y-auto">
-                      <div className="flex justify-between items-center text-[10px] text-indigo-400 font-bold pb-2 border-b border-slate-800">
-                        <span>🖨️ ROLLO DE IMPRESIÓN EMULADO</span>
-                        <div className="flex gap-2">
-                          <span className="bg-slate-800 text-slate-300 font-black text-[9px] px-2 py-0.5 rounded uppercase">
-                            Papel: {localSettings.thermalPrinter.paperWidth}
-                          </span>
+                    {/* Right live printer output panel */}
+                    <div className="lg:col-span-7 space-y-4">
+                      <div className="bg-[#111] border-2 border-slate-850 rounded-3xl p-4 text-white font-mono space-y-3 shadow-lg relative max-h-[360px] overflow-y-auto">
+                        <div className="flex justify-between items-center text-[10px] text-indigo-400 font-bold pb-2 border-b border-slate-800">
+                          <span>🖨️ ROLLO DE IMPRESIÓN EMULADO</span>
+                          <div className="flex gap-2">
+                            <span className="bg-slate-800 text-slate-300 font-black text-[9px] px-2 py-0.5 rounded uppercase">
+                              Papel: {localSettings.thermalPrinter.paperWidth}
+                            </span>
+                          </div>
                         </div>
+
+                        {printedReceiptsSim.length === 0 ? (
+                          <div className="text-center py-12 text-slate-500 font-black italic space-y-3">
+                            <span className="text-3xl block select-none">📄</span>
+                            <p className="text-xs">No se han enviado trabajos de impresión.</p>
+                            <p className="text-[9px] uppercase tracking-wider text-slate-600">
+                              Presiona "Imprimir Autodiagnóstico" abajo
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="bg-white text-slate-800 p-4 border border-gray-300 shadow-inner max-w-sm mx-auto text-xs font-mono scale-95 origin-top select-all leading-normal">
+                            {printedReceiptsSim.map((line, idx) => (
+                              <p key={idx} className="whitespace-pre min-h-[1em]">
+                                {line}
+                              </p>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
-                      {printedReceiptsSim.length === 0 ? (
-                        <div className="text-center py-12 text-slate-500 font-black italic space-y-3">
-                          <span className="text-3xl block select-none">📄</span>
-                          <p className="text-xs">No se han enviado trabajos de impresión.</p>
-                          <p className="text-[9px] uppercase tracking-wider text-slate-600">
-                            Presiona "Imprimir Autodiagnóstico" abajo
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="bg-white text-slate-800 p-4 border border-gray-300 shadow-inner max-w-sm mx-auto text-xs font-mono scale-95 origin-top select-all leading-normal">
-                          {printedReceiptsSim.map((line, idx) => (
-                            <p key={idx} className="whitespace-pre min-h-[1em]">
-                              {line}
-                            </p>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex gap-2 pt-1 text-center justify-center">
-                      <button
-                        type="button"
-                        onClick={triggerTestPrint}
-                        disabled={isPrintingJob}
-                        className="flex-1 py-3 bg-indigo-600 border-b-4 border-indigo-800 font-black text-white text-xs uppercase tracking-wider hover:bg-indigo-500 active:translate-y-px active:border-b-0 cursor-pointer rounded-2xl flex items-center justify-center gap-1.5"
-                      >
-                        <Disc className={`w-4 h-4 ${isPrintingJob ? 'animate-spin' : ''}`} />
-                        Imprimir Autodiagnóstico ESC/POS
-                      </button>
-                      <button
-                        type="button"
-                        onClick={triggerPulseDrawer}
-                        className="py-3 px-4 bg-white hover:bg-gray-50 border-2 border-gray-200 border-b-4 text-slate-700 font-black text-xs uppercase cursor-pointer rounded-2xl"
-                      >
-                        Pulsar Cajón (RJ11) 🪙
-                      </button>
+                      <div className="flex gap-2 pt-1 text-center justify-center">
+                        <button
+                          type="button"
+                          onClick={triggerTestPrint}
+                          disabled={isPrintingJob}
+                          className="flex-1 py-3 bg-indigo-600 border-b-4 border-indigo-800 font-black text-white text-xs uppercase tracking-wider hover:bg-indigo-500 active:translate-y-px active:border-b-0 cursor-pointer rounded-2xl flex items-center justify-center gap-1.5"
+                        >
+                          <Disc className={`w-4 h-4 ${isPrintingJob ? 'animate-spin' : ''}`} />
+                          Imprimir Autodiagnóstico ESC/POS
+                        </button>
+                        <button
+                          type="button"
+                          onClick={triggerPulseDrawer}
+                          className="py-3 px-4 bg-white hover:bg-gray-50 border-2 border-gray-200 border-b-4 text-slate-700 font-black text-xs uppercase cursor-pointer rounded-2xl"
+                        >
+                          Pulsar Cajón (RJ11) 🪙
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1004,83 +1027,154 @@ export default function HardwareHubModal({ settings, onSaveSettings, onClose }: 
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                  {/* Left Column Config */}
                   <div className="lg:col-span-5 bg-white border-2 border-gray-200 rounded-3xl p-4 space-y-4">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-rose-500 block border-b pb-2">
-                      Parámetros del Cajón
+                    <span className="text-[10px] font-black uppercase tracking-widest text-sky-500 block border-b pb-2">
+                      Parámetros del Driver
                     </span>
 
-                    <div className="space-y-4.5">
+                    <div className="space-y-3.5">
                       <div className="space-y-1">
                         <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">
-                          Puerto de Conexión del Solenoide
+                          Estado del Cajón
                         </label>
-                        <select className="w-full bg-gray-50 border-2 border-gray-200 p-2 text-xs font-bold rounded-xl outline-none">
-                          <option>RJ11 en Impresora Térmica (LPT1 / DK-Port)</option>
-                          <option>Controladora USB Relé Directo de Cajetilla</option>
-                          <option>Apertura Manual Segura</option>
+                        <select
+                          value={localSettings.cashDrawer.mode}
+                          onChange={(e) => {
+                            setLocalSettings({
+                              ...localSettings,
+                              cashDrawer: { ...localSettings.cashDrawer, mode: e.target.value as any },
+                            });
+                          }}
+                          className="w-full bg-gray-50 border-2 border-gray-200 p-2 text-xs font-bold rounded-xl outline-none"
+                        >
+                          <option value="manual">Operación Manual (Solo Estado Visual)</option>
+                          <option value="rj11_kick">Impulso RJ11 (100ms, 12V/24V)</option>
+                          <option value="serial_virtual">Serie Virtual COM (WebSerial Protocol)</option>
                         </select>
                       </div>
 
-                      <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-black text-gray-400 tracking-wider block">
-                          Código Decimal de Apertura (ESC/POS Drawer Kick)
-                        </label>
-                        <select className="w-full bg-gray-50 border-2 border-gray-200 p-1.5 text-xs font-bold rounded-xl font-mono">
-                          <option>ESC p 0 25 250 (Pin 2 standard)</option>
-                          <option>ESC p 1 25 250 (Pin 5 standard)</option>
-                          <option>BEL \x07 (Buzzer de apertura)</option>
-                        </select>
-                      </div>
+                      <div className="border-t pt-3.5 space-y-2">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block pb-1">
+                          Simulación de Estados
+                        </span>
 
-                      <div className="bg-red-50 border border-red-100 p-3 rounded-2xl text-[10px] text-red-800 font-bold leading-normal flex gap-1.5 pt-2">
-                        <HelpCircle size={18} className="text-red-500 shrink-0 mt-0.5" />
-                        <p>
-                          <strong>Medida de Seguridad:</strong> El cajón de dinero registrará cada evento de apertura
-                          manual o emergente en el Log del turno actual para proteger el arqueo.
-                        </p>
+                        <label className="flex items-center gap-2.5 cursor-pointer selection-none">
+                          <input
+                            type="checkbox"
+                            checked={localSettings.cashDrawer.enableFeedback}
+                            onChange={(e) => {
+                              setLocalSettings({
+                                ...localSettings,
+                                cashDrawer: { ...localSettings.cashDrawer, enableFeedback: e.target.checked },
+                              });
+                              playSound('click');
+                            }}
+                            className="accent-indigo-600 w-4.5 h-4.5"
+                          />
+                          <div>
+                            <span className="text-xs font-extrabold text-slate-700 block">
+                              Feedback Auditivo y Tátil
+                            </span>
+                            <span className="text-[9px] text-gray-400 font-bold block max-w-xs">
+                              Reproduce sonido al cambiar estado ( abierto → cerrado )
+                            </span>
+                          </div>
+                        </label>
+
+                        <label className="flex items-center gap-2.5 cursor-pointer selection-none pt-1">
+                          <input
+                            type="checkbox"
+                            checked={localSettings.cashDrawer.enableLedIndicator}
+                            onChange={(e) => {
+                              setLocalSettings({
+                                ...localSettings,
+                                cashDrawer: { ...localSettings.cashDrawer, enableLedIndicator: e.target.checked },
+                              });
+                              playSound('click');
+                            }}
+                            className="accent-indigo-600 w-4.5 h-4.5"
+                          />
+                          <div>
+                            <span className="text-xs font-extrabold text-slate-700 block">
+                              Indicador LED de Estado
+                            </span>
+                            <span className="text-[9px] text-gray-400 font-bold block max-w-xs">
+                              Luz interna cambia color según estado del cajón
+                            </span>
+                          </div>
+                        </label>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Drawer visual representation */}
-                  <div className="lg:col-span-7 bg-[#27272a] rounded-3xl p-5 border-2 border-[#18181b] block text-white text-center relative overflow-hidden min-h-[250px] shadow-lg flex flex-col justify-between items-center bg-radial">
-                    <span className="text-[10px] font-black uppercase text-rose-400 tracking-widest font-mono">
-                      SIMULADOR VISUAL CAJÓN METÁLICO
-                    </span>
-
-                    {/* Drawer Animation Container */}
-                    <div className="my-3 flex flex-col items-center">
-                      {cashDrawerOpenState ? (
-                        <div className="animate-bounce space-y-2">
-                          {/* Opened Drawer Icon */}
-                          <div className="bg-[#3f3f46] p-6 rounded-2xl border-4 border-[#58cc02] shadow-xl text-center space-y-1.5 relative z-10 w-48 text-gray-100 font-extrabold text-sm uppercase">
-                            <span className="text-4xl block select-none">💸</span>
-                            <span>¡CAJÓN ABIERTO!</span>
-                            <span className="text-[8px] bg-emerald-100 text-emerald-800 py-0.5 px-2 rounded-full block">
-                              IMPULSO RJ11 OK
+                    {/* Right live cash drawer panel */}
+                    <div className="lg:col-span-7 space-y-4">
+                      <div className="bg-[#111] border-2 border-slate-850 rounded-3xl p-4 text-white font-mono space-y-3 shadow-lg relative max-h-[280px] overflow-y-auto">
+                        <div className="flex justify-between items-center text-[10px] text-indigo-400 font-bold pb-2 border-b border-slate-800">
+                          <span>💰 CAJÓN DE DINERO EMULADO</span>
+                          <div className="flex gap-2">
+                            <span className="bg-slate-800 text-slate-300 font-black text-[9px] px-2 py-0.5 rounded uppercase">
+                              Estado: {cashDrawerOpenState ? '¡ABIERTO!' : 'CERRADO'}
                             </span>
                           </div>
                         </div>
-                      ) : (
-                        <div className="space-y-2">
-                          {/* Closed Drawer Icon */}
-                          <div className="bg-[#18181b] p-6 rounded-2xl border-2 border-[#3f3f46] shadow-inner text-center space-y-1.5 w-48 text-gray-400 font-extrabold text-sm uppercase">
-                            <span className="text-4xl block select-none">🔒</span>
-                            <span>Cajón Cerrado</span>
-                            <span className="text-[8px] text-zinc-500 block">EN ESPERA DE COBRO</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
 
-                    <div className="w-full">
-                      <button
-                        type="button"
-                        onClick={triggerPulseDrawer}
-                        className="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider rounded-2xl border-b-4 border-rose-800 active:translate-y-px active:border-b-0 cursor-pointer"
-                      >
-                        Enviar Impulso de Solenoide (Apertura Emergencia) 💸
-                      </button>
+                        {cashDrawerOpenState ? (
+                          <>
+                            <div className="flex items-center gap-4 mt-3">
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 bg-emerald-500 rounded-full" />
+                                <span className="text-lg font-black">
+                                  ¡Cajón Abierto!
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <CashDrawerIcon size={24} className="text-emerald-500" />
+                                <span className="text-lg font-black">
+                                  Simulando apertura física
+                                </span>
+                              </div>
+                            </div>
+                            <div className="bg-emerald-500/20 p-3 rounded-xl">
+                              <p className="text-sm font-black">
+                                Listo para recibir efectivo • Compartimento interno accesible
+                              </p>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-4 mt-3">
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 bg-gray-400 rounded-full" />
+                                <span className="text-lg font-black">
+                                  Cajón Seguro
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <CashDrawerIcon size={24} className="text-gray-400" />
+                                <span className="text-lg font-black">
+                                  Esperando transacción
+                                </span>
+                              </div>
+                            </div>
+                            <div className="bg-gray-400/20 p-3 rounded-xl">
+                              <p className="text-sm font-black">
+                                Dispositivo listo • Esperando señal de activación
+                              </p>
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2 pt-1 text-center justify-center">
+                        <button
+                          type="button"
+                          onClick={triggerPulseDrawer}
+                          className="py-3 px-4 bg-white hover:bg-gray-50 border-2 border-gray-200 border-b-4 text-slate-700 font-black text-xs uppercase cursor-pointer rounded-2xl"
+                        >
+                          Pulsar Cajón (RJ11) 🪙
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1088,30 +1182,25 @@ export default function HardwareHubModal({ settings, onSaveSettings, onClose }: 
             )}
           </div>
         </div>
-
-        {/* BOTTOM OPTION CONTROL RAIL */}
-        <div className="bg-slate-50 border-t border-gray-150 p-4 shrink-0 flex items-center justify-between gap-3">
-          <div className="text-[10px] font-black text-gray-400 font-mono flex items-center gap-1.5 uppercase">
-            <ShieldCheck size={14} className="text-emerald-500" />
-            Control local con tecnología Web APIs sin drivers externos
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              onClick={handleApplySettings}
-              className="py-2.5 px-6 bg-[#58cc02] text-white border-b-4 border-[#3e9301] hover:bg-[#61e002] active:translate-y-px active:border-b-0 font-black text-xs uppercase cursor-pointer rounded-2xl"
-            >
-              Aplicar Cambios 🔧
-            </button>
-            <button
-              onClick={onClose}
-              className="py-2.5 px-4 bg-white text-gray-500 border-2 border-gray-200 border-b-4 hover:bg-gray-50 active:translate-y-px active:border-b-2 font-black text-xs uppercase rounded-xl cursor-pointer"
-            >
-              Cerrar Bus
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

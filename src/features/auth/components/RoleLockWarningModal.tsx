@@ -12,8 +12,7 @@ interface RoleLockWarningModalProps {
       | 'history'
       | 'customers'
       | 'settings'
-      | 'logistics'
-      | 'gamification',
+      | 'logistics',
   ) => void;
 }
 

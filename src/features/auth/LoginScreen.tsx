@@ -28,7 +28,7 @@ const mapProfileToUser = (profile: any, selectedCharacter: string, role: string)
   xp: profile.xp || 120,
   level: profile.level || 1,
   dailyGoal: Number(profile.daily_goal || 150),
-  levelTitle: profile.level_title || 'Cajero Novato 🦉',
+  levelTitle: profile.level_title || 'Operador Comercial',
   role: profile.role || role || 'cashier',
   gems: profile.gems || 40,
   gemsEarnedTotal: profile.gems_earned_total || 40,
@@ -54,7 +54,7 @@ const createDefaultProfileObj = (
   xp: 120,
   level: 1,
   daily_goal: 150,
-  level_title: 'Cajero Novato 🦉',
+  level_title: 'Operador Comercial',
   role: role,
   gems: 40,
   gems_earned_total: 40,
@@ -73,31 +73,31 @@ const translateClerkError = (err: any): string => {
   // 1. Check by error code
   switch (code) {
     case 'form_password_pwned':
-      return '¡Ouch! 🦉 Esa contraseña es muy común en internet. ¡Por favor, inventa una diferente para proteger tus gemas!';
+      return 'Esa contraseña es muy común en internet. Por favor, ingresa una diferente para proteger tu cuenta.';
     case 'form_password_length_too_short':
     case 'password_too_short':
-      return '¡Cuidado! 🦉 Tu contraseña debe tener al menos 8 caracteres para mantener a salvo tu racha de ventas.';
+      return 'Tu contraseña debe tener al menos 8 caracteres para mantener a salvo tus registros.';
     case 'form_identifier_not_found':
     case 'user_not_found':
-      return '¡Espera! 🦉 Ese usuario o correo no existe. ¿Escribiste todo correctamente o quieres crear una cuenta?';
+      return 'Ese usuario o correo no existe. ¿Escribiste todo correctamente o deseas crear una cuenta?';
     case 'form_password_incorrect':
     case 'password_incorrect':
-      return '¡Ups! 🦉 Contraseña incorrecta. ¡Piénsala bien o usa tu poción de memoria!';
+      return 'Contraseña incorrecta. Piénsala bien e intenta de nuevo.';
     case 'form_identifier_exists':
     case 'email_already_exists':
     case 'username_already_exists':
-      return '¡Espera! 🦉 Ese correo o usuario ya está en uso. ¿Ya tienes una cuenta registrada?';
+      return 'Ese correo o usuario ya está en uso. ¿Ya tienes una cuenta registrada?';
     case 'form_param_format_invalid':
       if (message.toLowerCase().includes('email')) {
-        return '¡Cuidado! 🦉 Por favor ingresa un correo electrónico con formato válido (ejemplo@dominio.com).';
+        return 'Por favor ingresa un correo electrónico con formato válido (ejemplo@dominio.com).';
       }
       if (message.toLowerCase().includes('username')) {
-        return '¡Cuidado! 🦉 El nombre de usuario solo puede tener letras, números y guiones bajos.';
+        return 'El nombre de usuario solo puede tener letras, números y guiones bajos.';
       }
-      return '¡Ouch! 🦉 El formato de uno de los campos no es válido.';
+      return 'El formato de uno de los campos no es válido.';
     case 'form_code_incorrect':
     case 'verification_failed':
-      return '¡Código incorrecto! 🦉 El código de 6 dígitos no coincide. ¡Revisa tu Gmail y vuelve a intentarlo!';
+      return '¡Código incorrecto! El código de 6 dígitos no coincide. ¡Revisa tu correo y vuelve a intentarlo!';
     default:
       break;
   }
@@ -105,33 +105,33 @@ const translateClerkError = (err: any): string => {
   // 2. Check by message content substring matching
   const msgLower = message.toLowerCase();
   if (msgLower.includes('already signed in')) {
-    return '¡Ya tienes una sesión activa! 🦉 Permíteme re-conectar tu caja comercial al instante...';
+    return '¡Ya tienes una sesión activa! Conectando tu terminal comercial al instante...';
   }
   if (msgLower.includes('compromised') || msgLower.includes('data breach') || msgLower.includes('breach')) {
-    return '¡Ouch! 🦉 Esa contraseña es muy común en internet. ¡Por favor, inventa una diferente para proteger tus gemas!';
+    return 'Esa contraseña es muy común en internet. Por favor, crea una diferente para proteger tus datos.';
   }
   if (
     msgLower.includes('at least 8 characters') ||
     msgLower.includes('must be 8 characters') ||
     msgLower.includes('too short')
   ) {
-    return '¡Cuidado! 🦉 Tu contraseña debe tener al menos 8 caracteres para mantener a salvo tu racha de ventas.';
+    return 'Tu contraseña debe tener al menos 8 caracteres para mantener a salvo tu cuenta y registros.';
   }
   if (msgLower.includes('already exists') || msgLower.includes('already in use') || msgLower.includes('taken')) {
-    return '¡Espera! 🦉 Ese correo o usuario ya está registrado. ¿Ya tienes una cuenta?';
+    return 'Ese correo o usuario ya está registrado. ¿Ya tienes una cuenta?';
   }
   if (msgLower.includes('incorrect') || msgLower.includes('invalid password')) {
-    return '¡Ups! 🦉 Contraseña incorrecta. ¡Piénsala bien o usa tu poción de memoria!';
+    return 'Contraseña incorrecta. Intente de nuevo.';
   }
   if (msgLower.includes('not found') || msgLower.includes('no user')) {
-    return '¡Espera! 🦉 Ese usuario o correo no existe. ¿Escribiste todo correctamente o quieres crear una cuenta?';
+    return 'Ese usuario o correo no existe. ¿Escribiste todo correctamente o deseas registrarte?';
   }
   if (msgLower.includes('code') && (msgLower.includes('incorrect') || msgLower.includes('invalid'))) {
-    return '¡Código incorrecto! 🦉 El código de 6 dígitos no coincide. ¡Revisa tu Gmail y vuelve a intentarlo!';
+    return '¡Código incorrecto! El código de 6 dígitos no coincide. Revisa tu correo e inténtalo de nuevo.';
   }
 
   // Fallback translation or clean message
-  return `¡Ouch! 🦉 Ha ocurrido un pequeño tropiezo: ${message || 'Error al conectar con la base de datos de Clerk.'}`;
+  return `Ha ocurrido un inconveniente: ${message || 'Error al conectar con el servicio de seguridad.'}`;
 };
 
 // Dynamic helper to map custom avatar moods per character
@@ -473,10 +473,10 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
       {successAnimation ? (
         <div className="max-w-md w-full bg-white border-2 border-[#e5e5e5] border-b-[8px] rounded-3xl p-8 text-center flex flex-col items-center justify-center space-y-6 shadow-xl animate-bounce">
-          <div className="text-8xl transform scale-125 transition-all duration-300">🐦</div>
+          <div className="text-8xl transform scale-125 transition-all duration-300">💼</div>
           <div className="space-y-2">
             <h2 className="text-3xl font-extrabold text-[#fb923c] tracking-tight">¡Caja Activada!</h2>
-            <p className="text-gray-600 font-bold">Cargando tu racha de ventas y objetivos de hoy...</p>
+            <p className="text-gray-600 font-bold">Cargando catálogo de existencias y terminal contable...</p>
           </div>
           <div className="w-full bg-[#e5e5e5] h-5 rounded-full overflow-hidden p-[2px]">
             <div
@@ -488,7 +488,7 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
               }}
             />
           </div>
-          <p className="text-sm text-gray-400 italic font-medium">"¡Que la chispa del fénix guíe tus ventas de hoy!"</p>
+          <p className="text-sm text-gray-400 italic font-medium">"¡Que tengas un excelente y productivo día de trabajo!"</p>
         </div>
       ) : (
         <div className="max-w-xl w-full flex flex-col items-center space-y-6">
@@ -841,8 +841,7 @@ function ClerkLoginScreen({ onLoginSuccess }: LoginScreenProps) {
             )}
           </div>
           <p className="text-center text-xs text-gray-400 font-bold leading-relaxed max-w-md">
-            💡 Consejo: Mantén tu racha activa realizando al menos una venta diaria y cuadra tu caja al finalizar el
-            turno para conservar tus gemas de recompensa.
+            💡 Consejo: Asegúrate de realizar tu arqueo de caja al finalizar el turno para conciliar correctamente los ingresos del día.
           </p>
         </div>
       )}
@@ -910,7 +909,7 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
     let localUser: User;
 
     if (existingUser) {
-      addLog('¡Usuario existente encontrado! Recuperando tu racha, XP y nivel...');
+      addLog('¡Usuario existente encontrado! Recuperando perfil y credenciales...');
       localUser = {
         ...existingUser,
         avatar: selectedCharacter, // allow changing avatar
@@ -1016,10 +1015,10 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
       {successAnimation ? (
         <div className="max-w-md w-full bg-white border-2 border-[#e5e5e5] border-b-[8px] rounded-3xl p-8 text-center flex flex-col items-center justify-center space-y-6 shadow-xl animate-bounce">
-          <div className="text-8xl transform scale-125 transition-all duration-300">🐦</div>
+          <div className="text-8xl transform scale-125 transition-all duration-300">💼</div>
           <div className="space-y-2">
             <h2 className="text-3xl font-extrabold text-[#fb923c] tracking-tight">¡Caja Activada!</h2>
-            <p className="text-gray-600 font-bold">Cargando tu racha de ventas y objetivos de hoy...</p>
+            <p className="text-gray-600 font-bold">Cargando catálogo de existencias y terminal contable...</p>
           </div>
           <div className="w-full bg-[#e5e5e5] h-5 rounded-full overflow-hidden p-[2px]">
             <div
@@ -1031,7 +1030,7 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
               }}
             />
           </div>
-          <p className="text-sm text-gray-400 italic font-medium">"¡Que la chispa del fénix guíe tus ventas de hoy!"</p>
+          <p className="text-sm text-gray-400 italic font-medium">"¡Que tengas un excelente y productivo día de trabajo!"</p>
         </div>
       ) : (
         <div className="max-w-xl w-full flex flex-col items-center space-y-6">
@@ -1129,8 +1128,7 @@ function LocalLoginScreen({ onLoginSuccess }: LoginScreenProps) {
             </form>
           </div>
           <p className="text-center text-xs text-gray-400 font-bold leading-relaxed max-w-md">
-            💡 Consejo: Mantén tu racha activa realizando al menos una venta diaria y cuadra tu caja al finalizar el
-            turno para conservar tus gemas de recompensa.
+            💡 Consejo: Asegúrate de realizar tu arqueo de caja al finalizar el turno para conciliar correctamente los ingresos del día.
           </p>
         </div>
       )}

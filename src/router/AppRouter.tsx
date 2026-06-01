@@ -21,9 +21,7 @@ import { CustomersScreen } from '../features/customers';
 import { SettingsScreen } from '../features/settings';
 import { ShiftsScreen } from '../features/shifts';
 import { LogisticsScreen } from '../features/logistics';
-import { GamificationScreen } from '../features/gamification';
 import InstallModal from '../shared/ui/Modals/InstallModal';
-import LevelUpCelebrateModal from '../features/gamification/components/LevelUpCelebrateModal';
 import RoleLockWarningModal from '../features/auth/components/RoleLockWarningModal';
 import PinLockModal from '../features/auth/components/PinLockModal';
 import HardwareHubModal from '../features/settings/components/HardwareHubModal';
@@ -167,7 +165,12 @@ export default function AppRouter() {
 
   useEffect(() => {
     const simInstallRaw = localStorage.getItem('duo_pos_sim_installed');
-    if (simInstallRaw === 'true') { setIsSimInstalled(true); setShowInstallBanner(false); }
+    if (simInstallRaw === 'true') {
+      Promise.resolve().then(() => {
+        setIsSimInstalled(true);
+        setShowInstallBanner(false);
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -347,29 +350,17 @@ export default function AppRouter() {
     }
     if (user) {
       const today = new Date().toISOString().split('T')[0];
-      
-      // Otorgar XP y esperar a que el store se actualice con el nuevo nivel/XP
-      const isHappyHourActive = activeEvent?.type === 'happy_hour';
-      await useUserStore.getState().grantXp(15, isHappyHourActive);
-      
-      triggerDuoHappy();
       try {
         const dayStatsRaw = localStorage.getItem(`duo_pos_daily_acts_${today}`);
         const currentStats = dayStatsRaw ? JSON.parse(dayStatsRaw) : { barcodeScans: 0, invoicesEmitted: 0, customersRegistered: 0 };
         localStorage.setItem(`duo_pos_daily_acts_${today}`, JSON.stringify(currentStats));
       } catch {}
       
-      // Obtener el usuario actualizado con el nuevo nivel/XP para evitar sobreescritura de datos
       const freshUser = useUserStore.getState().user;
       if (freshUser) {
-        let streak = freshUser.streak;
-        if (freshUser.lastSaleDate !== today) streak = freshUser.streak + 1;
         const updatedUser: User = {
           ...freshUser,
-          streak,
           lastSaleDate: today,
-          gems: (freshUser.gems ?? 40) + 5,
-          gemsEarnedTotal: (freshUser.gemsEarnedTotal ?? 40) + 5,
         };
         await saveUser(updatedUser);
       }
@@ -451,13 +442,13 @@ export default function AppRouter() {
   const handleLogout = () => logoutUser();
 
   if (showLanding && !user) {
-    return (<><ClerkSessionSync onSyncUser={setUser} /><LandingPage onEnterApp={() => setShowLanding(false)} onEnterAsAdmin={() => { const adminUser: User = { id: 'user-admin', username: 'Administrador StockMaster', email: 'admin@stockmasterpro.com', avatar: 'duo', streak: 5, lastSaleDate: new Date().toISOString().split('T')[0], xp: 380, level: 3, dailyGoal: 150, levelTitle: 'Supervisor de Rachas 🥈', role: 'admin', gems: 400, gemsEarnedTotal: 400, unlockedSkins: ['skin-standard', 'skin-dark-galaxy', 'skin-neon-cyberpunk'], activeSkin: 'standard', unlockedBadges: [], completedMissionsToday: [], seasonXp: 0, seasonRewardsClaimed: [], }; loginUser(adminUser); toast.success('¡Ingresaste con la cuenta maestra de Administrador! ⚡🎉', { title: 'StockMaster Club' }); }} /></>);
+    return (<>{import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ? <ClerkSessionSync onSyncUser={setUser} /> : null}<LandingPage onEnterApp={() => setShowLanding(false)} onEnterAsAdmin={() => { const adminUser: User = { id: 'user-admin', username: 'Administrador StockMaster', email: 'admin@stockmasterpro.com', avatar: 'duo', streak: 5, lastSaleDate: new Date().toISOString().split('T')[0], xp: 380, level: 3, dailyGoal: 150, levelTitle: 'Supervisor de Rachas 🥈', role: 'admin', gems: 400, gemsEarnedTotal: 400, unlockedSkins: ['skin-standard', 'skin-dark-galaxy', 'skin-neon-cyberpunk'], activeSkin: 'standard', unlockedBadges: [], completedMissionsToday: [], seasonXp: 0, seasonRewardsClaimed: [], }; loginUser(adminUser); toast.success('¡Ingresaste con la cuenta maestra de Administrador! ⚡🎉', { title: 'StockMaster Club' }); }} /></>);
   }
 
   if (isClockTampered || isLicenseExpired) return <LicenseBlockScreen />;
 
   if (!user) {
-    return (<><ClerkSessionSync onSyncUser={setUser} /><LoginScreen onLoginSuccess={(u) => loginUser(u)} /></>);
+    return (<>{import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ? <ClerkSessionSync onSyncUser={setUser} /> : null}<LoginScreen onLoginSuccess={(u) => loginUser(u)} /></>);
   }
 
   return (
@@ -480,35 +471,7 @@ export default function AppRouter() {
       }
     >
 
-      {/* Express Event Alert Banner */}
-      {activeEvent && (
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 border-b-8 rounded-3xl p-4.5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-bounce" style={{ animationDuration: '4s' }}>
-          <div className="flex items-center gap-4.5 w-full sm:w-auto">
-            <div className="bg-amber-100 p-3 h-14 w-14 rounded-2xl flex items-center justify-center text-3xl shadow-sm animate-pulse flex-shrink-0">
-              {activeEvent.type === 'happy_hour' ? '⚡' : activeEvent.type === 'scan_challenge' ? '🔍' : '🤝'}
-            </div>
-            <div className="text-left space-y-1">
-              <span className="bg-amber-200 text-amber-950 text-[10px] uppercase font-black px-2 py-0.5 rounded-lg border-b border-amber-300">Reto Express Activo ⏰</span>
-              <h4 className="text-lg font-black tracking-tight text-gray-800">{activeEvent.title}</h4>
-              <p className="text-xs text-gray-500 font-extrabold leading-relaxed max-w-lg">{activeEvent.description}</p>
-              {activeEvent.targetCount > 0 && (
-                <div className="flex items-center gap-2 pt-1 w-full">
-                  <div className="w-40 bg-gray-200 h-2.5 rounded-full overflow-hidden border border-gray-300">
-                    <div className="bg-amber-500 h-full transition-all duration-300" style={{ width: `${(activeEvent.currentCount / activeEvent.targetCount) * 100}%` }} />
-                  </div>
-                  <span className="text-[10px] font-black text-amber-700">Progreso: {activeEvent.currentCount} / {activeEvent.targetCount}</span>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-4.5 w-full sm:w-auto justify-end">
-            <div className="bg-amber-100 border-2 border-amber-200 rounded-2xl p-2 px-3.5 flex items-center gap-2 shadow-xs">
-              <span className="text-xl font-black text-amber-600 font-mono tracking-tight animate-pulse">{Math.floor(activeEvent.remainingSeconds / 60)}:{(activeEvent.remainingSeconds % 60).toString().padStart(2, '0')}</span>
-            </div>
-            <button type="button" onClick={() => { playSound('click'); setActiveEvent(null); }} className="p-1 px-2 border-2 border-amber-200 text-amber-600 bg-white hover:bg-amber-50 font-black text-xs uppercase py-1.5 rounded-xl transition-all cursor-pointer">Omitir</button>
-          </div>
-        </div>
-      )}
+
 
       <Routes>
         <Route path="/" element={<DashboardScreen user={user} transactions={transactions} products={products} onSetNewGoal={(val) => saveUser({ ...user, dailyGoal: val })} onNavigateToSell={() => setActiveTab('sales')} onGrantXp={handleGrantXp} onUpdateUser={saveUser} />} />
@@ -517,14 +480,12 @@ export default function AppRouter() {
         <Route path="/inventory" element={<InventoryScreen products={products.map((p) => ({ ...p, stock: p.branchesStock?.[activeBranchId] ?? p.stock }))} onAddProduct={handleAddProduct} onUpdateProduct={handleUpdateProduct} onDeleteProduct={handleDeleteProduct} onGrantXp={handleGrantXp} activeShift={activeShift} onAddShiftMovement={handleAddShiftMovement} currentUser={user} suppliers={suppliers} purchaseOrders={purchaseOrders} onAddSupplier={handleAddSupplier} onUpdateSupplier={handleUpdateSupplier} onDeleteSupplier={handleDeleteSupplier} onSavePurchaseOrder={handleSavePurchaseOrder} onTransitPurchaseOrder={handleTransitPurchaseOrder} onReceivePurchaseOrder={handleReceivePurchaseOrder} onCancelPurchaseOrder={handleCancelPurchaseOrder} onRegisterSupplierPayout={handleRegisterSupplierPayout} exchangeRate={exchangeRates[activeRateType]} activeRateType={activeRateType} />} />
         <Route path="/history" element={<HistoryScreen transactions={transactions} onRefundTransaction={handleRefundTransaction} currentUser={user} billingSettings={billingSettings} />} />
         <Route path="/settings" element={<SettingsScreen settings={billingSettings} onSaveSettings={handleSaveBillingSettings} onGrantXp={handleGrantXp} licenseDetails={licenseDetails} onActivateLicenseKey={handleActivateLicenseKey} onResetLicenseToFree={handleResetLicenseToFree} appVersion={appVersion} onUpdateAppVersion={handleUpdateAppVersion} user={user} products={products} transactions={transactions} />} />
-        <Route path="/gamification" element={<GamificationScreen user={user} onUpdateUser={saveUser} transactions={transactions} products={products} customers={customers} licenseDetails={licenseDetails} activeEvent={activeEvent as any} onTriggerExpressEvent={handleTriggerExpressEvent} />} />
         <Route path="/shifts" element={<ShiftsScreen user={user} transactions={transactions} activeShift={activeShift} shiftHistory={shiftHistory} onOpenShift={handleOpenShift} onCloseShift={handleCloseShift} onAddShiftMovement={handleAddShiftMovement} onGrantXp={handleGrantXp} />} />
         <Route path="/logistics" element={<LogisticsScreen products={products} onUpdateProduct={handleUpdateProduct} transactions={transactions} activeShift={activeShift} shiftHistory={shiftHistory} onGrantXp={handleGrantXp} branches={branches} setBranches={setBranches} activeBranchId={activeBranchId} setActiveBranchId={setActiveBranchId} registers={registers} setRegisters={setRegisters} activeRegisterId={activeRegisterId} setActiveRegisterId={setActiveRegisterId} stockTransfers={stockTransfers} setStockTransfers={setStockTransfers} currentUser={user} licenseDetails={licenseDetails} />} />
       </Routes>
 
       {/* Modals */}
       {isInstallModalOpen && <InstallModal onClose={() => setIsInstallModalOpen(false)} onGrantXp={handleGrantXp} isSimulatedInstalled={isSimInstalled} onSimulateInstallSuccess={handleSimulateInstallSuccess} deferredPrompt={deferredPrompt} setDeferredPrompt={setDeferredPrompt} />}
-      <LevelUpCelebrateModal />
       <RoleLockWarningModal setActiveTab={setActiveTab} />
       {isPinModalOpen && pendingRole && (
         <PinLockModal isOpen={isPinModalOpen} requiredRole={pendingRole === 'admin' ? 'admin' : 'supervisor'} onClose={() => { setIsPinModalOpen(false); setPendingRole(null); }}

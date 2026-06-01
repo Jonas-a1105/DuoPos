@@ -36,11 +36,11 @@ export default function DatabaseSettings({ user, products, transactions }: Datab
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      toast.success('Respaldo exportado exitosamente en tu descargas.', {
+      toast.success('Respaldo exportado exitosamente en tus descargas.', {
         title: 'Copia de Seguridad Lista 💾'
       });
-    } catch (err) {
-      toast.error('Error al exportar los datos: ' + err);
+    } catch (error) {
+      toast.error(`Error al exportar los datos: ${error.message}`);
     }
   };
 
@@ -76,10 +76,8 @@ export default function DatabaseSettings({ user, products, transactions }: Datab
             window.location.reload();
           }, 1500);
         }
-      } catch (err) {
-        toast.error('El archivo no contiene un JSON estructurado válido.', {
-          title: 'Error de Parseo ⛔'
-        });
+      } catch (error) {
+        toast.error(`El archivo no contiene un JSON estructurado válido: ${error.message}`);
         setIsRestoring(false);
       }
     };

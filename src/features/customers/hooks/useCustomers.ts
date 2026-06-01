@@ -179,7 +179,7 @@ export function useCustomers() {
           else league = 'Bronce';
 
           let creditUsed = c.creditUsed !== undefined ? c.creditUsed : 0;
-          let creditHistory = c.creditHistory !== undefined ? [...c.creditHistory] : [];
+          const creditHistory = c.creditHistory !== undefined ? [...c.creditHistory] : [];
 
           if (txn.paymentMethod === 'credit') {
             creditUsed = Number((creditUsed + txn.total).toFixed(2));

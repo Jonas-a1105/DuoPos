@@ -6679,8 +6679,8 @@ function requireBuffer () {
 		const base64 = requireBase64Js();
 		const ieee754 = requireIeee754();
 		const customInspectSymbol =
-		  (typeof Symbol === 'function' && typeof Symbol['for'] === 'function') // eslint-disable-line dot-notation
-		    ? Symbol['for']('nodejs.util.inspect.custom') // eslint-disable-line dot-notation
+		  (typeof Symbol === 'function' && typeof Symbol['for'] === 'function')  
+		    ? Symbol['for']('nodejs.util.inspect.custom')  
 		    : null;
 
 		exports$1.Buffer = Buffer;
@@ -6998,7 +6998,7 @@ function requireBuffer () {
 		}
 
 		function SlowBuffer (length) {
-		  if (+length != length) { // eslint-disable-line eqeqeq
+		  if (+length != length) {  
 		    length = 0;
 		  }
 		  return Buffer.alloc(+length)
@@ -8487,7 +8487,7 @@ function requireBuffer () {
 		      this.name = `${this.name} [${sym}]`;
 		      // Access the stack to generate the error message including the error code
 		      // from the name.
-		      this.stack; // eslint-disable-line no-unused-expressions
+		      this.stack;  
 		      // Reset the name to the actual name.
 		      delete this.name;
 		    }
@@ -8745,7 +8745,7 @@ function requireBuffer () {
 		}
 		function numberIsNaN (obj) {
 		  // For IE11 support
-		  return obj !== obj // eslint-disable-line no-self-compare
+		  return obj !== obj  
 		}
 
 		// Create lookup table for `toString('hex')`

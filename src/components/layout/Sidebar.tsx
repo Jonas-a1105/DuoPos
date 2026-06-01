@@ -21,8 +21,6 @@ import { useSession } from '../../hooks/useSession';
 import { DUO_CHARACTERS } from '../../initialData';
 import { playSound } from '../../services/audio/soundService';
 import { toast } from '../../shared/ui';
-import AeroMascot from '../../shared/ui/Mascot/AeroMascot';
-import ShieldCrest from '../../shared/ui/Mascot/ShieldCrest';
 
 interface SidebarProps {
   themeClasses: Record<string, string>;
@@ -35,7 +33,6 @@ interface SidebarProps {
 const NAV_ITEMS_DESKTOP = [
   { id: 'dashboard', label: 'Inicio', icon: <Home size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Tablero' },
   { id: 'sales', label: 'Vender', icon: <ShoppingBag size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Ventas' },
-  { id: 'gamification', label: 'Master Club 🏆', icon: <Trophy size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Gamificación' },
   { id: 'shifts', label: 'Caja y Turnos', icon: <Wallet size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Turnos' },
   { id: 'customers', label: 'Clientes', icon: <Users size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Clientes' },
   { id: 'inventory', label: 'Catalogos', icon: <Package size={20} strokeWidth={2.5} />, roles: ['admin', 'supervisor'], name: 'Catálogos' },
@@ -47,7 +44,6 @@ const NAV_ITEMS_DESKTOP = [
 const PRIMARY_MOBILE_TABS = [
   { id: 'dashboard', label: 'Inicio', icon: <Home size={18} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Tablero' },
   { id: 'sales', label: 'Vender', icon: <ShoppingBag size={18} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Ventas' },
-  { id: 'gamification', label: 'Club Duo', icon: <Trophy size={18} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Gamificación' },
   { id: 'shifts', label: 'Caja', icon: <Wallet size={18} strokeWidth={2.5} />, roles: ['admin', 'supervisor', 'cashier'], name: 'Turnos' },
 ];
 
@@ -130,19 +126,12 @@ export default function Sidebar({ themeClasses, isMuted, toggleMute, onSync, isS
       <aside className="hidden md:flex flex-col justify-between w-64 p-4 pr-6 shrink-0 h-[calc(100vh-60px)] sticky top-4">
         <div className="space-y-8">
           <div className="flex items-center gap-2 px-2 cursor-pointer transform hover:scale-102 transition-transform duration-100">
-            <div className="relative flex items-center gap-1.5 shrink-0">
-              <ShieldCrest level={user?.level ?? 1} size={36} animate={true} />
-              <AeroMascot
-                size={36}
-                activeAccessory={user?.activeAccessory}
-                mood="neutral"
-                level={user?.level ?? 1}
-                showSparkles={false}
-              />
+            <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-950/30 flex items-center justify-center shadow-inner text-xl select-none font-bold text-orange-500 border border-orange-200 shrink-0">
+              💼
             </div>
             <div>
               <h1 className={`text-2xl font-black tracking-wider leading-none ${themeClasses.logoText}`}>Stock<span className={user?.activeSkin === 'standard' ? 'text-[#3c3c3c]' : 'text-inherit opacity-85'}>Master</span></h1>
-              <span className="text-[9px] tracking-widest uppercase font-black text-gray-400">Pro - Gamificado</span>
+              <span className="text-[9px] tracking-widest uppercase font-black text-gray-400">Pro - Enterprise</span>
             </div>
           </div>
           <nav className="space-y-2">{NAV_ITEMS_DESKTOP.map((tab) => renderNavItem(tab))}</nav>

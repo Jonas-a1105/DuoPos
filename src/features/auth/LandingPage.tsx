@@ -51,10 +51,10 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
   });
 
   // Sandbox Simulator interactive state
-  const [simLevel, setSimLevel] = useState(1);
-  const [simXP, setSimXP] = useState(30);
-  const [simGems, setSimGems] = useState(40);
-  const [simStreak, setSimStreak] = useState(3);
+  const [simTransactionsCount, setSimTransactionsCount] = useState(8);
+  const [simDailyBilling, setSimDailyBilling] = useState(12.50);
+  const [simLoyaltyPoints, setSimLoyaltyPoints] = useState(25);
+  const [simActiveTerminals, setSimActiveTerminals] = useState(3);
   const [simScannedItems, setSimScannedItems] = useState<Array<{ name: string; price: number; code: string }>>([]);
   const [simPrintedTicket, setSimPrintedTicket] = useState<string | null>(null);
   const [simActiveSkin, setSimActiveSkin] = useState<'standard' | 'galaxy' | 'cyberpunk'>('standard');
@@ -104,25 +104,14 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
     const updatedItems = [picked, ...simScannedItems].slice(0, 3);
     setSimScannedItems(updatedItems);
 
-    // Gain simulated rewards
-    const gainedXP = 15;
-    const gainedGems = 5;
-    triggerSandboxParticle(`+${gainedXP} XP / +${gainedGems} 💎`);
+    // Increase simulated business metrics
+    const gainedPoints = 5;
+    triggerSandboxParticle(`+$${picked.price.toFixed(2)} Facturado / +${gainedPoints} Puntos`);
 
-    let nextXP = simXP + gainedXP;
-    let nextLevel = simLevel;
-    if (nextXP >= 100) {
-      nextXP -= 100;
-      nextLevel += 1;
-      playSound('levelup');
-      triggerSandboxParticle('¡SUBISTE DE NIVEL! 🎉');
-    } else {
-      playSound('success');
-    }
-
-    setSimXP(nextXP);
-    setSimLevel(nextLevel);
-    setSimGems((prev) => prev + gainedGems);
+    setSimTransactionsCount((prev) => prev + 1);
+    setSimDailyBilling((prev) => Number((prev + picked.price).toFixed(2)));
+    setSimLoyaltyPoints((prev) => prev + gainedPoints);
+    playSound('success');
   };
 
   const handleSimulatePrintTicket = () => {
@@ -147,13 +136,13 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
       ===================================
                STOCKMASTER PRO
          SIMULADOR DE TICKET INTERNO
-        AV. CASANOVA CENTRO DE RACHAS
+        AV. CASANOVA OFICINA CENTRAL
             RIF: J-50128489-0 (DEMO)
                CARACAS, VE
       ===================================
       CONTROL INTERNO: #FT-${invoiceNum}
       FECHA: ${currentDate}
-      CAJERO: Aero_Demo_Pro_99
+      CAJERO: Jonas_Principal_01
       ---------------------
       PRODUCTOS:
       ${simScannedItems.map((item) => `* ${item.name.slice(0, 15)}... - $${item.price.toFixed(2)}`).join('\n      ')}
@@ -172,19 +161,19 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
     triggerSandboxParticle('Ticket Generado 🖨️');
   };
 
-  const handleSimulateStreakUpgrade = () => {
-    playSound('levelup');
-    setSimStreak((prev) => prev + 1);
-    setSimGems((prev) => prev + 15);
-    triggerSandboxParticle('🔥 ¡Racha aumentada! +15 💎');
+  const handleSimulateArqueoCaja = () => {
+    playSound('success');
+    setSimActiveTerminals((prev) => Math.min(prev + 1, 5));
+    setSimLoyaltyPoints((prev) => prev + 10);
+    triggerSandboxParticle('Caja Arqueada: OK / +10 Puntos');
   };
 
   const handleSimResetSandbox = () => {
     playSound('click');
-    setSimLevel(1);
-    setSimXP(30);
-    setSimGems(40);
-    setSimStreak(3);
+    setSimTransactionsCount(8);
+    setSimDailyBilling(12.50);
+    setSimLoyaltyPoints(25);
+    setSimActiveTerminals(3);
     setSimScannedItems([]);
     setSimPrintedTicket(null);
     setSimActiveSkin('standard');
@@ -209,22 +198,7 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
         'Acceso directo con teclado numérico',
       ],
     },
-    {
-      id: 'gamification',
-      title: 'Gamificación & Club de Logros 🏆',
-      shortDesc:
-        'Convierte tareas monótonas en misiones y rachas de motivación. Consigue gemas, sube de nivel y canjea skins personalizadas.',
-      longDesc:
-        'Fomenta la productividad y reduce el descuido del personal. Cada operación POS otorga puntos de experiencia (XP) y gemas cibernéticas. Con ellas, los cajeros pueden participar en el "Club de Gamificación", completando misiones diarias y conquistando trofeos de vida. La tienda virtual integrada les permite comprar protectores de racha (Streak Freezes), pociones de doble experiencia, hermosos temas visuales exclusivos y flairs de rango honorífico.',
-      icon: <Trophy className="text-[#ff9600] h-6 w-6 stroke-[2.5]" />,
-      badge: 'Exclusivo StockMaster',
-      features: [
-        'Misiones Diarias interactivas',
-        'Tienda Virtual con skins intercambiables',
-        'Rangos honoríficos de nivel',
-        'Doble XP con booster pociones',
-      ],
-    },
+
     {
       id: 'fiscal',
       title: 'Simulador de Impresión y Control Interno 🧾',
@@ -259,18 +233,18 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
     },
     {
       id: 'customers',
-      title: 'CRM y Alianzas Lealtad (Streaks) 👥',
+      title: 'CRM y Alianzas de Fidelización 👥',
       shortDesc:
-        'Monitorea las visitas frecuentes con un club exclusivo de socios, medallas por racha y ligas de retención de clientes.',
+        'Monitorea las visitas frecuentes con un programa exclusivo de socios, categorías por consumo y retención de clientes.',
       longDesc:
-        'Tus clientes ganan puntos y mantienen vivas sus rachas de compras en tu negocio. El módulo CRM de StockMaster Pro les da seguimiento visual inmediato: asigna medallas, registra su club de fidelidad, los ordena en ligas temáticas (Ligas de Bronce, Plata, Rubí) y analiza la fecha de su última interacción comercial para habilitar llamados de reenganche proactivos.',
+        'Tus clientes acumulan puntos por cada compra en tu negocio. El módulo CRM de StockMaster Pro les da seguimiento administrativo inmediato: asigna categorías, registra su perfil de fidelidad (Nivel Bronce, Plata, Oro, VIP) y analiza la fecha de su última compra para habilitar llamados de reenganche proactivos.',
       icon: <Users className="text-[#a435f0] h-6 w-6 stroke-[2.5]" />,
       badge: 'Estrategia CRM',
       features: [
-        'Rachas de compra recurrentes',
-        'Puntos acumulativos Loyalty',
-        'Ligas de fidelidad (Bronce a Rubí)',
-        'Directorio telefónico y correos',
+        'Compras recurrentes registradas',
+        'Puntos acumulativos de Fidelización',
+        'Categorías de lealtad (Bronce a VIP)',
+        'Directorio telefónico y créditos',
       ],
     },
     {
@@ -361,7 +335,7 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
                 <span className={simActiveSkin === 'standard' ? 'text-slate-800' : 'text-inherit opacity-85'}>Pro</span>
               </h1>
               <span className="text-[9px] tracking-widest uppercase font-black text-gray-400 block mt-0.5">
-                Gamified Sales Core
+                Enterprise POS Suite
               </span>
             </div>
           </div>
@@ -426,7 +400,7 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
                     : 'bg-orange-50 text-orange-700 border border-orange-150'
               }`}
             >
-              <Sparkles className="h-3.5 w-3.5 animate-spin duration-1000" /> ¡Punto de Venta Gamificado del Futuro!
+              <Sparkles className="h-3.5 w-3.5 animate-spin duration-1000" /> ¡Sistema de Facturación de Alto Rendimiento!
             </span>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-none text-balance">
@@ -435,10 +409,9 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
             </h1>
 
             <p className="text-base md:text-lg text-gray-500 font-medium leading-relaxed max-w-2xl">
-              StockMaster Pro es el punto de venta inteligente e interactivo que convierte las ventas cotidianas de
-              cajeros, supervisores y administradores en misiones de productividad. Gamifica la facturación, controla
-              transferencias, simula comprobantes térmicos para control interno y desbloquea skins corporativas
-              exclusivas usando gemas ganadas por rendimiento comercial real.
+              StockMaster Pro es el punto de venta inteligente e interactivo que impulsa la productividad y precisión del
+              equipo operativo. Optimiza la facturación, controla transferencias, simula comprobantes térmicos para control
+              interno y personaliza interfaces corporativas exclusivas según las necesidades de cada terminal.
             </p>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-4">
@@ -526,14 +499,14 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
 
               {/* Character visual */}
               <div className="flex gap-4.5 items-center bg-slate-500/5 p-4 rounded-2xl mb-4.5">
-                <span className="text-5xl animate-bounce duration-1000 select-none">🐦</span>
+                <span className="text-5xl animate-bounce duration-1000 select-none">💼</span>
                 <div className="space-y-1 text-left">
-                  <h4 className="font-extrabold text-sm tracking-tight text-inherit">Cajero: Maestro Aero</h4>
+                  <h4 className="font-extrabold text-sm tracking-tight text-inherit">Operador Principal: Jonas</h4>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="bg-[#fb923c] text-white text-[9px] font-black px-1.5 py-0.2 rounded uppercase">
-                      NIVEL 4
+                      CAJA ACTIVA #01
                     </span>
-                    <span className="text-xs text-amber-500 font-extrabold flex items-center">🔥 8 Días Racha</span>
+                    <span className="text-xs text-amber-500 font-extrabold flex items-center">🟢 Turno Activo</span>
                   </div>
                 </div>
               </div>
@@ -541,16 +514,21 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
               {/* Stat progress */}
               <div className="space-y-3 font-semibold text-xs">
                 <div className="flex justify-between tracking-tight text-gray-550">
-                  <span>Misiones de Hoy</span>
-                  <span className="text-orange-500 font-black">2 / 4 Completados</span>
+                  <span>Meta de Ventas del Turno</span>
+                  <span className="text-orange-500 font-black">
+                    {Math.min(Math.round((simDailyBilling / 100) * 100), 100)}% Completada
+                  </span>
                 </div>
                 {/* Visual Bar map */}
                 <div className="w-full bg-slate-200/50 h-3 rounded-full overflow-hidden p-[1px]">
-                  <div className="bg-[#fb923c] h-full w-[50%] rounded-full transition-all duration-500" />
+                  <div
+                    className="bg-[#fb923c] h-full rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min((simDailyBilling / 100) * 100, 100)}%` }}
+                  />
                 </div>
                 <div className="flex justify-between text-[11px] pt-1">
-                  <span className="text-slate-450 uppercase font-black text-[9px]">DIANA GLOBAL DE VENTAS</span>
-                  <span className="font-mono text-[#fb923c] font-black">Bs. 3,450.00 / 5,000.00</span>
+                  <span className="text-slate-450 uppercase font-black text-[9px]">CUOTA DIARIA DE COBRO</span>
+                  <span className="font-mono text-[#fb923c] font-black">Bs. {(simDailyBilling * 45.42).toFixed(2)} / 4,542.00</span>
                 </div>
               </div>
 
@@ -592,7 +570,7 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
           </h2>
           <p className="text-base text-gray-500 max-w-3xl mx-auto">
             Hemos construido una suite completa de grado empresarial diseñada para la realidad comercial de Venezuela,
-            fusionada orgánicamente con dinámicas de motivación y productividad.
+            enfocada orgánicamente en la eficiencia operativa y productividad de tu personal.
           </p>
         </div>
 
@@ -677,7 +655,7 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
                 <Gift className="text-[#ff9600] shrink-0 h-6 w-6 stroke-[2]" />
                 <p className="text-[11.5px] text-slate-500 leading-normal font-semibold">
                   <strong>Impacto en el personal:</strong> El uso constante de este panel acelera la capacitación de
-                  cajeros nuevos de 14 días a solo 3 horas gracias al diseño lúdico intuitivo.
+                  cajeros nuevos de 14 días a solo 3 horas gracias al diseño intuitivo y profesional.
                 </p>
               </div>
             </div>
@@ -693,11 +671,10 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
               ZONA DE PRUEBA ABIERTA
             </span>
             <h2 className="text-3xl md:text-4xl font-black tracking-tight text-center">
-              Consola Simuladora de Racha StockMaster Pro
+              Consola Simuladora de Terminal StockMaster Pro
             </h2>
             <p className="text-base text-gray-500 max-w-3xl mx-auto text-center">
-              Prueba los engranajes mecánicos del sistema de gamificación e interacción antes de ingresar con tu usuario
-              de nómina comercial.
+              Prueba la agilidad en la canasta de compras, el lector y el emulador de tiques antes de iniciar sesión.
             </p>
           </div>
 
@@ -709,8 +686,7 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
                   Panel de Acciones de Prueba
                 </h3>
                 <p className="text-xs text-gray-500 font-semibold mt-2.5 leading-normal">
-                  Haz clic en los siguientes botones interactivos para inyectar transacciones en la terminal simuladora
-                  de la derecha y ver cómo acumulas gemas, subes niveles o cambias de theme.
+                  Haz clic en los siguientes botones interactivos para simular transacciones de forma segura y ver en tiempo real la facturación y los tiques emitidos.
                 </p>
               </div>
 
@@ -727,7 +703,7 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
                     <span>Escanear Código Producto</span>
                   </span>
                   <span className="bg-[#fb923c] text-white text-[9px] font-black py-0.5 px-2 rounded-md">
-                    +15 XP / +5 💎
+                    +PUNTOS LOYALTY
                   </span>
                 </button>
 
@@ -746,25 +722,25 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
                   </span>
                 </button>
 
-                {/* Increase Streak count */}
+                {/* Simular Arqueo de Caja */}
                 <button
                   type="button"
-                  onClick={handleSimulateStreakUpgrade}
+                  onClick={handleSimulateArqueoCaja}
                   className="w-full bg-white hover:bg-slate-50 text-slate-800 border-2 border-slate-200 border-b-5 py-3 px-5 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-between text-left active:translate-y-0.5 active:border-b-2 cursor-pointer"
                 >
                   <span className="flex items-center gap-3">
-                    <Flame className="text-orange-500 h-5 w-5" />
-                    <span>Aumentar racha cotidiana</span>
+                    <CheckCircle2 className="text-emerald-600 h-5 w-5" />
+                    <span>Efectuar Arqueo de Turno (Simulado)</span>
                   </span>
-                  <span className="bg-orange-50 text-orange-600 text-[9px] font-black py-0.5 px-2 rounded-md">
-                    +1 DÍA
+                  <span className="bg-emerald-50 text-emerald-600 text-[9px] font-black py-0.5 px-2 rounded-md">
+                    CUADRADO
                   </span>
                 </button>
 
                 {/* Theme Selector */}
                 <div className="space-y-1.5 pt-3">
                   <span className="text-[10px] uppercase font-black text-gray-400 tracking-wider block">
-                    Canjear & Cambiar tema visual de previsualización:
+                    Personalizar tema visual de la interfaz de usuario:
                   </span>
                   <div className="grid grid-cols-3 gap-2">
                     <button
@@ -779,7 +755,7 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
                           : 'bg-slate-50 border-slate-200 text-slate-500'
                       }`}
                     >
-                      🐦 Aero
+                      🍊 Corporativo
                     </button>
                     <button
                       type="button"
@@ -860,20 +836,20 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
               {/* Active employee values counters */}
               <div className="grid grid-cols-4 gap-2 text-center pb-5 border-b border-dashed border-gray-150 mb-5">
                 <div className="bg-slate-500/5 p-2 rounded-xl">
-                  <span className="block text-[8.5px] font-black text-gray-400 leading-none">NIVEL</span>
-                  <span className="text-lg font-black tracking-tight">{simLevel}</span>
+                  <span className="block text-[8.5px] font-black text-gray-400 leading-none">TRANSACCIONES</span>
+                  <span className="text-lg font-black tracking-tight">{simTransactionsCount}</span>
                 </div>
                 <div className="bg-slate-500/5 p-2 rounded-xl">
-                  <span className="block text-[8.5px] font-black text-gray-400 leading-none">PUNTOS XP</span>
-                  <span className="text-lg font-black font-mono tracking-tight">{simXP}/100</span>
+                  <span className="block text-[8.5px] font-black text-gray-400 leading-none">VENTAS USD</span>
+                  <span className="text-lg font-black font-mono tracking-tight">${simDailyBilling.toFixed(2)}</span>
                 </div>
                 <div className="bg-slate-500/5 p-2 rounded-xl">
-                  <span className="block text-[8.5px] font-black text-gray-400 leading-none">DIAMANTES</span>
-                  <span className="text-lg font-black tracking-tight text-amber-500">Bs. {simGems}</span>
+                  <span className="block text-[8.5px] font-black text-gray-400 leading-none">LOYALTY PTS</span>
+                  <span className="text-lg font-black tracking-tight text-amber-500">{simLoyaltyPoints} pts</span>
                 </div>
                 <div className="bg-slate-500/5 p-2 rounded-xl">
-                  <span className="block text-[8.5px] font-black text-gray-400 leading-none">RACHA</span>
-                  <span className="text-lg font-black text-orange-500">🔥 {simStreak} d</span>
+                  <span className="block text-[8.5px] font-black text-gray-400 leading-none">CAJAS ACTIVAS</span>
+                  <span className="text-lg font-black text-orange-500">🟢 {simActiveTerminals} / 5</span>
                 </div>
               </div>
 
@@ -945,11 +921,11 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
               MÉTRICAS REALES COMPROBADAS
             </span>
             <h2 className="text-3xl md:text-4xl font-black tracking-tight leading-none">
-              ¿Por qué integrar diversión en el terminal de cobro aumenta un 41% tus utilidades?
+              ¿Por qué optimizar el flujo de cobro en mostrador aumenta un 41% tus utilidades?
             </h2>
             <p className="text-base text-gray-500 leading-relaxed font-semibold">
               El ausentismo de cajeros y las discrepancias de caja al final de los turnos representan pérdidas
-              importantes a nivel mundial. StockMaster Pro ataca este problema aplicando hábitos diarios inspiradores
+              importantes a nivel mundial. StockMaster Pro ataca este problema aplicando herramientas de control intuitivas
               para el equipo operativo.
             </p>
 
@@ -959,7 +935,7 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
                 <div className="space-y-1">
                   <h4 className="font-extrabold text-sm tracking-tight text-inherit">Cero Fugas Contables</h4>
                   <p className="text-xs text-gray-500 leading-normal font-semibold">
-                    Al gamificar los cierres cuadratura perfectos, el 98% de los operadores declaran sus ingresos sin
+                    Al automatizar y simplificar el arqueo, el 98% de los operadores declaran sus ingresos sin
                     diferencias de centavos.
                   </p>
                 </div>
@@ -971,8 +947,7 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
                     Aceleración del Despacho de Cola
                   </h4>
                   <p className="text-xs text-gray-500 leading-normal font-semibold">
-                    Cajeros motivados escanean artículos y efectúan cobros un 2.5x veces más rápido para culminar sus
-                    misiones diarias.
+                    Cajeros capacitados con nuestra UI premium escanean artículos y efectúan cobros un 2.5x veces más rápido.
                   </p>
                 </div>
               </div>
@@ -981,7 +956,7 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
                 <div className="space-y-1">
                   <h4 className="font-extrabold text-sm tracking-tight text-inherit">Retención de Clientes Orgánica</h4>
                   <p className="text-xs text-gray-500 leading-normal font-semibold">
-                    Los operadores registran de manera entusiasta a los clientes en el CRM de lealtad para sumar puntos,
+                    Los operadores registran ágilmente a los clientes en el CRM de lealtad para acumular puntos,
                     mejorando el regreso frecuente en un 38%.
                   </p>
                 </div>
@@ -1024,7 +999,7 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
             {/* Chart 2: Client retention graph */}
             <div className="space-y-2 pt-2 border-t border-dashed border-gray-150">
               <div className="flex justify-between items-center text-xs font-black">
-                <span>Registro de clientes frecuentes en club de racha</span>
+                <span>Registro de clientes frecuentes en programa de fidelidad</span>
                 <span className="text-blue-600 font-extrabold">Aumentado 240%</span>
               </div>
               <div className="grid grid-cols-3 gap-3 pt-2 text-center text-[10px] font-black">
@@ -1074,7 +1049,7 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
                 Es una herramienta multiplataforma (PWA listo para instalar en iPhone/Android/Desktop) que provee una
                 solución completa de caja registradora, control de divisas, CRM de fidelidad y logística de
                 multi-sucursal. Está diseñado para comercios, panaderías, tiendas de donuts, cadenas de comida rápida, y
-                botiquerías de Venezuela que deseen profesionalizar sus finanzas de manera lúdica, intuitiva, rápida y
+                botiquerías de Venezuela que deseen profesionalizar sus finanzas de manera limpia, intuitiva, rápida y
                 bajo las mejores prácticas administrativas.
               </div>
             )}
@@ -1087,16 +1062,12 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
               onClick={() => toggleFaq('como-gamifica')}
               className="w-full text-left p-4.5 font-extrabold text-sm sm:text-base flex justify-between items-center bg-gray-50 cursor-pointer"
             >
-              <span>🐦 ¿Cómo funciona la gamificación de empleados? ¿Es obligatorio jugar?</span>
+              <span>📊 ¿Cómo funciona el sistema de incentivos y fidelización de la suite?</span>
               <span className="text-gray-400 font-mono text-xl">{faqOpen['como-gamifica'] ? '−' : '+'}</span>
             </button>
             {faqOpen['como-gamifica'] && (
               <div className="p-5 text-xs sm:text-sm text-gray-600 leading-relaxed font-semibold border-t border-gray-200">
-                La gamificación corre en segundo plano y no interrumpe el cobro. Cada cajero al registrar artículos
-                correctos o realizar cierres perfectos gana XP y Gemas. El juego es un incentivo: el empleado puede
-                desbloquear hermosos temas (Skins) y títulos en la tienda del sistema. No afecta negativamente los
-                salarios de nómina, pero promueve un ambiente de trabajo de alta energía, divertido, reduciendo
-                drásticamente la rotación de cajeros.
+                El sistema cuenta con un programa integrado de fidelización y control de metas operativas. Cada cajero al registrar transacciones de forma precisa, emitir comprobantes válidos y efectuar arqueos sin discrepancias ayuda al negocio a cumplir sus metas de ventas del turno y acumula puntos de fidelidad para sus clientes frecuentes. Todo esto corre en segundo plano y promueve un ambiente de trabajo de alta precisión, dinámico y enfocado en la excelencia de atención sin complicar los procesos tradicionales.
               </div>
             )}
           </div>
@@ -1184,7 +1155,7 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
               <span>•</span>
               <span className="hover:underline cursor-pointer">Control Interno</span>
               <span>•</span>
-              <span className="hover:underline cursor-pointer">Acuerdo de Racha</span>
+              <span className="hover:underline cursor-pointer">Términos y Soporte</span>
             </div>
           </div>
         </div>

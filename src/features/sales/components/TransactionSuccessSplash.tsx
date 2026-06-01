@@ -70,16 +70,14 @@ export default function TransactionSuccessSplash({
       const rawText = generateRawEscPos(receiptData, hardwareSettings.thermalPrinter);
       console.log('ESC/POS payload successfully generated:\n', rawText);
 
-      toast.success('¡Impresión finalizada! Ticket registrado en el Bus IoT. +15 XP ⚡', {
+      toast.success('¡Impresión finalizada! Ticket registrado en el Bus IoT.', {
         title: 'Impresión Exitosa 🖨️',
         duration: 5000,
       });
       toast.info(
-        `Impresión finalizada. Dispositivo: Térmico (${hardwareSettings.thermalPrinter.paperWidth}), Puerto: ${hardwareSettings.thermalPrinter.connectionType.toUpperCase()}. +15 XP ⚡`,
-        { title: 'Impresión ESC/POS 🔌', duration: 5000 },
+        `Impresión finalizada. Dispositivo: Térmico (${hardwareSettings.thermalPrinter.paperWidth}), Puerto: ${hardwareSettings.thermalPrinter.connectionType.toUpperCase()}.`,
+        { title: 'Impresión ESC/POS 🔌', duration: 5000 }
       );
-      onGrantXp(15);
-      playSound('levelup');
     }, 800);
   };
 
@@ -256,17 +254,17 @@ export default function TransactionSuccessSplash({
                 : ''
             }
             
-            ${
-              txn.customerId
-                ? `
-            <div class="text-center" style="margin-top: 6px; font-weight: bold; font-size: 10px;">
-              💎 CLUB DE GEMAS DUOLINGO:<br />
-              ${txn.gemsRedeemed ? `Canjeado: -${txn.gemsRedeemed} G` : ''}
-              ${txn.gemsRedeemed && txn.gemsGained ? ' | ' : ''}
-              ${txn.gemsGained ? `Acumula: +${txn.gemsGained} G` : ''}
-            </div>`
-                : ''
-            }
+             ${
+               txn.customerId
+                 ? `
+             <div class="text-center" style="margin-top: 6px; font-weight: bold; font-size: 10px;">
+               📈 PUNTOS DE FIDELIDAD:<br />
+               ${txn.gemsRedeemed ? `Canjeados: -${txn.gemsRedeemed} Pts` : ''}
+               ${txn.gemsRedeemed && txn.gemsGained ? ' | ' : ''}
+               ${txn.gemsGained ? `Ganados: +${txn.gemsGained} Pts` : ''}
+             </div>`
+                 : ''
+             }
 
             ${
               inv
@@ -288,11 +286,11 @@ export default function TransactionSuccessSplash({
                 : ''
             }
 
-            <div class="reward">
-              🎉 ¡PRESTIGIO ADQUIRIDO!<br />Has obtenido +${txn.xpGained} XP de racha
+            <div class="reward" style="border: 1px solid #ddd; padding: 4.5px; border-radius: 4px; margin-top: 6px; font-size: 8px;">
+              ¡GRACIAS POR SU COMPRA!<br />Servicio de Facturación StockMaster Pro
             </div>
             
-            <div style="margin-top: 12px; font-size: 9px;" class="text-center">🦉 ¡Exígele a tu competencia mantener su racha! 🦉</div>
+            <div style="margin-top: 12px; font-size: 9px;" class="text-center">¡Gracias por su preferencia!</div>
             <script>
               window.onload = function() {
                 window.print();
@@ -311,7 +309,7 @@ export default function TransactionSuccessSplash({
   // Real-world native share or clipboard backup
   const handleShareReceipt = async (txn: Transaction) => {
     const shareText =
-      `🦉 DuoPOS Ticket ${txn.id} 🦉\n` +
+      `💼 StockMaster Pro Ticket ${txn.id} 💼\n` +
       `---------------------------\n` +
       `Cajero: ${txn.employeeName}\n` +
       `Fecha: ${new Date(txn.date).toLocaleDateString()}\n` +
@@ -326,10 +324,9 @@ export default function TransactionSuccessSplash({
       `TOTAL: $${txn.total.toFixed(2)} USD\n` +
       `---------------------------\n` +
       (txn.customerId
-        ? `💎 Club de Gemas: ${txn.gemsRedeemed ? `Canjeado -${txn.gemsRedeemed}G ` : ''}${txn.gemsGained ? `| Ganado +${txn.gemsGained}G` : ''}\n---------------------------\n`
+        ? `📈 Puntos de Fidelidad: ${txn.gemsRedeemed ? `Canjeados: -${txn.gemsRedeemed} Pts ` : ''}${txn.gemsGained ? `| Ganados: +${txn.gemsGained} Pts` : ''}\n---------------------------\n`
         : '') +
-      `🏆 Recompensa: +${txn.xpGained} XP extra acumulados!\n` +
-      `¡Gracias por tu racha comercial!`;
+      `¡Gracias por su preferencia!`;
 
     if (navigator.share) {
       try {
@@ -352,55 +349,45 @@ export default function TransactionSuccessSplash({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#58cc02] flex flex-col items-center justify-center p-4 font-sans animate-zoomIn text-white text-center">
+    <div className="fixed inset-0 z-50 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex flex-col items-center justify-center p-4 font-sans animate-zoomIn text-white text-center">
       <div className="max-w-md w-full space-y-6">
-        {/* Character Bounces high and cheers */}
-        <span className="text-9xl block select-none drop-shadow-lg transform animate-bounce duration-500">
-          {activeChar.avatar}
-        </span>
+        {/* Success checkmark animates elegantly */}
+        <div className="mx-auto w-20 h-20 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg border border-emerald-450 animate-bounce">
+          <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
 
-        <div className="space-y-2 animate-fadeIn">
-          <span className="text-2xl font-black tracking-widest text-[#d2f09d] uppercase">¡VENTA REALIZADA!</span>
-          <h2 className="text-4xl md:text-5xl font-black leading-tight tracking-tight">
-            {activeChar.name === 'Lily' ? 'Ugh, lo lograste.' : '¡Excelente Trabajo!'}
+        <div className="space-y-1.5 animate-fadeIn">
+          <span className="text-xl font-black tracking-widest text-[#d2f09d] uppercase">¡VENTA COMPLETADA!</span>
+          <h2 className="text-3xl md:text-4xl font-black leading-tight tracking-tight">
+            Transacción Exitosa
           </h2>
-          <p className="text-white/90 font-black text-sm max-w-xs mx-auto italic pl-4 pr-4">"{activeChar.saleQuote}"</p>
+          <p className="text-white/80 font-bold text-xs max-w-xs mx-auto italic">El cobro ha sido procesado e ingresado a caja correctamente.</p>
         </div>
 
         {/* Dynamic Receipt Metadata */}
         <div className="bg-white/10 backdrop-blur-md rounded-3xl p-5 border border-white/20 space-y-4">
           <div className="flex justify-between items-center border-b border-white/10 pb-3 text-sm">
-            <span className="font-extrabold text-white/80 uppercase tracking-wider text-xs">Monto Recaudado</span>
+            <span className="font-extrabold text-white/80 uppercase tracking-wider text-xs">Monto Total Recaudado</span>
             <span className="text-2xl font-black font-mono">${celebrateTxn.total.toFixed(2)}</span>
           </div>
 
-          {/* Reward stats */}
-          <div className="flex justify-around items-center">
+          <div className="flex justify-around items-center text-xs font-semibold py-1">
             <div className="flex flex-col items-center">
-              <div className="bg-yellow-400 text-amber-950 p-2.5 rounded-full shadow-md animate-spin-slow">⭐</div>
-              <span className="text-[10px] uppercase font-black text-white/70 tracking-widest mt-1.5">RECOMPENSA</span>
-              <span className="text-lg font-black mt-0.5">+{celebrateTxn.xpGained} XP</span>
+              <span className="text-xl">📊</span>
+              <span className="text-[10px] uppercase font-black text-white/70 tracking-widest mt-1">REGISTRO</span>
+              <span className="text-sm font-black mt-0.5">COMPLETADO</span>
             </div>
 
-            <div className="h-8 w-[1px] bg-white/10" />
+            <div className="h-6 w-[1px] bg-white/10" />
 
             <div className="flex flex-col items-center">
-              <span className="text-2xl leading-none">🔥</span>
-              <span className="text-[10px] uppercase font-black text-white/70 tracking-widest mt-1.5">RACHA</span>
-              <span className="text-lg font-black mt-0.5">ASEGURADA</span>
+              <span className="text-xl">🔒</span>
+              <span className="text-[10px] uppercase font-black text-white/70 tracking-widest mt-1">ESTADO</span>
+              <span className="text-sm font-black mt-0.5">AUDITADO</span>
             </div>
           </div>
-
-          {celebrateTxn.customerId && (
-            <div className="bg-white/5 border border-white/10 rounded-xl p-2.5 text-xs font-black uppercase text-[#d2f09d] flex items-center justify-between">
-              <span>💎 CLUB DE GEMAS:</span>
-              <span className="font-mono text-white text-[10px]">
-                {celebrateTxn.gemsRedeemed ? `CANJEADO -${celebrateTxn.gemsRedeemed}G` : ''}
-                {celebrateTxn.gemsRedeemed && celebrateTxn.gemsGained ? ' | ' : ''}
-                {celebrateTxn.gemsGained ? `GANADO +${celebrateTxn.gemsGained}G` : ''}
-              </span>
-            </div>
-          )}
 
           {/* Simulated Cash Drawer Alert */}
           {celebrateTxn.paymentMethod === 'cash' && (
@@ -408,10 +395,10 @@ export default function TransactionSuccessSplash({
               <span className="text-2xl">🔓</span>
               <div>
                 <span className="font-extrabold text-yellow-300 block uppercase text-[10px] tracking-wider leading-none">
-                  Cajón de Dinero Simulado Abierto (Click!)
+                  Cajón de Dinero Abierto (Click!)
                 </span>
                 <span className="font-semibold block text-[10px] text-white/95 mt-1 animate-fadeIn">
-                  El resorte mecánico se ha disparado. Guarda el efectivo recibido y entrega el cambio correspondiente.
+                  Guarda el efectivo recibido y entrega el cambio correspondiente al cliente.
                 </span>
               </div>
             </div>
@@ -456,7 +443,6 @@ export default function TransactionSuccessSplash({
             type="button"
             onClick={() => {
               setSelectedTxnForActiveInvoice(celebrateTxn);
-              playSound('levelup');
             }}
             className="w-full bg-[#1e293b] text-white border-b-6 border-[#0f172a] hover:bg-slate-700 active:translate-y-[2px] active:border-b-2 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
           >
@@ -467,13 +453,13 @@ export default function TransactionSuccessSplash({
         {/* Action buttons to resume */}
         <button
           onClick={() => setCelebrateTxn(null)}
-          className="w-full bg-white text-[#58cc02] border-b-[6px] border-[#dddddd] hover:bg-gray-50 active:border-b-0 active:translate-y-[6px] py-4 rounded-3xl font-black text-lg uppercase tracking-wider transition-all cursor-pointer"
+          className="w-full bg-white text-indigo-950 border-b-[6px] border-[#dddddd] hover:bg-gray-50 active:border-b-0 active:translate-y-[6px] py-4 rounded-3xl font-black text-lg uppercase tracking-wider transition-all cursor-pointer"
         >
           Siguiente Cliente
         </button>
 
-        <span className="text-xs text-white/60 font-black uppercase tracking-widest block">
-          DuoPOS • El Cajero Ideal
+        <span className="text-xs text-white/50 font-black uppercase tracking-widest block">
+          StockMaster Pro • Sistema de Gestión de Caja
         </span>
       </div>
     </div>

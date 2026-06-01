@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Transaction, Product, User } from '../../../types';
-import AeroMascot from '../../../shared/ui/Mascot/AeroMascot';
+import { TrendingUp } from 'lucide-react';
 
 interface AdvancedAnalyticsTabProps {
   transactions: Transaction[];
@@ -371,16 +371,10 @@ export default function AdvancedAnalyticsTab({ transactions, products, user }: A
           </div>
         </div>
 
-        {/* Calculations and characters suggestions box */}
+        {/* Calculations and analysis box */}
         <div className="mt-4 pt-4 border-t border-amber-200 flex flex-col sm:flex-row items-center gap-4 text-xs text-amber-900">
-          <div className="flex-shrink-0">
-            <AeroMascot
-              size={40}
-              activeAccessory={user.activeAccessory}
-              mood="neutral"
-              level={user.level}
-              animate={false}
-            />
+          <div className="flex-shrink-0 bg-amber-100 p-2.5 rounded-2xl border border-amber-200 flex items-center justify-center">
+            <TrendingUp size={20} className="text-amber-800" />
           </div>
           <p className="font-extrabold flex-1 text-center sm:text-left leading-relaxed">
             {(() => {
@@ -395,13 +389,12 @@ export default function AdvancedAnalyticsTab({ transactions, products, user }: A
 
               return (
                 <span>
-                  Aero dice: "Para generar{' '}
+                  <strong>Análisis Predictivo:</strong> Para generar{' '}
                   <strong className="text-amber-950 font-black">${monthlyTargetProfit} USD</strong> de ganancia pura,
                   estimamos que debes despachar{' '}
                   <strong className="text-amber-950 font-black">{unitsNeeded} unidades de mercadería</strong>. Esto
-                  equivale a <strong className="text-amber-950 font-black">{salesNeeded} clientes atendidos</strong> en
-                  tu mostrador (suponiendo carros promedio de {averageCartItems.toFixed(1)} items). ¡A entrenar esa
-                  racha de ventas!"
+                  equivale a <strong className="text-amber-950 font-black">{salesNeeded} transacciones concretadas</strong> en
+                  mostrador (suponiendo carros promedio de {averageCartItems.toFixed(1)} items). ¡Optimiza tus existencias para cubrir este objetivo!
                 </span>
               );
             })()}

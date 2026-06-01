@@ -52,10 +52,9 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
 
     onUpdateCustomer(updatedCust);
     playSound('levelup');
-    onGrantXp(30); // 30 XP employee bonus context
 
     setRewardSuccessMsg(
-      `🎉 ¡Felicidades! Se canjeó con éxito "${reward.name}" para el cliente ${selectedCust.name}. Se le han debitado ${reward.cost} Gemas.`,
+      `🎉 ¡Felicidades! Se canjeó con éxito "${reward.name}" para el cliente ${selectedCust.name}. Se le han debitado ${reward.cost} Puntos.`,
     );
     setTimeout(() => {
       setRewardSuccessMsg('');
@@ -68,11 +67,10 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
       <div className="bg-amber-100 border-2 border-amber-300 rounded-3xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="space-y-1.5 text-center md:text-left">
           <div className="flex items-center justify-center md:justify-start gap-1.5 text-amber-800 font-extrabold text-sm uppercase">
-            <span>🏆</span> Multiplicadores por Liga de Honor DuoPOS
+            <span>🏆</span> Factor Multiplicador por Categoría de Cliente
           </div>
           <p className="text-xs text-amber-700 leading-relaxed font-bold">
-            Los clientes acumulan gemas por cada venta finalizada. A mayor estatus de racha (liga de honor), mayor es su
-            multiplicador de velocidad de gemas en el punto de venta.
+            Los clientes acumulan puntos de fidelidad por cada venta finalizada. A mayor volumen de compras, mayor es su categoría de cliente y el factor multiplicador de puntos.
           </p>
         </div>
       </div>
@@ -80,7 +78,7 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
       {/* BRACKETS LIST */}
       <div className="bg-white border-2 border-gray-200 border-b-6 rounded-3xl p-5 text-left">
         <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider mb-3.5">
-          Multiplicadores de Liga Vigentes & Distribución de Clientes
+          Multiplicadores de Categorías Vigentes & Distribución de Clientes
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5">
           {Object.keys(LEAGUE_METADATA).map((leagueKey) => {
@@ -136,7 +134,7 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
           {/* SELECT CUSTOMER */}
           <div className="space-y-1.5 text-left">
             <label className="text-[10px] uppercase font-black text-gray-400 block tracking-wider">
-              Selecciona el Cliente de la Racha
+              Seleccione un Cliente Activo
             </label>
             <select
               value={loyaltySelectedCustId}
@@ -144,12 +142,12 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
                 setLoyaltySelectedCustId(e.target.value);
                 playSound('click');
               }}
-              className="w-full bg-white border-2 border-gray-200 border-b-4 rounded-xl px-3 py-2 font-bold text-xs select-none outline-none focus:border-[#e6b100] text-gray-700 cursor-pointer"
+              className="w-full bg-white border-2 border-gray-200 border-b-4 rounded-xl px-3.5 py-2 font-bold text-xs select-none outline-none focus:border-[#e6b100] text-gray-700 cursor-pointer"
             >
               <option value="">-- Buscar & Elegir Cliente --</option>
               {customers.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} (💎 {c.gems} Gemas)
+                  {c.name} ({c.gems} Puntos)
                 </option>
               ))}
             </select>
@@ -169,8 +167,8 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
                       </span>
                     </div>
                     <div className="flex justify-between text-xs font-bold font-mono">
-                      <span>Gemas Disponibles:</span>
-                      <span className="text-[#58cc02] font-black">{sel.gems} G</span>
+                      <span>Puntos Disponibles:</span>
+                      <span className="text-[#58cc02] font-black">{sel.gems} Pts</span>
                     </div>
                   </div>
                 );
@@ -186,10 +184,10 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
                 <span className="text-xl">🎁</span>
                 <div className="text-left">
                   <h3 className="text-xs font-black uppercase text-gray-750">
-                    Catálogo de Cupones y Recompensas Oficiales DuoPOS
+                    Catálogo de Beneficios y Cupones StockMaster Pro
                   </h3>
                   <p className="text-[9px] text-gray-400 font-bold uppercase">
-                    Haz click en canjear para debitar las gemas del cliente
+                    Haz click en canjear para debitar los puntos del cliente
                   </p>
                 </div>
               </div>
@@ -220,17 +218,17 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
                 },
                 {
                   id: 'item-4',
-                  name: 'Mochila Oficial DuoAcademy',
+                  name: 'Mochila Ejecutiva StockMaster',
                   cost: 500,
                   icon: '🎒',
-                  desc: 'Regalo físico de edición limitada con barra de progreso de la racha.',
+                  desc: 'Regalo físico de edición corporativa con compartimientos para laptop y cargador USB.',
                 },
                 {
                   id: 'item-5',
-                  name: 'Peluche Auténtico de Duo (Búho)',
+                  name: 'Kit Corporativo Premium StockMaster',
                   cost: 1000,
-                  icon: '🦉',
-                  desc: 'Premio supremo de coleccionista. Otorgable solo a ligas de Honor.',
+                  icon: '💼',
+                  desc: 'Kit premium de oficina que incluye libreta de cuero, bolígrafo de lujo y taza térmica.',
                 },
               ].map((reward) => {
                 const isAffordable = (() => {
@@ -252,7 +250,7 @@ export default function LoyaltyStore({ customers, onUpdateCustomer, onGrantXp }:
                       <div className="flex items-center justify-between">
                         <span className="text-2xl">{reward.icon}</span>
                         <span className="bg-amber-400 text-amber-955 text-[10px] font-black uppercase px-2 py-0.5 rounded-lg border border-amber-300 font-mono">
-                          {reward.cost} Gemas
+                          {reward.cost} Puntos
                         </span>
                       </div>
                       <h4 className="text-xs font-black text-gray-800 leading-snug mt-1.5">{reward.name}</h4>

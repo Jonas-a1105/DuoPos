@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { User, Transaction, Product } from '../../../types';
-import AeroMascot from '../../../shared/ui/Mascot/AeroMascot';
 import { playSound } from '../../../services/audio/soundService';
 import { Send, Brain, HelpCircle } from 'lucide-react';
 
@@ -25,10 +24,6 @@ export default function DuoCopilotTab({ user, transactions, products, onGrantXp 
     try {
       const statsContext = {
         employeeName: user.username,
-        level: user.level,
-        xp: user.xp,
-        dailyGoal: user.dailyGoal,
-        streak: user.streak,
         totalSalesVolume: transactions.reduce((acc, curr) => acc + curr.total, 0),
         transactionsCount: transactions.length,
         productsCount: products.length,
@@ -41,17 +36,17 @@ export default function DuoCopilotTab({ user, transactions, products, onGrantXp 
       };
 
       const systemPrompt =
-        'Eres Aero Copilot, el asistente IA analítico de negocios de alta tecnología de StockMaster Pro. Tu objetivo es dar recomendaciones estratégicas breves (máximo 4 párrafos cortos), atractivas, lúdicas y extremadamente profesionales. Habla con entusiasmo, usa el tono divertido pero sabio característico del fénix Aero. Estructura tus respuestas usando encabezados markdown elegantes, listas de viñetas, y añade sugerencias numéricas específicas de decisiones de racha y precios para las métricas provistas.';
+        'Eres el Copilot de Negocios de StockMaster Pro, un asistente analítico avanzado de inteligencia de negocios para puntos de venta. Tu objetivo es proporcionar recomendaciones estratégicas breves (máximo 4 párrafos cortos), precisas y extremadamente profesionales sobre la gestión de inventarios, incremento de facturación, optimización de márgenes y fidelización de clientes. Estructura tus respuestas con títulos markdown claros, listas de viñetas y sugerencias basadas en decisiones comerciales de datos.';
 
-      const userMessage = `Hola Aero Copilot. Mis datos de hoy/históricos de la tienda son:
-- Empleado: ${statsContext.employeeName} (Nivel ${statsContext.level}, Racha: ${statsContext.streak} días)
-- Volumen de Ventas: $${statsContext.totalSalesVolume.toFixed(2)} USD (Transacciones: ${statsContext.transactionsCount})
-- Catálogo: ${statsContext.productsCount} productos (${statsContext.lowStockCount} con stock bajo de 5 unidades)
-- Productos principales: ${JSON.stringify(statsContext.inventoryProducts.slice(0, 4))}
+      const userMessage = `Hola Copilot. Mis datos de rendimiento comercial de la tienda son:
+- Empleado: ${statsContext.employeeName}
+- Volumen de Ventas Facturado: $${statsContext.totalSalesVolume.toFixed(2)} USD (Transacciones totales: ${statsContext.transactionsCount})
+- Catálogo de Inventario: ${statsContext.productsCount} productos registrados (${statsContext.lowStockCount} con existencia crítica por debajo de 5 unidades)
+- Resumen de catálogo (primeros 4 items): ${JSON.stringify(statsContext.inventoryProducts.slice(0, 4))}
 
-Consulta del usuario: ${queryToUse}
+Consulta de negocio: ${queryToUse}
 
-Por favor, analízalo con tu telemetría avanzada y dime insights de calibre mundial.`;
+Por favor, analízalos y bríndame recomendaciones y diagnósticos administrativos inteligentes basados en estas métricas.`;
 
       const response = await fetch('/api/gemini/insights', {
         method: 'POST',
@@ -59,14 +54,10 @@ Por favor, analízalo con tu telemetría avanzada y dime insights de calibre mun
         body: JSON.stringify({ systemPrompt, userMessage }),
       });
       const data = await response.json();
-      setCopilotResponse(data.text || 'No se ha podido recuperar una respuesta de Aero Copilot.');
-
-      if (onGrantXp) {
-        onGrantXp(25);
-      }
+      setCopilotResponse(data.text || 'No se ha podido recuperar una respuesta del Copilot de Negocios.');
     } catch (err: any) {
       console.error(err);
-      setCopilotResponse('⚠️ Error de conexión con Aero Copilot en la nube. Revisa tu racha de conexión.');
+      setCopilotResponse('⚠️ Error de conexión con el Copilot de Negocios en la nube. Por favor, intente de nuevo.');
     } finally {
       setCopilotLoading(false);
     }
@@ -79,27 +70,20 @@ Por favor, analízalo con tu telemetría avanzada y dime insights de calibre mun
         <div className="absolute top-[-50px] right-[-20px] text-white opacity-10 font-bold select-none pointer-events-none text-9xl">
           🛡️
         </div>
-        <div className="select-none shrink-0">
-          <AeroMascot
-            size={96}
-            activeAccessory={user.activeAccessory}
-            mood={copilotLoading ? 'happy' : 'neutral'}
-            level={user.level}
-            animate={true}
-            showSparkles={copilotLoading}
-          />
+        <div className="w-20 h-20 rounded-2xl bg-white/10 flex items-center justify-center text-4xl shadow-inner border border-white/20 shrink-0 select-none">
+          🧠
         </div>
         <div className="space-y-1.5 flex-1 text-center md:text-left">
           <span className="bg-purple-400 text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider inline-block">
             Asistente Ejecutivo Premium
           </span>
           <h3 className="text-xl md:text-2xl font-black tracking-tight text-white uppercase">
-            Aero Copilot IA Analítico
+            Copilot de Inteligencia Comercial IA
           </h3>
           <p className="text-xs text-purple-100 font-semibold leading-relaxed max-w-xl">
             Alimentado de forma segura por el motor de inteligencia de{' '}
-            <strong className="text-yellow-300">Gemini server-side</strong>. Aero Copilot lee en tiempo real tu volumen
-            de ventas, rotación de inventarios y patrones de turnos para entregarte sugerencias de negocio ágiles y
+            <strong className="text-yellow-300">Gemini server-side</strong>. El Copilot lee en tiempo real tu volumen
+            de ventas, rotación de inventarios y patrones de turnos para entregarte sugerencias de negocio sugerentes y
             altamente rentables.
           </p>
         </div>
@@ -129,20 +113,20 @@ Por favor, analízalo con tu telemetría avanzada y dime insights de calibre mun
               {
                 id: 'cross',
                 title: '🛒 Venta Cruzada & Combos',
-                text: 'Sugiéreme promociones cruzadas o combos dinámicos gamificados entre mis productos estrella y los de menor movimiento para vaciar bodega.',
+                text: 'Sugiéreme promociones cruzadas o combos dinámicos de ventas entre mis productos estrella y los de menor movimiento para vaciar bodega.',
                 tag: 'AUMENTAR TICKET',
               },
               {
                 id: 'rota',
                 title: '⚡ Optimización de Turno',
-                text: 'Analiza mis transacciones y dime cuáles son las horas pico aproximadas y cómo capacitar a mis cajeros para que ganen gemas rápidamente.',
+                text: 'Analiza mis transacciones y dime cuáles son las horas pico aproximadas y cómo optimizar los tiempos de atención en caja.',
                 tag: 'METRICAS DE CAJA',
               },
               {
                 id: 'league',
-                title: '🏆 Fidelización y Ligas',
-                text: 'Recomienda desafíos de racha semanales inspirados en Duolingo para que mis clientes aumenten sus puntos de fidelidad y compren más.',
-                tag: 'ESTRATEGIA CLUB',
+                title: '🏆 Fidelización Comercial',
+                text: 'Recomienda estrategias de fidelización para clientes frecuentes para aumentar la recompensa de compras y fidelidad comercial.',
+                tag: 'ESTRATEGIA FIDELIDAD',
               },
             ].map((item) => (
               <button
@@ -209,7 +193,7 @@ Por favor, analízalo con tu telemetría avanzada y dime insights de calibre mun
               <div className="bg-purple-50 border border-purple-200 rounded-2xl px-4 py-2.5 flex items-center justify-between text-[10px] text-purple-900 font-extrabold uppercase">
                 <div className="flex items-center gap-1.5">
                   <span className="h-2.5 w-2.5 rounded-full bg-[#7c3aed] animate-ping" />
-                  <span>Telemetría de racha empresarial conectada</span>
+                  <span>Telemetría empresarial conectada</span>
                 </div>
                 <span>REPORTE DEL TURNO DEL CAJERO: {user.username.toUpperCase()}</span>
               </div>
@@ -229,7 +213,7 @@ Por favor, analízalo con tu telemetría avanzada y dime insights de calibre mun
                       Procesando Métricas en Gemini AI...
                     </h5>
                     <p className="font-mono text-[10.5px] text-purple-400 font-bold uppercase leading-relaxed max-w-sm">
-                      Sincronizando volumen de racha y estado de inventario...
+                      Sincronizando estado de inventario y caja...
                     </p>
                   </div>
                   <div className="w-full max-w-xs bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-700/50">
@@ -246,10 +230,10 @@ Por favor, analízalo con tu telemetría avanzada y dime insights de calibre mun
                       <span className="text-xl">💡</span>
                       <div>
                         <h4 className="font-black text-sm text-purple-950 uppercase leading-none">
-                          Análisis Aero Copilot
+                          Análisis Copilot IA
                         </h4>
-                        <p className="text-[8.5px] text-purple-400 font-extrabold uppercase mt-1 leading-none">
-                          Firma Digital Verificada con +25 XP Recibidos
+                        <p className="text-[8.5px] text-purple-450 font-extrabold uppercase mt-1 leading-none">
+                          Firma Digital Verificada
                         </p>
                       </div>
                     </div>
@@ -309,20 +293,6 @@ Por favor, analízalo con tu telemetría avanzada y dime insights de calibre mun
                         </p>
                       );
                     })}
-                  </div>
-
-                  {/* CONGRATULATIONS CONSOLE NOTICE */}
-                  <div className="bg-[#e5f6ff] text-[#155375] border border-blue-200 rounded-2xl p-4 flex gap-3 text-xs font-bold items-center">
-                    <span className="text-xl">🛡️🔥</span>
-                    <div className="flex-1 space-y-0.5">
-                      <p className="uppercase text-[10.5px] font-black text-[#155375]">
-                        ¡Misión Inteligente Completada!
-                      </p>
-                      <p className="text-gray-500 uppercase text-[9px] leading-relaxed">
-                        Has recibido <span className="text-purple-700 font-black">+25 de XP corporativo</span> de racha
-                        empresarial por consultar a Aero Copilot para mejorar tu tienda.
-                      </p>
-                    </div>
                   </div>
                 </div>
               )}
