@@ -196,7 +196,7 @@ export default function HospitalityFloorPlan({
       </div>
 
       {/* Waiter Assignation & Table details options details */}
-      <div className="bg-slate-50 p-3 rounded-2xl border flex flex-col sm:flex-row gap-3 items-center justify-between text-xs font-bold text-gray-700">
+      <div className="bg-slate-50 p-3 rounded-2xl border border-gray-200 flex flex-col sm:flex-row gap-3 items-center justify-between text-xs font-bold text-gray-700">
         <div className="flex items-center gap-1.5">
           <span className="text-sm">🤵</span>
           <label className="text-xs font-black uppercase text-slate-700">Asignar Mesero Activo:</label>

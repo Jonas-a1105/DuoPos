@@ -526,7 +526,7 @@ export default function ProductCatalog({
                     placeholder="Ej. Café de la Racha (Espresso)"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-slate-50 border p-2 rounded-xl font-bold"
+                    className="w-full bg-slate-50 border border-gray-200 p-2 rounded-xl font-bold"
                   />
                 </div>
 
@@ -538,7 +538,7 @@ export default function ProductCatalog({
                     required
                     value={price}
                     onChange={(e) => setPrice(Number(e.target.value))}
-                    className="w-full bg-slate-50 border p-2 rounded-xl font-bold font-mono"
+                    className="w-full bg-slate-50 border border-gray-200 p-2 rounded-xl font-bold font-mono"
                   />
                 </div>
 
@@ -550,7 +550,7 @@ export default function ProductCatalog({
                     required
                     value={cost}
                     onChange={(e) => setCost(Number(e.target.value))}
-                    className="w-full bg-slate-50 border p-2 rounded-xl font-bold font-mono"
+                    className="w-full bg-slate-50 border border-gray-200 p-2 rounded-xl font-bold font-mono"
                   />
                 </div>
 
@@ -561,7 +561,7 @@ export default function ProductCatalog({
                     required
                     value={stock}
                     onChange={(e) => setStock(Number(e.target.value))}
-                    className="w-full bg-slate-50 border p-2 rounded-xl font-bold font-mono"
+                    className="w-full bg-slate-50 border border-gray-200 p-2 rounded-xl font-bold font-mono"
                   />
                 </div>
 
@@ -572,7 +572,7 @@ export default function ProductCatalog({
                     required
                     value={minStock}
                     onChange={(e) => setMinStock(Number(e.target.value))}
-                    className="w-full bg-slate-50 border p-2 rounded-xl font-bold font-mono"
+                    className="w-full bg-slate-50 border border-gray-200 p-2 rounded-xl font-bold font-mono"
                   />
                 </div>
 
@@ -581,7 +581,7 @@ export default function ProductCatalog({
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full bg-slate-50 border p-2 rounded-xl font-bold text-gray-700 cursor-pointer"
+                    className="w-full bg-slate-50 border border-gray-200 p-2 rounded-xl font-bold text-gray-700 cursor-pointer"
                   >
                     {CATEGORIES.filter((c) => c !== 'Todos').map((c) => (
                       <option key={c} value={c}>
@@ -596,7 +596,7 @@ export default function ProductCatalog({
                   <select
                     value={productSupplierId}
                     onChange={(e) => setProductSupplierId(e.target.value)}
-                    className="w-full bg-slate-50 border p-2 rounded-xl font-bold text-gray-700 cursor-pointer"
+                    className="w-full bg-slate-50 border border-gray-200 p-2 rounded-xl font-bold text-gray-700 cursor-pointer"
                   >
                     <option value="">-- Sin proveedor definido --</option>
                     {suppliers.map((s) => (
@@ -615,7 +615,7 @@ export default function ProductCatalog({
                   placeholder="Detalles únicos de este insumo..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full bg-slate-50 border p-2 rounded-xl text-xs font-semibold"
+                  className="w-full bg-slate-50 border border-gray-200 p-2 rounded-xl text-xs font-semibold"
                 />
               </div>
 
@@ -623,7 +623,7 @@ export default function ProductCatalog({
                 <button
                   type="button"
                   onClick={() => setIsFormOpen(false)}
-                  className="bg-slate-100 hover:bg-slate-205 py-2.5 font-bold rounded-xl border"
+                  className="bg-slate-100 hover:bg-slate-205 py-2.5 font-bold rounded-xl border border-gray-200"
                 >
                   Cancelar
                 </button>

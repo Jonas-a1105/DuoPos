@@ -310,7 +310,7 @@ export default function CustomerDirectory({
                 </div>
 
                 {/* LINEA DE CREDITO ("FIADO") DETAILS */}
-                <div className="bg-gray-50 border p-3 rounded-2xl space-y-2">
+                <div className="bg-gray-50 border border-gray-200 p-3 rounded-2xl space-y-2">
                   <div className="flex justify-between items-center text-[10px] font-black">
                     <span className="text-gray-400 uppercase tracking-widest flex items-center gap-0.5">
                       <span>📝</span> Línea de Crédito ("Fiado")
@@ -339,7 +339,7 @@ export default function CustomerDirectory({
                       </div>
 
                       {/* Debt Progression loading bar */}
-                      <div className="w-full h-3.5 bg-gray-200 rounded-full overflow-hidden border p-0.5">
+                      <div className="w-full h-3.5 bg-gray-200 rounded-full overflow-hidden border border-gray-200 p-0.5">
                         <div
                           className={`h-full rounded-full transition-all duration-300 ${progressBgColor}`}
                           style={{ width: `${creditUsedPct}%` }}
