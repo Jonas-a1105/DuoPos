@@ -19,6 +19,10 @@
   --color-gray-805: #1e293b;
   --color-gray-855: #0f172a;
 
+  --color-slate-150: #e2e8f0;
+  --color-slate-250: #cbd5e1;
+  --color-slate-350: #94a3b8;
+
   @keyframes scanLine {
     0% {
       top: 0%;
