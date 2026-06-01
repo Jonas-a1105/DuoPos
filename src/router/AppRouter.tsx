@@ -58,12 +58,6 @@ export default function AppRouter() {
   const setIsLicenseExpired = useUserStore((s) => s.setIsLicenseExpired);
   const isClockTampered = useUserStore((s) => s.isClockTampered);
   const setIsClockTampered = useUserStore((s) => s.setIsClockTampered);
-  const duoMood = useUserStore((s) => s.duoMood);
-  const setDuoMood = useUserStore((s) => s.setDuoMood);
-  const setDuoSparkles = useUserStore((s) => s.setDuoSparkles);
-  const duoSparkles = useUserStore((s) => s.duoSparkles);
-  const levelUpAchieved = useUserStore((s) => s.levelUpAchieved);
-  const setLevelUpAchieved = useUserStore((s) => s.setLevelUpAchieved);
   const roleLockWarning = useUserStore((s) => s.roleLockWarning);
   const setRoleLockWarning = useUserStore((s) => s.setRoleLockWarning);
   const lastSyncTime = useUserStore((s) => s.lastSyncTime);
@@ -127,11 +121,6 @@ export default function AppRouter() {
 
   const isDev = user && (user.username.toLowerCase() === 'jonas' || user.username.toLowerCase() === 'jonas_mendoza' || (user.email && user.email.toLowerCase().includes('jonas')) || user.username.toLowerCase() === 'admin');
 
-  const triggerDuoHappy = () => {
-    setDuoMood('happy');
-    setDuoSparkles(true);
-    setTimeout(() => { setDuoMood('neutral'); setDuoSparkles(false); }, 5000);
-  };
 
   const { data: exchangeRatesQuery, isFetching: isRefreshingRates, refetch: refetchRates } = useExchangeRates();
 

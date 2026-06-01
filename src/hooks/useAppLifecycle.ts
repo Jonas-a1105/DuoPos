@@ -20,9 +20,6 @@ export function useAppLifecycle() {
   const setIsLicenseExpired = useUserStore((s) => s.setIsLicenseExpired);
   const setIsClockTampered = useUserStore((s) => s.setIsClockTampered);
   const licenseDetails = useUserStore((s) => s.licenseDetails);
-  const setDuoMood = useUserStore((s) => s.setDuoMood);
-  const duoMood = useUserStore((s) => s.duoMood);
-
   const activeBranchId = useSalesStore((s) => s.activeBranchId);
   const setTransactions = useSalesStore((s) => s.setTransactions);
   const transactions = useSalesStore((s) => s.transactions);
@@ -35,28 +32,6 @@ export function useAppLifecycle() {
 
   const location = useLocation();
   const activeTab = location.pathname === '/' ? 'dashboard' : location.pathname.substring(1);
-
-  useEffect(() => {
-    let inactivityTimer: ReturnType<typeof setTimeout>;
-    const resetInactivity = () => {
-      const currentMood = duoMood;
-      setDuoMood(currentMood === 'happy' ? 'happy' : 'neutral');
-      clearTimeout(inactivityTimer);
-      inactivityTimer = setTimeout(() => setDuoMood('sleeping'), 120000);
-    };
-    resetInactivity();
-    window.addEventListener('mousemove', resetInactivity);
-    window.addEventListener('keydown', resetInactivity);
-    window.addEventListener('click', resetInactivity);
-    window.addEventListener('touchstart', resetInactivity);
-    return () => {
-      clearTimeout(inactivityTimer);
-      window.removeEventListener('mousemove', resetInactivity);
-      window.removeEventListener('keydown', resetInactivity);
-      window.removeEventListener('click', resetInactivity);
-      window.removeEventListener('touchstart', resetInactivity);
-    };
-  }, [duoMood]);
 
   useEffect(() => {
     try {

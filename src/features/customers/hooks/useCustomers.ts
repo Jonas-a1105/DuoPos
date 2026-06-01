@@ -45,7 +45,7 @@ export function useCustomers() {
         `Cliente '${newCust.name}' registrado con límite de crédito $${newCust.creditLimit || 0} USD y teléfono ${newCust.phone || 'S/N'}`
       );
 
-      // Increment daily customer registry counts for gamification
+      // Increment daily customer registry counts for statistics
       try {
         const today = new Date().toISOString().split('T')[0];
         const dayStatsRaw = localStorage.getItem(`duo_pos_daily_acts_${today}`);

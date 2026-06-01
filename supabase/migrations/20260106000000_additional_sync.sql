@@ -1,6 +1,6 @@
 -- Migration: Create new tables and columns for complete sync and settings persistence
 
--- 1. Create table daily_stats for gamification stats
+-- 1. Create table daily_stats for daily business intelligence stats
 CREATE TABLE IF NOT EXISTS daily_stats (
     day_date TEXT PRIMARY KEY,
     stats_json JSONB NOT NULL,

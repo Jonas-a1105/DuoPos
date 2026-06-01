@@ -13,10 +13,6 @@ interface UserState {
   isLicenseExpired: boolean;
   isClockTampered: boolean;
   licenseDetails: LicenseDetails;
-  xpBoosterCharges: number;
-  duoMood: 'neutral' | 'happy' | 'crying' | 'smart' | 'party' | 'sleeping';
-  duoSparkles: boolean;
-  levelUpAchieved: { oldLevel: number; newLevel: number; title: string } | null;
   roleLockWarning: { requiredRole: string; activeRole: string; tabName: string } | null;
   lastSyncTime: string | null;
 
@@ -27,15 +23,10 @@ interface UserState {
   setIsLicenseExpired: (expired: boolean) => void;
   setIsClockTampered: (tampered: boolean) => void;
   setLicenseDetails: (details: LicenseDetails) => void;
-  setDuoMood: (mood: 'neutral' | 'happy' | 'crying' | 'smart' | 'party' | 'sleeping') => void;
-  setDuoSparkles: (sparkles: boolean) => void;
-  setLevelUpAchieved: (achievement: { oldLevel: number; newLevel: number; title: string } | null) => void;
   setRoleLockWarning: (warning: { requiredRole: string; activeRole: string; tabName: string } | null) => void;
   setLastSyncTime: (time: string | null) => void;
-  setXpBoosterCharges: (charges: number) => void;
 
   updateUser: (updatedUser: User) => Promise<void>;
-  grantXp: (amount: number, isHappyHourActive?: boolean) => Promise<void>;
 }
 
 const DEFAULT_LICENSE_DETAILS: LicenseDetails = {
@@ -58,10 +49,6 @@ export const useUserStore = create<UserState>((set, get) => ({
   isLicenseExpired: false,
   isClockTampered: false,
   licenseDetails: DEFAULT_LICENSE_DETAILS,
-  xpBoosterCharges: 0,
-  duoMood: 'neutral',
-  duoSparkles: false,
-  levelUpAchieved: null,
   roleLockWarning: null,
   lastSyncTime: null,
 
@@ -71,12 +58,8 @@ export const useUserStore = create<UserState>((set, get) => ({
   setIsLicenseExpired: (isLicenseExpired) => set({ isLicenseExpired }),
   setIsClockTampered: (isClockTampered) => set({ isClockTampered }),
   setLicenseDetails: (licenseDetails) => set({ licenseDetails }),
-  setDuoMood: (duoMood) => set({ duoMood }),
-  setDuoSparkles: (duoSparkles) => set({ duoSparkles }),
-  setLevelUpAchieved: (levelUpAchieved) => set({ levelUpAchieved }),
   setRoleLockWarning: (roleLockWarning) => set({ roleLockWarning }),
   setLastSyncTime: (lastSyncTime) => set({ lastSyncTime }),
-  setXpBoosterCharges: (xpBoosterCharges) => set({ xpBoosterCharges }),
 
   updateUser: async (updatedUser) => {
     set({ user: updatedUser });
@@ -134,9 +117,5 @@ export const useUserStore = create<UserState>((set, get) => ({
         console.error('Error syncing profile to Supabase:', err);
       }
     }
-  },
-
-  grantXp: async () => {
-    // No-op to eliminate gamification completely
   },
 }));
