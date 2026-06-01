@@ -125,13 +125,30 @@ export default function Sidebar({ themeClasses, isMuted, toggleMute, onSync, isS
       {/* Desktop Sidebar Layout */}
       <aside className="hidden md:flex flex-col justify-between w-64 p-4 pr-6 shrink-0 h-[calc(100vh-60px)] sticky top-4">
         <div className="space-y-8">
-          <div className="flex items-center gap-2 px-2 cursor-pointer transform hover:scale-102 transition-transform duration-100">
-            <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-950/30 flex items-center justify-center shadow-inner text-xl select-none font-bold text-orange-500 border border-orange-200 shrink-0">
-              💼
-            </div>
-            <div>
-              <h1 className={`text-2xl font-black tracking-wider leading-none ${themeClasses.logoText}`}>Stock<span className={user?.activeSkin === 'standard' ? 'text-[#3c3c3c]' : 'text-inherit opacity-85'}>Master</span></h1>
-              <span className="text-[9px] tracking-widest uppercase font-black text-gray-400">Pro - Enterprise</span>
+          <div className="flex items-center gap-2.5 px-2 cursor-pointer transform hover:scale-102 transition-transform duration-100">
+            {/* Elegant Abstract Connection Intertwined Logo SVG */}
+            <svg viewBox="0 0 100 100" className="w-10 h-10 shrink-0 animate-pulse-slow" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g transform="translate(50, 50)">
+                {/* 1. Top-Left Loop (Light Peach) */}
+                <rect x="-32" y="-32" width="34" height="34" rx="11" stroke="#ffdfc4" strokeWidth="8.5" transform="rotate(45)" />
+                {/* 2. Bottom-Left Loop (Medium Orange) */}
+                <rect x="-32" y="-2" width="34" height="34" rx="11" stroke="#ffa851" strokeWidth="8.5" transform="rotate(45)" />
+                {/* 3. Bottom-Right Loop (Dark Charcoal) */}
+                <rect x="-2" y="-2" width="34" height="34" rx="11" stroke="#3c3c3c" strokeWidth="8.5" transform="rotate(45)" />
+                {/* 4. Top-Right Loop (Bright Orange) */}
+                <rect x="-2" y="-32" width="34" height="34" rx="11" stroke="#ff8525" strokeWidth="8.5" transform="rotate(45)" />
+                {/* 5. Intertwining effect: Peach overlap */}
+                <rect x="-32" y="-32" width="34" height="34" rx="11" stroke="#ffdfc4" strokeWidth="8.5" strokeDasharray="25 100" transform="rotate(45)" />
+              </g>
+            </svg>
+            <div className="text-left font-sans">
+              <h1 className="text-[20px] font-black tracking-tight leading-none">
+                <span className="text-[#ff8525]">Stock </span>
+                <span className={user?.activeSkin === 'standard' ? 'text-[#3c3c3c]' : 'text-inherit opacity-85'}>Master Pro</span>
+              </h1>
+              <span className="text-[7.5px] tracking-widest uppercase font-black text-gray-400 block mt-1">
+                Gestión de Ventas e Inventario
+              </span>
             </div>
           </div>
           <nav className="space-y-2">{NAV_ITEMS_DESKTOP.map((tab) => renderNavItem(tab))}</nav>

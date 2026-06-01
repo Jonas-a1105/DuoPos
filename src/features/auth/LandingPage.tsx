@@ -321,21 +321,28 @@ export default function LandingPage({ onEnterApp, onEnterAsAdmin }: LandingPageP
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2.5 cursor-pointer" onClick={handleSimResetSandbox}>
-            {/* Elegant blank generic logo container */}
-            <div className="w-10 h-10 rounded-xl border-2 border-orange-500 bg-white flex items-center justify-center shadow-sm shrink-0">
-              <div className="w-5 h-5 rounded-md bg-orange-400 animate-pulse" />
-            </div>
-            <div className="text-left">
-              <h1
-                className={`text-2xl font-black tracking-wider leading-none ${
-                  simActiveSkin === 'cyberpunk' ? 'text-cyan-400' : 'text-[#fb923c]'
-                }`}
-              >
-                StockMaster
-                <span className={simActiveSkin === 'standard' ? 'text-slate-800' : 'text-inherit opacity-85'}>Pro</span>
+            {/* Elegant Abstract Connection Intertwined Logo SVG */}
+            <svg viewBox="0 0 100 100" className="w-10 h-10 shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g transform="translate(50, 50)">
+                {/* 1. Top-Left Loop (Light Peach) */}
+                <rect x="-32" y="-32" width="34" height="34" rx="11" stroke="#ffdfc4" strokeWidth="8.5" transform="rotate(45)" />
+                {/* 2. Bottom-Left Loop (Medium Orange) */}
+                <rect x="-32" y="-2" width="34" height="34" rx="11" stroke="#ffa851" strokeWidth="8.5" transform="rotate(45)" />
+                {/* 3. Bottom-Right Loop (Dark Charcoal) */}
+                <rect x="-2" y="-2" width="34" height="34" rx="11" stroke="#3c3c3c" strokeWidth="8.5" transform="rotate(45)" />
+                {/* 4. Top-Right Loop (Bright Orange) */}
+                <rect x="-2" y="-32" width="34" height="34" rx="11" stroke="#ff8525" strokeWidth="8.5" transform="rotate(45)" />
+                {/* 5. Intertwining effect: Peach overlap */}
+                <rect x="-32" y="-32" width="34" height="34" rx="11" stroke="#ffdfc4" strokeWidth="8.5" strokeDasharray="25 100" transform="rotate(45)" />
+              </g>
+            </svg>
+            <div className="text-left font-sans">
+              <h1 className="text-[21px] font-black tracking-tight leading-none">
+                <span className={simActiveSkin === 'cyberpunk' ? 'text-cyan-400' : 'text-[#ff8525]'}>Stock </span>
+                <span className={simActiveSkin === 'standard' ? 'text-[#3c3c3c]' : simActiveSkin === 'cyberpunk' ? 'text-pink-500' : 'text-slate-200'}>Master Pro</span>
               </h1>
-              <span className="text-[9px] tracking-widest uppercase font-black text-gray-400 block mt-0.5">
-                Enterprise POS Suite
+              <span className="text-[7.5px] tracking-widest uppercase font-black text-[#a1a1a1] block mt-1">
+                Gestión de Ventas e Inventario
               </span>
             </div>
           </div>
