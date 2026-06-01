@@ -1,0 +1,14 @@
+<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(50, 50)">
+    <!-- 1. Top-Left Loop (Light Peach) -->
+    <rect x="-32" y="-32" width="34" height="34" rx="11" stroke="#ffdfc4" strokeWidth="8.5" transform="rotate(45)" />
+    <!-- 2. Bottom-Left Loop (Medium Orange) -->
+    <rect x="-32" y="-2" width="34" height="34" rx="11" stroke="#ffa851" strokeWidth="8.5" transform="rotate(45)" />
+    <!-- 3. Bottom-Right Loop (Dark Charcoal) -->
+    <rect x="-2" y="-2" width="34" height="34" rx="11" stroke="#3c3c3c" strokeWidth="8.5" transform="rotate(45)" />
+    <!-- 4. Top-Right Loop (Bright Orange) -->
+    <rect x="-2" y="-32" width="34" height="34" rx="11" stroke="#ff8525" strokeWidth="8.5" transform="rotate(45)" />
+    <!-- 5. Intertwining effect: Peach overlap -->
+    <rect x="-32" y="-32" width="34" height="34" rx="11" stroke="#ffdfc4" strokeWidth="8.5" strokeDasharray="25 100" transform="rotate(45)" />
+  </g>
+</svg>
